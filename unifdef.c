@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __RCSID
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.48 2002/04/26 18:56:55 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.49 2002/04/26 19:02:45 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -215,14 +215,14 @@ main(int argc, char *argv[])
 				value[symind] = NULL;
 		} else if (ignorethis)
 			goto unrec;
+		else if (strcmp(&cp[1], "c") == 0)
+			complement = true;
+		else if (strcmp(&cp[1], "l") == 0)
+			lnblank = true;
 		else if (strcmp(&cp[1], "d") == 0)
 			debugging = true;
 		else if (strcmp(&cp[1], "t") == 0)
 			text = true;
-		else if (strcmp(&cp[1], "l") == 0)
-			lnblank = true;
-		else if (strcmp(&cp[1], "c") == 0)
-			complement = true;
 		else {
 		unrec:
 			warnx("unrecognized option: %s", cp);
