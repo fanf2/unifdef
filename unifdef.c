@@ -31,12 +31,12 @@
  * SUCH DAMAGE.
  */
 
-static const void * const copyright[] = {
+static const char * const copyright[] = {
     "@(#) Copyright (c) 1985, 1993\n\
 	The Regents of the University of California.  All rights reserved.\n",
     "@(#)unifdef.c	8.1 (Berkeley) 6/6/93",
-    "$dotat: unifdef/unifdef.c,v 1.168 2003/08/12 20:33:59 fanf2 Exp $",
-    copyright };
+    "$dotat: unifdef/unifdef.c,v 1.169 2003/08/12 20:51:30 fanf2 Exp $",
+};
 
 /*
  * unifdef - remove ifdef'ed lines
