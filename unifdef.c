@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.86 2002/12/11 01:44:04 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.87 2002/12/11 02:07:02 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -95,10 +95,20 @@ typedef enum {		/* 0 or 1: pass thru; 1 or 2: ignore comments */
 } Reject_level;
 
 typedef enum {
-	NO_COMMENT = false,
+	NO_COMMENT,
 	C_COMMENT,
-	CXX_COMMENT
+	CXX_COMMENT,
+	STARTING_COMMENT,
+	FINISHING_COMMENT
 } Comment_state;
+
+typedef enum {
+	LS_START,
+	LS_HASH,
+	LS_KEYWORD,
+	LS_TRAILER,
+	LS_DIRTY
+} Line_state;
 
 const char *const errs[] = {
 #define NO_ERR      0
@@ -199,6 +209,7 @@ int             nsyms;
 
 Reject_level    reject;		/* what kind of filtering we are doing */
 Comment_state   incomment;	/* inside C comment */
+Line_state      linestate;	/* how to look for a #if here */
 
 Linetype        checkline(int *);
 void            debug(const char *, ...);
@@ -479,73 +490,70 @@ process(int depth)
 }
 
 /*
- * Parse a line and determine its type.
+ * Parse a line and determine its type. We keep the preprocessor line
+ * parser state between calls in a global variable.
+ * XXX: We don't handle preprocessor control lines that are split
+ * across multiple physical lines correctly in many cases.
  */
 Linetype
 checkline(int *cursym)
 {
 	const char *cp;
-	char *symp;
 	Linetype retval;
-	char kw[KWSIZE];
+	Comment_state wascomment;
+	int kwlen;
 
-	*cursym = -1;
+	wascomment = incomment;
 	retval = LT_PLAIN;
+	*cursym = -1;
 	cp = skipcomment(tline);
-	if (*cp != '#' || incomment)
-		goto eol;
-
-	cp = skipcomment(++cp);
-	keyword = (char *)cp;
-	symp = kw;
-	while (!endsym(*cp)) {
-		*symp = *cp++;
-		if (++symp >= &kw[KWSIZE])
-			goto eol;
+	if (linestate == LS_START) {
+		if (*cp == '#') {
+			linestate = LS_HASH;
+			cp = skipcomment(cp + 1);
+		} else if (*cp != '\0')
+			linestate = LS_DIRTY;
 	}
-	*symp = '\0';
-
-	if (strcmp(kw, "ifdef") == 0) {
-		retval = LT_TRUE;
-		goto ifdef;
-	} else if (strcmp(kw, "ifndef") == 0) {
-		retval = LT_FALSE;
-	ifdef:
-		cp = skipcomment(++cp);
-		if (incomment) {
+	if (!incomment && linestate == LS_HASH) {
+		linestate = LS_TRAILER;
+		keyword = (char *)cp;
+		cp = skipsym(cp);
+		kwlen = cp - keyword;
+		if ((retval = LT_TRUE,
+		     strlcmp("ifdef", keyword, kwlen) == 0) ||
+		    (retval = LT_FALSE,
+		     strlcmp("ifndef", keyword, kwlen) == 0)) {
+			cp = skipcomment(cp);
+			if ((*cursym = findsym(cp)) < 0)
+				retval = LT_IF;
+			else if (value[*cursym] == NULL)
+				retval = (retval == LT_TRUE)
+				    ? LT_FALSE : LT_TRUE;
+			cp = skipsym(cp);
+		} else if (strlcmp("if", keyword, kwlen) == 0)
+			retval = ifeval(&cp);
+		else if (strlcmp("elif", keyword, kwlen) == 0)
+			retval = ifeval(&cp) - LT_IF + LT_ELIF;
+		else if (strlcmp("else", keyword, kwlen) == 0)
+			retval = LT_ELSE;
+		else if (strlcmp("endif", keyword, kwlen) == 0)
+			retval = LT_ENDIF;
+		else
 			retval = LT_PLAIN;
-			goto eol;
-		}
-		if ((*cursym = findsym(cp)) < 0)
-			retval = LT_IF;
-		else if (value[*cursym] == NULL)
-			retval = (retval == LT_TRUE)
-			    ? LT_FALSE : LT_TRUE;
-	} else if (strcmp(kw, "if") == 0) {
-		retval = ifeval(&cp);
+	}
+	if (linestate == LS_TRAILER) {
 		cp = skipcomment(cp);
-		if (*cp != '\n' || keepthis)
-			retval = LT_IF;
-	} else if (strcmp(kw, "elif") == 0) {
-		retval = ifeval(&cp) - LT_IF + LT_ELIF;
-		cp = skipcomment(cp);
-		if (*cp != '\n' || keepthis)
-			retval = LT_ELIF;
-	} else if (strcmp(kw, "else") == 0)
-		retval = LT_ELSE;
-	else if (strcmp(kw, "endif") == 0)
-		retval = LT_ENDIF;
-
-eol:
-	if (!text && reject != REJ_IGNORE)
-		for (; *cp;) {
-			if (incomment)
-				cp = skipcomment(cp);
-			else if (*cp == '/' && (cp[1] == '*' || cp[1] == '/'))
-				cp = skipcomment(cp);
-			else
-				cp++;
+		if (wascomment || *cp != '\0' || incomment) {
+			if (retval == LT_TRUE || retval == LT_FALSE)
+				retval = LT_IF;
+			linestate = LS_DIRTY;
 		}
+	}
+	if (linestate == LS_DIRTY) {
+		while (*cp != '\0')
+			cp = skipcomment(cp + 1);
+	}
+	debug("state incomment %d linestate %d", incomment, linestate);
 	return retval;
 }
 
@@ -685,62 +693,92 @@ eval_table(struct ops *ops, int *valp, const char **cpp)
 Linetype
 ifeval(const char **cpp)
 {
+	int ret;
 	int val;
+
 	debug("eval %s", *cpp);
 	keepthis = killconsts ? false : true;
-	return eval_table(eval_ops, &val, cpp);
+	ret = eval_table(eval_ops, &val, cpp);
+	return keepthis ? LT_IF : ret;
 }
 
 /*
  * Skip over comments and stop at the next character position that is
- * not whitespace.
+ * not whitespace. Between calls we keep the comment state in a global
+ * variable, and we also make a note when we get a proper end-of-line.
+ * XXX: doesn't cope with the buffer splitting inside a state transition.
  */
 const char *
 skipcomment(const char *cp)
 {
-	if (incomment)
-		goto inside;
-	for (;; cp++) {
-		while (*cp == ' ' || *cp == '\t')
-			cp++;
-		if (text)
-			return cp;
-		if (cp[0] != '/')
-			return cp;
-
-		if (cp[1] == '*') {
-			if (!incomment) {
-				incomment = C_COMMENT;
-				stcomline = linenum;
-			}
-		} else if (cp[1] == '/') {
-			if (!incomment) {
-				incomment = CXX_COMMENT;
-				stcomline = linenum;
-			}
-		} else
-			return cp;
-
-		cp += 2;
-inside:
-		if (incomment == C_COMMENT) {
-			for (;;) {
-				for (; *cp != '*'; cp++)
-					if (*cp == '\0')
-						return cp;
-				if (*++cp == '/') {
-					incomment = NO_COMMENT;
-					break;
-				}
-			}
-		}
-		else if (incomment == CXX_COMMENT) {
-			for (; *cp != '\n'; cp++)
-				if (*cp == '\0')
-					return cp;
-			incomment = NO_COMMENT;
-		}
+	if (text || reject == REJ_IGNORE) {
+		while (isspace((unsigned char)*cp))
+			cp += 1;
+		return cp;
 	}
+	while (*cp != '\0')
+		if (strncmp(cp, "\\\n", 2) == 0)
+			cp += 2;
+		else switch (incomment) {
+		case NO_COMMENT:
+			if (strncmp(cp, "/\\\n", 3) == 0) {
+				incomment = STARTING_COMMENT;
+				cp += 3;
+			} else if (strncmp(cp, "/*", 2) == 0) {
+				incomment = C_COMMENT;
+				cp += 2;
+			} else if (strncmp(cp, "//", 2) == 0) {
+				incomment = CXX_COMMENT;
+				cp += 2;
+			} else if (strncmp(cp, "\n", 1) == 0) {
+				linestate = LS_START;
+				cp += 1;
+			} else if (strchr(" \t", *cp) != NULL) {
+				cp += 1;
+			} else
+				return cp;
+			continue;
+		case CXX_COMMENT:
+			if (strncmp(cp, "\n", 1) == 0) {
+				incomment = NO_COMMENT;
+				linestate = LS_START;
+			}
+			cp += 1;
+			continue;
+		case C_COMMENT:
+			if (strncmp(cp, "*\\\n", 3) == 0) {
+				incomment = FINISHING_COMMENT;
+				cp += 3;
+			} else if (strncmp(cp, "*/", 2) == 0) {
+				incomment = NO_COMMENT;
+				cp += 2;
+			} else
+				cp += 1;
+			continue;
+		case STARTING_COMMENT:
+			if (*cp == '*') {
+				incomment = C_COMMENT;
+				cp += 1;
+			} else if (*cp == '/') {
+				incomment = CXX_COMMENT;
+				cp += 1;
+			} else {
+				incomment = NO_COMMENT;
+				linestate = LS_DIRTY;
+			}
+			continue;
+		case FINISHING_COMMENT:
+			if (*cp == '/') {
+				incomment = NO_COMMENT;
+				cp += 1;
+			} else
+				incomment = C_COMMENT;
+			continue;
+		default:
+			/* bug */
+			abort();
+		}
+	return cp;
 }
 
 /*
