@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.133 2003/01/17 19:04:36 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.134 2003/01/20 00:01:49 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -148,6 +148,12 @@ static char const * const linestate_name[] = {
 #define	MAXSYMS         4096			/* maximum number of symbols */
 
 /*
+ * Sometimes when editing a keyword the replacement text is longer, so
+ * we leave some space at the end of the tline buffer to accommodate this.
+ */
+#define	EDITSLOP        10
+
+/*
  * Globals.
  */
 
@@ -167,7 +173,7 @@ static FILE            *input;			/* input file pointer */
 static const char      *filename;		/* input file name */
 static int              linenum;		/* current line number */
 
-static char             tline[MAXLINE+10];	/* input buffer plus space */
+static char             tline[MAXLINE+EDITSLOP];/* input buffer plus space */
 static char            *keyword;		/* used for editing #elif's */
 
 static Comment_state    incomment;		/* comment parser state */
@@ -187,6 +193,7 @@ static int              findsym(const char *);
 static void             flushline(bool);
 static Linetype         getline(void);
 static Linetype         ifeval(const char **);
+static void             keywordedit(const char *);
 static void             nest(void);
 static void             process(void);
 static const char      *skipcomment(const char *);
@@ -297,12 +304,12 @@ usage(void)
  *
  * When we have processed a group that starts off with a known-false
  * #if/#elif sequence (which has therefore been deleted) followed by a
- * #elif that we don't understand and therefore must keep, we turn the
+ * #elif that we don't understand and therefore must keep, we edit the
  * latter into a #if to keep the nesting correct.
  *
  * When we find a true #elif in a group, the following block will
  * always be kept and the rest of the sequence after the next #elif or
- * #else will be discarded. We change the #elif to #else and the
+ * #else will be discarded. We edit the #elif into a #else and the
  * following directive to #endif since this has the desired behaviour.
  */
 typedef void state_fn(void);
@@ -342,11 +349,11 @@ static void Ifalse(void) { Ffalse(); ignore[depth] = true; }
 static void
 Mpass (void) { strncpy(keyword, "if  ", 4); Pelif(); }
 static void
-Mtrue (void) { strcpy(keyword, "else\n");  print(); state(IS_TRUE_MIDDLE); }
+Mtrue (void) { keywordedit("else\n");  print(); state(IS_TRUE_MIDDLE); }
 static void
-Melif (void) { strcpy(keyword, "endif\n"); print(); state(IS_FALSE_TRAILER); }
+Melif (void) { keywordedit("endif\n"); print(); state(IS_FALSE_TRAILER); }
 static void
-Melse (void) { strcpy(keyword, "endif\n"); print(); state(IS_FALSE_ELSE); }
+Melse (void) { keywordedit("endif\n"); print(); state(IS_FALSE_ELSE); }
 
 static state_fn * const trans_table[IS_COUNT][LT_COUNT] = {
 /* IS_OUTSIDE */
@@ -375,6 +382,11 @@ static state_fn * const trans_table[IS_COUNT][LT_COUNT] = {
 /*
  * State machine utility functions
  */
+static void
+keywordedit(const char *replacement)
+{
+	strlcpy(keyword, replacement, EDITSLOP);
+}
 static void
 nest(void)
 {
