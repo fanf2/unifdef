@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.149 2003/01/20 12:46:08 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.150 2003/01/20 13:48:06 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.15 2003/01/20 12:41:41 fanf Exp $");
@@ -310,7 +310,7 @@ usage(void)
  * A state transition function alters the global #if processing state
  * in a particular way. The table below is indexed by the current
  * processing state and the type of the current line. A NULL entry
- * indicate that processing is complete.
+ * indicates that processing is complete.
  *
  * Nesting is handled by keeping a stack of states; some transition
  * functions increase or decrease the depth. They also maintain the
