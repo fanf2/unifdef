@@ -25,8 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-#	$dotat: unifdef/unifdefall.sh,v 1.11 2003/07/31 08:20:47 fanf2 Exp $
-# $FreeBSD: src/usr.bin/unifdef/unifdefall.sh,v 1.2 2002/09/24 19:50:03 fanf Exp $
+#	$dotat: unifdef/unifdefall.sh,v 1.12 2003/08/12 20:32:39 fanf2 Exp $
 
 set -e
 
