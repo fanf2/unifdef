@@ -43,7 +43,7 @@ static const char copyright[] =
 
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.35 2002/04/26 15:47:04 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.36 2002/04/26 16:47:53 fanf Exp $");
 #endif
 
 /*
@@ -61,6 +61,7 @@ __RCSID("$dotat: unifdef/unifdef.c,v 1.35 2002/04/26 15:47:04 fanf Exp $");
 
 #include <ctype.h>
 #include <err.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -73,6 +74,7 @@ FILE   *input;
 typedef int Bool;
 
 char   *filename;
+char    debugging;		/* -d option in effect: debugging reports */
 char    text;			/* -t option in effect: this is a text file */
 char    lnblank;		/* -l option in effect: blank deleted lines */
 char    complement;		/* -c option in effect: complement the
@@ -96,6 +98,7 @@ char    incomment;		/* inside C comment */
 char    inquote;		/* inside single or double quotes */
 int     exitstat;
 
+void	debug(const char *, ...);
 void	error(int, int);
 int	findsym(char *);
 void	flushline(Bool);
@@ -153,6 +156,8 @@ main(argc, argv)
 				value[symind] = NULL;
 		} else if (ignorethis)
 			goto unrec;
+		else if (strcmp(&cp[1], "d") == 0)
+			debugging = YES;
 		else if (strcmp(&cp[1], "t") == 0)
 			text = YES;
 		else if (strcmp(&cp[1], "l") == 0)
@@ -189,7 +194,7 @@ void
 usage()
 {
 	fprintf (stderr, "usage: %s",
-"unifdef [-l] [-t] [-c] [[-Dsym] [-Usym] [-iDsym] [-iUsym]] ... [file]\n");
+"unifdef [-cdlt] [[-Dsym[=val]] [-Usym] [-iDsym[=val]] [-iUsym]] ... [file]\n");
 	exit (2);
 }
 
@@ -265,6 +270,8 @@ doif_1(depth, lineval, ignoring)
 	int     inelse;
 	int     donetrue;
 
+	debug("#if line %d code %d depth %d",
+	    linenum, lineval, depth);
 	saveline = stifline;
 	stifline = linenum;
 	savereject = reject;
@@ -289,9 +296,12 @@ doif_1(depth, lineval, ignoring)
 		else
 			donetrue = YES;
 	}
+	debug("active %d ignore %d", active, ignoring);
 	for (;;) {
 		switch (lineval = doif(depth)) {
 		case LT_ELIF:
+			debug("#elif start %d line %d code %d depth %d",
+			    stifline, linenum, lineval, depth);
 			if (inelse)
 				error(ELIF_ERR, depth);
 			donetrue = NO;
@@ -304,9 +314,12 @@ doif_1(depth, lineval, ignoring)
 				flushline(YES);
 				reject = savereject;
 			}
+			debug("active %d ignore %d", active, ignoring);
 			break;
 		case LT_ELTRUE:
 		case LT_ELFALSE:
+			debug("#elif start %d line %d code %d depth %d",
+			    stifline, linenum, lineval, depth);
 			if (inelse)
 				error(ELIF_ERR, depth);
 			if (active) {
@@ -323,8 +336,11 @@ doif_1(depth, lineval, ignoring)
 				reject = REJ_NO;
 				donetrue = YES;
 			}
+			debug("active %d ignore %d", active, ignoring);
 			break;
 		case LT_ELSE:
+			debug("#else start %d line %d code %d depth %d",
+			    stifline, linenum, lineval, depth);
 			if (inelse)
 				error(ELSE_ERR, depth);
 			if (active) {
@@ -343,8 +359,11 @@ doif_1(depth, lineval, ignoring)
 				}
 			}
 			inelse = YES;
+			debug("active %d ignore %d", active, ignoring);
 			break;
 		case LT_ENDIF:
+			debug("#endif start %d line %d code %d depth %d",
+			    stifline, linenum, lineval, depth);
 			if (active)
 				flushline(NO);
 			else
@@ -856,6 +875,18 @@ flushline(keep)
 	} else if (lnblank)
 		putc('\n', stdout);
 	return;
+}
+
+void
+debug(const char *msg, ...)
+{
+	va_list ap;
+
+	if (debugging) {
+		va_start(ap, msg);
+		vwarnx(msg, ap);
+		va_end(ap);
+	}
 }
 
 void
