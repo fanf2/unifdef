@@ -34,7 +34,7 @@
 .\"
 .\"     @(#)unifdef.1	8.2 (Berkeley) 4/1/94
 .\" $FreeBSD: src/usr.bin/unifdef/unifdef.1,v 1.10 2002/04/20 12:17:43 charnier Exp $
-.\" $dotat: unifdef/unifdef.1,v 1.15 2002/04/26 20:09:37 fanf Exp $
+.\" $dotat: unifdef/unifdef.1,v 1.16 2002/04/26 20:17:35 fanf Exp $
 .\"
 .Dd April 26, 2002
 .Dt UNIFDEF 1
@@ -67,9 +67,20 @@ while otherwise leaving the file alone.
 The
 .Nm
 utility acts on
-#if, #ifdef, #ifndef, #elif, #else, and #endif lines,
+.Li #if ,
+.Li #ifdef ,
+.Li #ifndef ,
+.Li #elif ,
+.Li #else ,
+and
+.Li #endif
+lines,
 and it understands only a very limited subset
-of the expression syntax for #if and #elif lines.
+of the expression syntax for
+.Li #if
+and
+.Li #elif
+lines.
 Integer values of symbols defined on the command line,
 the
 .Fn defined
@@ -81,7 +92,10 @@ the operators
 and parenthesized expressions
 are handled,
 and anything more complicated is passed through unharmed.
-#ifdef and #ifndef directives are only processed
+.Li #ifdef
+and
+.Li #ifndef
+directives are only processed
 if the symbol is specified on the command line,
 otherwise they are also passed though unchanged.
 .Pp
@@ -104,7 +118,11 @@ Available options:
 .It Fl D Ns Ar sym Ns Oo = Ns Ar val Oc
 Specify that a symbol is defined,
 and optionally specify what value to give it
-for the purpose of handling #if and #elif directives.
+for the purpose of handling
+.Li #if
+and
+.Li #elif
+directives.
 .Pp
 .It Fl U Ns Ar sym
 Specify that a symbol is undefined.
@@ -156,7 +174,7 @@ then you must tell
 which symbols are used for that purpose so that it won't try to parse
 for quotes and comments
 inside those ifdefs.
-One specifies ignored ifdefs with
+One specifies ignored symbols with
 .Fl iD Ns Ar sym
 and
 .Fl iU Ns Ar sym
@@ -193,7 +211,8 @@ Inappropriate elif, else or endif.
 .It
 Premature
 .Tn EOF
-with line numbers of the unterminated #ifdefs.
+with line numbers of the unterminated
+.Li #ifdefs .
 .El
 .Pp
 Exit status is 0 if output is exact copy of input, 1 if not, 2 if trouble.
