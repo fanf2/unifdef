@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.119 2002/12/12 19:52:26 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.120 2002/12/12 19:53:53 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -508,8 +508,6 @@ static int op_ne(int a, int b) { return a != b; }
 static int op_or(int a, int b) { return a || b; }
 static int op_and(int a, int b) { return a && b; }
 
-struct ops;
-
 /*
  * An evaluation function takes three arguments, as follows: (1) a pointer to
  * an element of the precedence table which lists the operators at the current
@@ -520,6 +518,8 @@ struct ops;
  * the expression is zero, LT_TRUE if it is non-zero, or LT_IF if the
  * expression could not be evaluated.
  */
+struct ops;
+
 typedef Linetype eval_fn(const struct ops *, int *, const char **);
 
 static eval_fn eval_table, eval_unary;
