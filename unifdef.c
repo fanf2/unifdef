@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.69 2002/05/15 18:55:14 fanf Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.70 2002/05/15 19:34:40 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -72,6 +72,7 @@ __FBSDID("$FreeBSD$");
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 /* types of input lines: */
 typedef enum {
@@ -216,6 +217,7 @@ void            doif(int, Linetype, bool);
 void            elif2if(void);
 void            elif2endif(void);
 void	        error(int, int);
+void            addsym(bool, bool, char *);
 int	        findsym(const char *);
 void	        flushline(bool);
 int	        getline(char *, int, FILE *, bool);
@@ -231,80 +233,66 @@ void	        usage(void);
 int
 main(int argc, char *argv[])
 {
-	char **curarg;
-	char *cp;
-	char *cp1;
-	bool ignorethis;
+	int opt;
 
-	for (curarg = &argv[1]; --argc > 0; curarg++) {
-		if (*(cp1 = cp = *curarg) != '-')
+	while((opt = getopt(argc, argv, "i:D:U:I:cdlst")) != -1)
+		switch(opt) {
+		case 'i': /* treat stuff controlled by these symbols as text */
+			/*
+			 * For strict backwards-compatibility the U or D
+			 * should be immediately after the -i but it doesn't
+			 * matter much if we relax that requirement.
+			 */
+			opt = *optarg++;
+			if (opt == 'D')
+				addsym(true, true, optarg);
+			else if (opt == 'U')
+				addsym(true, false, optarg);
+			else
+				usage();
 			break;
-		if (*++cp1 == 'i') {
-			ignorethis = true;
-			cp1++;
-		} else
-			ignorethis = false;
-		if ((*cp1 == 'D' || *cp1 == 'U') && cp1[1] != '\0') {
-			int     symind;
-
-			if ((symind = findsym(&cp1[1])) == 0) {
-				if (nsyms >= MAXSYMS)
-					errx(2, "too many symbols");
-				symind = nsyms++;
-				symname[symind] = &cp1[1];
-			}
-			ignore[symind] = ignorethis;
-			if (*cp1 == 'D') {
-				char   *val;
-
-				val = strchr(cp1, '=');
-				if (val == NULL)
-					value[symind] = "";
-				else {
-					value[symind] = val+1;
-					*val = '\0';
-				}
-			} else
-				value[symind] = NULL;
-		} else if (ignorethis) {
-			goto unrec;
-		} else if (cp[1] == 'I') {
-			if (cp[2] == '\0') {
-				curarg++;
-				argc--;
-			}
-			continue;
-		} else if (strcmp(&cp[1], "") == 0)
+		case 'D': /* define a symbol */
+			addsym(false, true, optarg);
 			break;
-		else if (strcmp(&cp[1], "-debug") == 0)
-			debugging = true;
-		else if (strcmp(&cp[1], "c") == 0)
+		case 'U': /* undef a symbol */
+			addsym(false, false, optarg);
+			break;
+		case 'I':
+			/* ignore for compatibility with cpp */
+			break;
+		case 'c': /* treat -D as -U and vice versa */
 			complement = true;
-		else if (strcmp(&cp[1], "l") == 0)
+			break;
+		case 'd':
+			debugging = true;
+			break;
+		case 'l': /* blank deleted lines instead of omitting them */
 			lnblank = true;
-		else if (strcmp(&cp[1], "s") == 0)
+			break;
+		case 's': /* only output list of symbols that control #ifs */
 			symlist = true;
-		else if (strcmp(&cp[1], "t") == 0)
+			break;
+		case 't': /* don't parse C comments or strings */
 			text = true;
-		else {
-		unrec:
-			warnx("unrecognized option: %s", cp);
+			break;
+		default:
 			usage();
 		}
-	}
+	argc -= optind;
+	argv += optind;
 	if (nsyms == 1 && !symlist) {
 		warnx("must -D or -U at least one symbol");
 		usage();
 	}
 	if (argc > 1) {
 		errx(2, "can only do one file");
-	} else if (argc == 1 && strcmp(*curarg, "-") != 0) {
-		filename = *curarg;
+	} else if (argc == 1 && strcmp(*argv, "-") != 0) {
+		filename = *argv;
 		if ((input = fopen(filename, "r")) != NULL) {
 			(void) process(0);
 			(void) fclose(input);
 		} else
-			err(2, "can't open %s", *curarg);
+			err(2, "can't open %s", *argv);
 	} else {
 		filename = "[stdin]";
 		input = stdin;
@@ -848,6 +836,39 @@ findsym(const char *str)
 		}
 	}
 	return 0;
+}
+
+/*
+ * Add a symbol to the symbol table.
+ */
+void
+addsym(bool ignorethis, bool definethis, char *sym)
+{
+	int symind;
+	char *val;
+
+	symind = findsym(sym);
+	if (symind == 0) {
+		if (nsyms >= MAXSYMS)
+			errx(2, "too many symbols");
+		symind = nsyms++;
+	}
+	symname[symind] = sym;
+	ignore[symind] = ignorethis;
+	val = (char*)skipsym(sym);
+	if (definethis) {
+		if (*val == '=') {
+			value[symind] = val+1;
+			*val = '\0';
+		} else if (*val == '\0')
+			value[symind] = "";
+		else
+			usage();
+	} else {
+		if (*val != '\0')
+			usage();
+		value[symind] = NULL;
+	}
 }
 
 /*
