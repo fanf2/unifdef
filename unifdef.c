@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __RCSID
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.51 2002/04/26 19:12:22 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.52 2002/04/26 20:23:09 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -132,6 +132,7 @@ int             stifline;	/* start of current #if */
 int             stqcline;	/* start of current coment or quote */
 
 #define MAXLINE 256
+#define KWSIZE 8
 char            tline[MAXLINE];	/* input buffer */
 char           *keyword;	/* used for editing #elif's */
 
@@ -438,7 +439,6 @@ checkline(int *cursym)
 	const char *cp;
 	char *symp;
 	Linetype retval;
-#define KWSIZE 8
 	char kw[KWSIZE];
 
 	retval = LT_PLAIN;
