@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.109 2002/12/12 19:15:24 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.110 2002/12/12 19:29:02 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -116,6 +116,17 @@ static char const * const ifstate_name[] = {
 	"FALSE_TRAILER"
 };
 
+/* state of preprocessor line parser */
+typedef enum {
+	LS_START,
+	LS_HASH,
+	LS_DIRTY
+} Line_state;
+
+static char const * const linestate_name[] = {
+	"START", "HASH", "DIRTY"
+};
+
 /* state of comment parser */
 typedef enum {
 	NO_COMMENT = false,
@@ -127,17 +138,6 @@ typedef enum {
 
 static char const * const comment_name[] = {
 	"NO", "C", "CXX", "STARTING", "FINISHING"
-};
-
-/* state of preprocessor line parser */
-typedef enum {
-	LS_START,
-	LS_HASH,
-	LS_DIRTY
-} Line_state;
-
-static char const * const linestate_name[] = {
-	"START", "HASH", "DIRTY"
 };
 
 #define	MAXDEPTH        16			/* maximum #if nesting */
@@ -192,56 +192,90 @@ static void             usage(void);
 #define endsym(c) (!isalpha((unsigned char)c) && !isdigit((unsigned char)c) && c != '_')
 
 /*
- * These are the operators that are supported by the expression evaluator.
+ * The main program.
  */
-static int op_lt(int a, int b) { return a < b; }
-static int op_gt(int a, int b) { return a > b; }
-static int op_le(int a, int b) { return a <= b; }
-static int op_ge(int a, int b) { return a >= b; }
-static int op_eq(int a, int b) { return a == b; }
-static int op_ne(int a, int b) { return a != b; }
-static int op_or(int a, int b) { return a || b; }
-static int op_and(int a, int b) { return a && b; }
+int
+main(int argc, char *argv[])
+{
+	int opt;
 
-struct ops;
+	while ((opt = getopt(argc, argv, "i:D:U:I:cdklst")) != -1)
+		switch (opt) {
+		case 'i': /* treat stuff controlled by these symbols as text */
+			/*
+			 * For strict backwards-compatibility the U or D
+			 * should be immediately after the -i but it doesn't
+			 * matter much if we relax that requirement.
+			 */
+			opt = *optarg++;
+			if (opt == 'D')
+				addsym(true, true, optarg);
+			else if (opt == 'U')
+				addsym(true, false, optarg);
+			else
+				usage();
+			break;
+		case 'D': /* define a symbol */
+			addsym(false, true, optarg);
+			break;
+		case 'U': /* undef a symbol */
+			addsym(false, false, optarg);
+			break;
+		case 'I':
+			/* no-op for compatibility with cpp */
+			break;
+		case 'c': /* treat -D as -U and vice versa */
+			complement = true;
+			break;
+		case 'k': /* process constant #ifs */
+			killconsts = true;
+			break;
+		case 'd':
+			debugging = true;
+			break;
+		case 'l': /* blank deleted lines instead of omitting them */
+			lnblank = true;
+			break;
+		case 's': /* only output list of symbols that control #ifs */
+			symlist = true;
+			break;
+		case 't': /* don't parse C comments */
+			text = true;
+			break;
+		default:
+			usage();
+		}
+	argc -= optind;
+	argv += optind;
+	if (nsyms == 0 && !symlist) {
+		warnx("must -D or -U at least one symbol");
+		usage();
+	}
+	if (argc > 1) {
+		errx(2, "can only do one file");
+	} else if (argc == 1 && strcmp(*argv, "-") != 0) {
+		filename = *argv;
+		if ((input = fopen(filename, "r")) != NULL) {
+			process();
+			(void) fclose(input);
+		} else
+			err(2, "can't open %s", *argv);
+	} else {
+		filename = "[stdin]";
+		input = stdin;
+		process();
+	}
 
-/*
- * An evaluation function takes three arguments, as follows: (1) a pointer to
- * an element of the precedence table which lists the operators at the current
- * level of precedence; (2) a pointer to an integer which will receive the
- * value of the expression; and (3) a pointer to a char* that points to the
- * expression to be evaluated and that is updated to the end of the expression
- * when evaluation is complete. The function returns LT_FALSE if the value of
- * the expression is zero, LT_TRUE if it is non-zero, or LT_IF if the
- * expression could not be evaluated.
- */
-typedef Linetype eval_fn(const struct ops *, int *, const char **);
+	exit(exitstat);
+}
 
-static eval_fn eval_table, eval_unary;
-
-/*
- * The precedence table. Expressions involving binary operators are evaluated
- * in a table-driven way by eval_table. When it evaluates a subexpression it
- * calls the inner function with its first argument pointing to the next
- * element of the table. Innermost expressions have special non-table-driven
- * handling.
- */
-static const struct ops {
-	eval_fn *inner;
-	struct op {
-		const char *str;
-		int (*fn)(int, int);
-	} op[5];
-} eval_ops[] = {
-	{ eval_table, { { "||", op_or } } },
-	{ eval_table, { { "&&", op_and } } },
-	{ eval_table, { { "==", op_eq },
-			{ "!=", op_ne } } },
-	{ eval_unary, { { "<=", op_le },
-			{ ">=", op_ge },
-			{ "<", op_lt },
-			{ ">", op_gt } } }
-};
+static void
+usage(void)
+{
+	fprintf (stderr, "usage: %s",
+"unifdef [-cdklst] [[-Dsym[=val]] [-Usym] [-iDsym[=val]] [-iUsym]] ... [file]\n");
+	exit (2);
+}
 
 /*
  * A state transition function alters the global #if processing state
@@ -330,87 +364,26 @@ static state_fn * const trans_table[IS_COUNT][LT_COUNT] = {
 /*PLAIN TRUEI FALSEI IF	  TRUE  FALSE  ELIF  ELTRUE ELFALSE ELSE  ENDIF  EOF*/
 };
 
-int
-main(int argc, char *argv[])
-{
-	int opt;
-
-	while ((opt = getopt(argc, argv, "i:D:U:I:cdklst")) != -1)
-		switch (opt) {
-		case 'i': /* treat stuff controlled by these symbols as text */
-			/*
-			 * For strict backwards-compatibility the U or D
-			 * should be immediately after the -i but it doesn't
-			 * matter much if we relax that requirement.
-			 */
-			opt = *optarg++;
-			if (opt == 'D')
-				addsym(true, true, optarg);
-			else if (opt == 'U')
-				addsym(true, false, optarg);
-			else
-				usage();
-			break;
-		case 'D': /* define a symbol */
-			addsym(false, true, optarg);
-			break;
-		case 'U': /* undef a symbol */
-			addsym(false, false, optarg);
-			break;
-		case 'I':
-			/* no-op for compatibility with cpp */
-			break;
-		case 'c': /* treat -D as -U and vice versa */
-			complement = true;
-			break;
-		case 'k': /* process constant #ifs */
-			killconsts = true;
-			break;
-		case 'd':
-			debugging = true;
-			break;
-		case 'l': /* blank deleted lines instead of omitting them */
-			lnblank = true;
-			break;
-		case 's': /* only output list of symbols that control #ifs */
-			symlist = true;
-			break;
-		case 't': /* don't parse C comments */
-			text = true;
-			break;
-		default:
-			usage();
-		}
-	argc -= optind;
-	argv += optind;
-	if (nsyms == 0 && !symlist) {
-		warnx("must -D or -U at least one symbol");
-		usage();
-	}
-	if (argc > 1) {
-		errx(2, "can only do one file");
-	} else if (argc == 1 && strcmp(*argv, "-") != 0) {
-		filename = *argv;
-		if ((input = fopen(filename, "r")) != NULL) {
-			process();
-			(void) fclose(input);
-		} else
-			err(2, "can't open %s", *argv);
-	} else {
-		filename = "[stdin]";
-		input = stdin;
-		process();
-	}
-
-	exit(exitstat);
-}
-
+/*
+ * State machine utility functions
+ */
 static void
-usage(void)
+nest(void)
 {
-	fprintf (stderr, "usage: %s",
-"unifdef [-cdklst] [[-Dsym[=val]] [-Usym] [-iDsym[=val]] [-iUsym]] ... [file]\n");
-	exit (2);
+	depth += 1;
+	if (depth >= MAXDEPTH)
+		error("Too many levels of nesting");
+	stifline[depth] = linenum;
+}
+static void
+state(Ifstate is)
+{
+	ifstate[depth] = is;
+}
+static void
+unignore(void)
+{
+	ignore[depth] = ignore[depth-1];
 }
 
 /*
@@ -518,6 +491,58 @@ getline(void)
 	    comment_name[incomment], linestate_name[linestate]);
 	return retval;
 }
+
+/*
+ * These are the operators that are supported by the expression evaluator.
+ */
+static int op_lt(int a, int b) { return a < b; }
+static int op_gt(int a, int b) { return a > b; }
+static int op_le(int a, int b) { return a <= b; }
+static int op_ge(int a, int b) { return a >= b; }
+static int op_eq(int a, int b) { return a == b; }
+static int op_ne(int a, int b) { return a != b; }
+static int op_or(int a, int b) { return a || b; }
+static int op_and(int a, int b) { return a && b; }
+
+struct ops;
+
+/*
+ * An evaluation function takes three arguments, as follows: (1) a pointer to
+ * an element of the precedence table which lists the operators at the current
+ * level of precedence; (2) a pointer to an integer which will receive the
+ * value of the expression; and (3) a pointer to a char* that points to the
+ * expression to be evaluated and that is updated to the end of the expression
+ * when evaluation is complete. The function returns LT_FALSE if the value of
+ * the expression is zero, LT_TRUE if it is non-zero, or LT_IF if the
+ * expression could not be evaluated.
+ */
+typedef Linetype eval_fn(const struct ops *, int *, const char **);
+
+static eval_fn eval_table, eval_unary;
+
+/*
+ * The precedence table. Expressions involving binary operators are evaluated
+ * in a table-driven way by eval_table. When it evaluates a subexpression it
+ * calls the inner function with its first argument pointing to the next
+ * element of the table. Innermost expressions have special non-table-driven
+ * handling.
+ */
+static const struct ops {
+	eval_fn *inner;
+	struct op {
+		const char *str;
+		int (*fn)(int, int);
+	} op[5];
+} eval_ops[] = {
+	{ eval_table, { { "||", op_or } } },
+	{ eval_table, { { "&&", op_and } } },
+	{ eval_table, { { "==", op_eq },
+			{ "!=", op_ne } } },
+	{ eval_unary, { { "<=", op_le },
+			{ ">=", op_ge },
+			{ "<", op_lt },
+			{ ">", op_gt } } }
+};
 
 /*
  * Function for evaluating the innermost parts of expressions,
@@ -815,28 +840,6 @@ flushline(bool keep)
 		exitstat = 1;
 	}
 	return;
-}
-
-/*
- * State machine utility functions
- */
-static void
-nest(void)
-{
-	depth += 1;
-	if (depth >= MAXDEPTH)
-		error("Too many levels of nesting");
-	stifline[depth] = linenum;
-}
-static void
-state(Ifstate is)
-{
-	ifstate[depth] = is;
-}
-static void
-unignore(void)
-{
-	ignore[depth] = ignore[depth-1];
 }
 
 /*
