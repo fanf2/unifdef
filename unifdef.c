@@ -51,7 +51,7 @@ __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
 #endif
 
 #ifndef lint
-__RCSID("$dotat: unifdef/unifdef.c,v 1.9 2002/04/25 15:51:42 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.10 2002/04/25 16:03:16 fanf Exp $");
 #endif
 
 /*
@@ -67,6 +67,7 @@ __RCSID("$dotat: unifdef/unifdef.c,v 1.9 2002/04/25 15:51:42 fanf Exp $");
  *        corresponding #ifdef or #ifndef
  */
 
+#include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -81,7 +82,6 @@ FILE   *input;
 #define CXX_COMMENT 2
 typedef int Bool;
 
-char   *progname;
 char   *filename;
 char text;			/* -t option in effect: this is a text file */
 char lnblank;			/* -l option in effect: blank deleted lines */
@@ -112,9 +112,9 @@ void	flushline(Bool);
 int	getlin(char *, int, FILE *, int);
 int	main(int, char **);
 void	pfile(void);
-void	prname(void);
 char   *skipcomment(char *);
 char   *skipquote(char *, int);
+void	usage(void);
 
 int
 main(argc, argv)
@@ -125,8 +125,6 @@ main(argc, argv)
 	char   *cp;
 	char   *cp1;
 	char    ignorethis;
-
-	progname = argv[0][0] ? argv[0] : "unifdef";
 
 	for (curarg = &argv[1]; --argc > 0; curarg++) {
 		if (*(cp1 = cp = *curarg) != '-')
@@ -144,11 +142,8 @@ main(argc, argv)
 			int     symind;
 
 			if ((symind = findsym(&cp1[1])) < 0) {
-				if (nsyms >= MAXSYMS) {
-					prname();
-					fprintf(stderr, "too many symbols.\n");
-					exit(2);
-				}
+				if (nsyms >= MAXSYMS)
+					errx(2, "too many symbols");
 				symind = nsyms++;
 				symname[symind] = &cp1[1];
 				insym[symind] = SYM_INACTIVE;
@@ -176,31 +171,21 @@ main(argc, argv)
 			complement = YES;
 		else {
 		unrec:
-			prname();
-			fprintf(stderr, "unrecognized option: %s\n", cp);
-			goto usage;
+			warnx("unrecognized option: %s", cp);
+			usage();
 		}
 	}
-	if (nsyms == 0) {
-usage:
-		fprintf(stderr, "\
-Usage: %s [-l] [-t] [-c] [[-Dsym] [-Usym] [-iDsym] [-iUsym]]... [file]\n\
-    At least one arg from [-D -U -iD -iU] is required\n", progname);
-		exit(2);
-	}
+	if (nsyms == 0)
+		usage();
 	if (argc > 1) {
-		prname();
-		fprintf(stderr, "can only do one file.\n");
+		errx(2, "can only do one file");
 	} else if (argc == 1) {
 		filename = *curarg;
 		if ((input = fopen(filename, "r")) != NULL) {
 			pfile();
 			(void) fclose(input);
-		} else {
-			prname();
-			fprintf(stderr, "can't open ");
-			perror(*curarg);
-		}
+		} else
+			err(2, "can't open %s", *curarg);
 	} else {
 		filename = "[stdin]";
 		input = stdin;
@@ -210,6 +195,15 @@ Usage: %s [-l] [-t] [-c] [[-Dsym] [-Usym] [-iDsym] [-iUsym]]... [file]\n\
 	(void) fflush(stdout);
 	exit(exitstat);
 }
+
+void
+usage()
+{
+	fprintf (stderr, "usage: %s",
+"unifdef [-l] [-t] [-c] [[-Dsym] [-Usym] [-iDsym] [-iUsym]] ... [file]\n");
+	exit (2);
+}
+
 /* types of input lines: */
 typedef int Linetype;
 #define LT_PLAIN       0	/* ordinary line */
@@ -345,8 +339,8 @@ doif(thissym, inif, prevreject, depth)
 			return NO_ERR;
 
 		case LT_LEOF:{
-				int     err;
-				err = incomment
+				int     code;
+				code = incomment
 				    ? CEOF_ERR
 				    : inquote == QUOTE_SINGLE
 				    ? Q1EOF_ERR
@@ -354,11 +348,11 @@ doif(thissym, inif, prevreject, depth)
 				    ? Q2EOF_ERR
 				    : NO_ERR;
 				if (inif != IN_NONE) {
-					if (err != NO_ERR)
-						(void) error(err, stqcline, depth);
+					if (code != NO_ERR)
+						(void) error(code, stqcline, depth);
 					return error(IEOF_ERR, stline, depth);
-				} else if (err != NO_ERR)
-					return error(err, stqcline, depth);
+				} else if (code != NO_ERR)
+					return error(code, stqcline, depth);
 				else
 					return NO_ERR;
 			}
@@ -650,30 +644,21 @@ flushline(keep)
 	return;
 }
 
-void
-prname()
-{
-	fprintf(stderr, "%s: ", progname);
-	return;
-}
-
 int
-error(err, line, depth)
-	int     err;		/* type of error & index into error string
+error(code, line, depth)
+	int     code;		/* type of error & index into error string
 				 * array */
 	int     line;		/* line number */
 	int     depth;		/* how many ifdefs we are inside */
 {
-	if (err == END_ERR)
-		return err;
-
-	prname();
+	if (code == END_ERR)
+		return code;
 
 #ifndef TESTING
-	fprintf(stderr, "Error in %s line %d: %s.\n", filename, line, errs[err]);
+	warnx("error in %s line %d: %s", filename, line, errs[code]);
 #else	/* TESTING */
-	fprintf(stderr, "Error in %s line %d: %s. ", filename, line, errs[err]);
-	fprintf(stderr, "ifdef depth: %d\n", depth);
+	warnx("error in %s line %d: %s (ifdef depth %d)",
+	    filename, line, errs[code], depth);
 #endif	/* TESTING */
 
 	exitstat = 2;
