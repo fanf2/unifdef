@@ -2,7 +2,7 @@
 #
 # remove all the #if's from a source file
 #
-# $dotat: unifdef/unifdefall.sh,v 1.6 2002/04/29 16:17:39 fanf Exp $
+# $dotat: unifdef/unifdefall.sh,v 1.7 2002/04/29 16:41:08 fanf Exp $
 
 set -e
 
@@ -19,7 +19,7 @@ comm -12 $tmp/ctrl $tmp/alldef > $tmp/def
 echo unifdef \\ > $tmp/cmd
 sed -Ee 's/^(.*)$/-U\1 \\/' $tmp/undef >> $tmp/cmd
 while read sym
-do	sed -Ee '/^('"$sym"')([(][^)]*[)])?([ 	]+(.*))$/!d;s//-D\1=\4/' $tmp/hashdefs
+do	sed -Ee '/^('"$sym"')([(][^)]*[)])?([ 	]+(.*))?$/!d;s//-D\1=\4/' $tmp/hashdefs
 done < $tmp/def |
 	sed -Ee 's/\\/\\\\/g;s/"/\\"/g;s/^/"/;s/$/" \\/' >> $tmp/cmd
 echo '"$@"' >> $tmp/cmd
