@@ -46,7 +46,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.155 2003/06/30 14:26:48 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.156 2003/06/30 14:30:54 fanf2 Exp $");
 #endif
 #endif /* not lint */
 #ifdef __FBSDID
@@ -502,8 +502,9 @@ process(void)
 }
 
 /*
- * Parse a line and determine its type. We keep the preprocessor line parser
- * state between calls in a global variable, with help from skipcomment().
+ * Parse a line and determine its type. We keep the preprocessor line
+ * parser state between calls in the global variable linestate, with
+ * help from skipcomment().
  */
 static Linetype
 getline(void)
@@ -762,8 +763,9 @@ ifeval(const char **cpp)
 
 /*
  * Skip over comments and stop at the next character position that is
- * not whitespace. Between calls we keep the comment state in a global
- * variable, and we also make a note when we get a proper end-of-line.
+ * not whitespace. Between calls we keep the comment state in the
+ * global variable incomment, and we also adjust the global variable
+ * linestate when we see a newline.
  * XXX: doesn't cope with the buffer splitting inside a state transition.
  */
 static const char *
