@@ -43,7 +43,7 @@ static const char copyright[] =
 
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.27 2002/04/25 23:25:31 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.28 2002/04/25 23:27:40 fanf Exp $");
 #endif
 
 /*
@@ -255,9 +255,7 @@ doif(thissym, prevreject, depth)
 	Linetype lineval;
 	Reject_level thisreject;
 	int     cursym;		/* index of the symbol returned by checkline */
-	int     stline;		/* line number when called this time */
 
-	stline = linenum;
 	for (;;) {
 		linenum++;
 		if (getlin(tline, sizeof tline, input, NO) == EOF) {
