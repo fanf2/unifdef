@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __RCSID
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.50 2002/04/26 19:03:48 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.51 2002/04/26 19:12:22 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -138,6 +138,7 @@ char           *keyword;	/* used for editing #elif's */
 bool            complement;	/* -c option in effect: do the complement */
 bool            debugging;	/* -d option in effect: debugging reports */
 bool            lnblank;	/* -l option in effect: blank deleted lines */
+bool            symlist;	/* -s option in effect: output symbol list */
 bool            text;		/* -t option in effect: this is a text file */
 
 int             exitstat;	/* program exit status */
@@ -221,6 +222,8 @@ main(int argc, char *argv[])
 			lnblank = true;
 		else if (strcmp(&cp[1], "d") == 0)
 			debugging = true;
+		else if (strcmp(&cp[1], "s") == 0)
+			symlist = true;
 		else if (strcmp(&cp[1], "t") == 0)
 			text = true;
 		else {
@@ -229,7 +232,7 @@ main(int argc, char *argv[])
 			usage();
 		}
 	}
-	if (nsyms == 1)
+	if (nsyms == 1 && !symlist)
 		usage();
 	if (argc > 1) {
 		errx(2, "can only do one file");
@@ -253,7 +256,7 @@ void
 usage(void)
 {
 	fprintf (stderr, "usage: %s",
-"unifdef [-cdlt] [[-Dsym[=val]] [-Usym] [-iDsym[=val]] [-iUsym]] ... [file]\n");
+"unifdef [-cdlst] [[-Dsym[=val]] [-Usym] [-iDsym[=val]] [-iUsym]] ... [file]\n");
 	exit (2);
 }
 
@@ -773,6 +776,11 @@ findsym(const char *str)
 	const char *symp;
 	int         symind;
 
+	if (symlist) {
+		for (cp = str; !endsym(*cp); cp++)
+			continue;
+		printf("%.*s\n", cp-str, str);
+	}
 	for (symind = 1; symind < nsyms; ++symind) {
 		for (symp = symname[symind], cp = str
 		    ; *symp && *cp == *symp
@@ -860,6 +868,8 @@ end:
 void
 flushline(bool keep)
 {
+	if (symlist)
+		return;
 	if ((keep && reject != REJ_YES) ^ complement) {
 		char   *line = tline;
 		FILE   *out = stdout;
