@@ -46,7 +46,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.159 2003/07/01 15:13:49 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.160 2003/07/01 15:21:25 fanf2 Exp $");
 #endif
 #endif /* not lint */
 #ifdef __FBSDID
@@ -287,8 +287,9 @@ main(int argc, char *argv[])
 		errx(2, "can only do one file");
 	} else if (argc == 1 && strcmp(*argv, "-") != 0) {
 		filename = *argv;
-		if ((input = fopen(filename, "r")) == NULL)
-			err(2, "can't open %s", *argv);
+		input = fopen(filename, "r");
+		if (input == NULL)
+			err(2, "can't open %s", filename);
 	} else {
 		filename = "[stdin]";
 		input = stdin;
