@@ -51,7 +51,7 @@ __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
 #endif
 
 #ifndef lint
-__RCSID("$dotat: unifdef/unifdef.c,v 1.8 2002/04/25 15:37:25 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.9 2002/04/25 15:51:42 fanf Exp $");
 #endif
 
 /*
@@ -378,6 +378,7 @@ checkline(cursym)
 	char   *cp;
 	char   *symp;
 	char   *scp;
+	int     symind;
 	Linetype retval;
 #define KWSIZE 8
 	char    keyword[KWSIZE];
@@ -414,15 +415,11 @@ checkline(cursym)
 			retval = LT_PLAIN;
 			goto eol;
 		}
-		{
-			int     symind;
-
-			if ((symind = findsym(scp)) < 0)
-				retval = LT_OTHER;
-			else if (value[*cursym = symind] == NULL)
-				retval = (retval == LT_TRUE)
-				    ? LT_FALSE : LT_TRUE;
-		}
+		if ((symind = findsym(scp)) < 0)
+			retval = LT_OTHER;
+		else if (value[*cursym = symind] == NULL)
+			retval = (retval == LT_TRUE)
+			    ? LT_FALSE : LT_TRUE;
 	} else if (strcmp(keyword, "if") == 0)
 		retval = LT_IF;
 	else if (strcmp(keyword, "else") == 0)
