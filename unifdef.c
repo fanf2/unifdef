@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.77 2002/12/10 16:10:51 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.78 2002/12/10 16:22:12 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -184,7 +184,7 @@ const char     *filename;
 int             linenum;	/* current line number */
 int             stifline;	/* start of current #if */
 int             stqcline;	/* start of current coment or quote */
-bool            keepthis;	/* ignore this #if's value 'cause it's const */
+bool            keepthis;	/* treat this const #if as unknown */
 
 #define MAXLINE 1024
 #define KWSIZE 8
@@ -260,7 +260,7 @@ main(int argc, char *argv[])
 			addsym(false, false, optarg);
 			break;
 		case 'I':
-			/* ignore for compatibility with cpp */
+			/* no-op for compatibility with cpp */
 			break;
 		case 'c': /* treat -D as -U and vice versa */
 			complement = true;
