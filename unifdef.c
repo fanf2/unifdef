@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.106 2002/12/12 17:41:39 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.107 2002/12/12 17:59:51 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -191,15 +191,15 @@ struct ops {
 };
 
 /*
- * A state transition function alters the global state in a particular
- * way. The table below is indexed by the current processing state and
- * the type of the current line. NULL entries indicate that processing
- * is complete.
+ * A state transition function alters the global #if processing state
+ * in a particular way. The table below is indexed by the current
+ * processing state and the type of the current line. A NULL entry
+ * indicate that processing is complete.
  *
  * Nesting is handled by keeping a stack of states; some transition
  * functions increase or decrease the depth. They also maintin the
  * ignore state on a stack. In some complicated cases they have to
- * alter the preprocessor directive.
+ * alter the preprocessor directive, as follows.
  *
  * When we have processed a group that starts off with a known-false
  * #if/#elif sequence (which has therefore been deleted) followed by a
@@ -209,7 +209,7 @@ struct ops {
  * When we find a true #elif in a group, the following block will
  * always be kept and the rest of the sequence after the next #elif or
  * #else will be discarded. We change the #elif to #else and the
- * followinf directive to #endif since this is equivalent.
+ * following directive to #endif since this has the desired behaviour.
  */
 typedef void state_fn(void);
 
