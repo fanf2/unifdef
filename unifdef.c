@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __RCSID
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.44 2002/04/26 17:33:47 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.45 2002/04/26 17:42:31 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -72,8 +72,68 @@ __FBSDID("$FreeBSD$");
 #include <stdlib.h>
 #include <string.h>
 
+/* types of input lines: */
+typedef enum {
+	LT_PLAIN,		/* ordinary line */
+	LT_TRUE,		/* a true #if */
+	LT_FALSE,		/* a false #if */
+	LT_ELTRUE,		/* a true #elif */
+	LT_ELFALSE,		/* a false #elif */
+	LT_IF,			/* an unknown #if */
+	LT_ELIF,		/* an unknown #elif */
+	LT_ELSE,		/* #else */
+	LT_ENDIF,		/* #endif */
+	LT_EOF			/* end of file */
+} Linetype;
+
+typedef enum {		/* 0 or 1: pass thru; 1 or 2: ignore comments */
+	REJ_NO,
+	REJ_IGNORE,
+	REJ_YES
+} Reject_level;
+
+typedef enum {
+	NO_COMMENT = false,
+	C_COMMENT,
+	CXX_COMMENT
+} Comment_state;
+
+typedef enum {
+	QUOTE_NONE = false,
+	QUOTE_SINGLE,
+	QUOTE_DOUBLE
+} Quote_state;
+
+const char *const errs[] = {
+#define NO_ERR      0
+	"",
+#define END_ERR     1
+	"",
+#define ELIF_ERR    2
+	"Inappropriate elif",
+#define ELSE_ERR    3
+	"Inappropriate else",
+#define ENDIF_ERR   4
+	"Inappropriate endif",
+#define IEOF_ERR    5
+	"Premature EOF in ifdef",
+#define CEOF_ERR    6
+	"Premature EOF in comment",
+#define Q1EOF_ERR   7
+	"Premature EOF in quoted character",
+#define Q2EOF_ERR   8
+	"Premature EOF in quoted string"
+};
+
 FILE           *input;
 const char     *filename;
+int             linenum;	/* current line number */
+int             stifline;	/* start of current #if */
+int             stqcline;	/* start of current coment or quote */
+
+#define MAXLINE 256
+char            tline[MAXLINE];	/* input buffer */
+char           *keyword;	/* used for editing #elif's */
 
 bool            debugging;	/* -d option in effect: debugging reports */
 bool            text;		/* -t option in effect: this is a text file */
@@ -89,31 +149,31 @@ bool            ignore[MAXSYMS];	/* -iDsym or -iUsym */
 
 int             nsyms = 1;	/* symbol 0 is used for tracking #ifs */
 
-typedef enum {
-	NO_COMMENT = false,
-	C_COMMENT,
-	CXX_COMMENT
-} Comment_state;
+Reject_level    reject;		/* what kind of filtering we are doing */
 Comment_state   incomment;	/* inside C comment */
-
-typedef enum {
-	QUOTE_NONE = false,
-	QUOTE_SINGLE,
-	QUOTE_DOUBLE
-} Quote_state;
 Quote_state     inquote;	/* inside single or double quotes */
 
+Linetype        checkline(int *);
 void	        debug(const char *, ...);
+Linetype        doif(int);
+void            doif_1(int, Linetype, bool);
+void            elif2if(void);
+void            elif2endif(void);
 void	        error(int, int);
 int	        findsym(const char *);
 void	        flushline(bool);
 int	        getlin(char *, int, FILE *, bool);
+Linetype        ifeval(const char **);
+Linetype        ifeval_1(const char **);
+Linetype        ifeval_2(const char **);
 int	        main(int, char **);
 void        	pfile(void);
 const char     *skipcomment(const char *);
 const char     *skipquote(const char *, Quote_state);
 const char     *skipsym(const char *);
 void	        usage(void);
+
+#define endsym(c) (!isalpha((unsigned char)c) && !isdigit((unsigned char)c) && c != '_')
 
 int
 main(int argc, char *argv[])
@@ -200,61 +260,6 @@ usage(void)
 "unifdef [-cdlt] [[-Dsym[=val]] [-Usym] [-iDsym[=val]] [-iUsym]] ... [file]\n");
 	exit (2);
 }
-
-#define MAXLINE 256
-char    tline[MAXLINE];
-char   *keyword;
-
-/* types of input lines: */
-typedef enum {
-	LT_PLAIN,		/* ordinary line */
-	LT_TRUE,		/* a true #if */
-	LT_FALSE,		/* a false #if */
-	LT_ELTRUE,		/* a true #elif */
-	LT_ELFALSE,		/* a false #elif */
-	LT_IF,			/* an unknown #if */
-	LT_ELIF,		/* an unknown #elif */
-	LT_ELSE,		/* #else */
-	LT_ENDIF,		/* #endif */
-	LT_EOF			/* end of file */
-} Linetype;
-Linetype checkline(int *);
-Linetype ifeval(const char **);
-
-typedef enum {		/* 0 or 1: pass thru; 1 or 2: ignore comments */
-	REJ_NO,
-	REJ_IGNORE,
-	REJ_YES
-} Reject_level;
-Reject_level reject;
-
-Linetype doif(int);
-void elif2if(void);
-void elif2endif(void);
-
-int             linenum;	/* current line number */
-int             stifline;	/* start of current #if */
-int             stqcline;	/* start of current coment or quote */
-const char     *errs[] = {
-#define NO_ERR      0
-	"",
-#define END_ERR     1
-	"",
-#define ELIF_ERR    2
-	"Inappropriate elif",
-#define ELSE_ERR    3
-	"Inappropriate else",
-#define ENDIF_ERR   4
-	"Inappropriate endif",
-#define IEOF_ERR    5
-	"Premature EOF in ifdef",
-#define CEOF_ERR    6
-	"Premature EOF in comment",
-#define Q1EOF_ERR   7
-	"Premature EOF in quoted character",
-#define Q2EOF_ERR   8
-	"Premature EOF in quoted string"
-};
 
 void
 pfile(void)
@@ -427,8 +432,6 @@ doif(int depth)
 		}
 	}
 }
-
-#define endsym(c) (!isalpha ((unsigned char)c) && !isdigit ((unsigned char)c) && c != '_')
 
 Linetype
 checkline(int *cursym)
