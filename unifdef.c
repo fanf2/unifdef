@@ -42,7 +42,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.164 2003/08/12 19:23:12 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.165 2003/08/12 19:35:31 fanf2 Exp $");
 #endif
 #endif /* not lint */
 #ifdef __FBSDID
@@ -357,9 +357,9 @@ static void Fpass (void) { nest();  Pelif(); }
 static void Ftrue (void) { nest();  Strue(); }
 static void Ffalse(void) { nest();  Sfalse(); }
 /* variable pedantry for obfuscated lines */
-static void Oiffy (void) { if (iocccok) Fpass(); else Eioccc(); ignoreon(); }
-static void Oif   (void) { if (iocccok) Fpass(); else Eioccc(); }
-static void Oelif (void) { if (iocccok) Pelif(); else Eioccc(); }
+static void Oiffy (void) { if (!iocccok) Eioccc(); Fpass(); ignoreon(); }
+static void Oif   (void) { if (!iocccok) Eioccc(); Fpass(); }
+static void Oelif (void) { if (!iocccok) Eioccc(); Pelif(); }
 /* ignore comments in this block */
 static void Idrop (void) { Fdrop();  ignoreon(); }
 static void Itrue (void) { Ftrue();  ignoreon(); }
