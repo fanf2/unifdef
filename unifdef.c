@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __RCSID
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.43 2002/04/26 17:25:50 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.44 2002/04/26 17:33:47 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -80,6 +80,8 @@ bool            text;		/* -t option in effect: this is a text file */
 bool            lnblank;	/* -l option in effect: blank deleted lines */
 bool            complement;	/* -c option in effect: do the complement */
 
+int             exitstat;	/* program exit status */
+
 #define MAXSYMS 1000
 const char     *symname[MAXSYMS];	/* symbol name */
 const char     *value[MAXSYMS];		/* -Dsym=value */
@@ -87,16 +89,19 @@ bool            ignore[MAXSYMS];	/* -iDsym or -iUsym */
 
 int             nsyms = 1;	/* symbol 0 is used for tracking #ifs */
 
-#define NO_COMMENT  0
-#define C_COMMENT   1
-#define CXX_COMMENT 2
-int     incomment;		/* inside C comment */
+typedef enum {
+	NO_COMMENT = false,
+	C_COMMENT,
+	CXX_COMMENT
+} Comment_state;
+Comment_state   incomment;	/* inside C comment */
 
-#define QUOTE_NONE   0
-#define QUOTE_SINGLE 1
-#define QUOTE_DOUBLE 2
-int     inquote;		/* inside single or double quotes */
-int     exitstat;
+typedef enum {
+	QUOTE_NONE = false,
+	QUOTE_SINGLE,
+	QUOTE_DOUBLE
+} Quote_state;
+Quote_state     inquote;	/* inside single or double quotes */
 
 void	        debug(const char *, ...);
 void	        error(int, int);
@@ -106,7 +111,7 @@ int	        getlin(char *, int, FILE *, bool);
 int	        main(int, char **);
 void        	pfile(void);
 const char     *skipcomment(const char *);
-const char     *skipquote(const char *, int);
+const char     *skipquote(const char *, Quote_state);
 const char     *skipsym(const char *);
 void	        usage(void);
 
@@ -201,25 +206,28 @@ char    tline[MAXLINE];
 char   *keyword;
 
 /* types of input lines: */
-typedef int Linetype;
-#define LT_PLAIN       0	/* ordinary line */
-#define LT_TRUE        1	/* a true #if */
-#define LT_FALSE       2	/* a false #if */
-#define LT_ELTRUE      3	/* a true #elif */
-#define LT_ELFALSE     4	/* a false #elif */
-#define LT_IF          5	/* an unknown #if */
-#define LT_ELIF        6	/* an unknown #elif */
-#define LT_ELSE        7	/* #else */
-#define LT_ENDIF       8	/* #endif */
-#define LT_EOF         9	/* end of file */
+typedef enum {
+	LT_PLAIN,		/* ordinary line */
+	LT_TRUE,		/* a true #if */
+	LT_FALSE,		/* a false #if */
+	LT_ELTRUE,		/* a true #elif */
+	LT_ELFALSE,		/* a false #elif */
+	LT_IF,			/* an unknown #if */
+	LT_ELIF,		/* an unknown #elif */
+	LT_ELSE,		/* #else */
+	LT_ENDIF,		/* #endif */
+	LT_EOF			/* end of file */
+} Linetype;
 Linetype checkline(int *);
 Linetype ifeval(const char **);
 
-typedef int Reject_level;
-Reject_level reject;		/* 0 or 1: pass thru; 1 or 2: ignore comments */
-#define REJ_NO          0
-#define REJ_IGNORE      1
-#define REJ_YES         2
+typedef enum {		/* 0 or 1: pass thru; 1 or 2: ignore comments */
+	REJ_NO,
+	REJ_IGNORE,
+	REJ_YES
+} Reject_level;
+Reject_level reject;
+
 Linetype doif(int);
 void elif2if(void);
 void elif2endif(void);
@@ -718,7 +726,7 @@ inside:
  *  position that is not whitespace.
  */
 const char *
-skipquote(const char *cp, int type)
+skipquote(const char *cp, Quote_state type)
 {
 	char    qchar;
 
