@@ -43,7 +43,7 @@ static const char copyright[] =
 
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.28 2002/04/25 23:27:40 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.29 2002/04/25 23:46:55 fanf Exp $");
 #endif
 
 /*
@@ -84,10 +84,6 @@ char    complement;		/* -c option in effect: complement the
 char   *symname[MAXSYMS];	/* symbol name */
 char   *value[MAXSYMS];		/* -Dsym=value */
 char    ignore[MAXSYMS];	/* -iDsym or -iUsym */
-char    insym[MAXSYMS];		/* state: false, inactive, true */
-#define SYM_INACTIVE 0		/* symbol is currently inactive */
-#define SYM_FALSE    1		/* symbol is currently false */
-#define SYM_TRUE     2		/* symbol is currently true  */
 
 char    nsyms = 1;		/* symbol 0 is used for tracking #ifs */
 char    incomment;		/* inside C comment */
@@ -139,7 +135,6 @@ main(argc, argv)
 					errx(2, "too many symbols");
 				symind = nsyms++;
 				symname[symind] = &cp1[1];
-				insym[symind] = SYM_INACTIVE;
 			}
 			ignore[symind] = ignorethis;
 			if (*cp1 == 'D') {
@@ -202,11 +197,14 @@ char    tline[MAXLINE];
 /* types of input lines: */
 typedef int Linetype;
 #define LT_PLAIN       0	/* ordinary line */
-#define LT_TRUE        1	/* a true  #ifdef of a symbol known to us */
-#define LT_FALSE       2	/* a false #ifdef of a symbol known to us */
-#define LT_IF          3	/* an #ifdef of a symbol not known to us */
-#define LT_ELSE        5	/* #else */
-#define LT_ENDIF       6	/* #endif */
+#define LT_TRUE        1	/* a true #if */
+#define LT_FALSE       2	/* a false #if */
+#define LT_ELTRUE      3	/* a true #elif */
+#define LT_ELFALSE     4	/* a false #elif */
+#define LT_IF          5	/* an unknown #if */
+#define LT_ELIF        6	/* an unknown #elif */
+#define LT_ELSE        7	/* #else */
+#define LT_ENDIF       8	/* #endif */
 Linetype checkline(int *);
 Linetype ifeval(char **);
 
@@ -215,7 +213,7 @@ Reject_level reject;		/* 0 or 1: pass thru; 1 or 2: ignore comments */
 #define REJ_NO          0
 #define REJ_IGNORE      1
 #define REJ_YES         2
-void doif(int, Reject_level, int);
+void doif(int);
 
 int     linenum;		/* current line number */
 int     stqcline;		/* start of current coment or quote */
@@ -224,17 +222,19 @@ char   *errs[] = {
 	"",
 #define END_ERR     1
 	"",
-#define ELSE_ERR    2
+#define ELIF_ERR    2
+	"Inappropriate elif",
+#define ELSE_ERR    3
 	"Inappropriate else",
-#define ENDIF_ERR   3
+#define ENDIF_ERR   4
 	"Inappropriate endif",
-#define IEOF_ERR    4
+#define IEOF_ERR    5
 	"Premature EOF in ifdef",
-#define CEOF_ERR    5
+#define CEOF_ERR    6
 	"Premature EOF in comment",
-#define Q1EOF_ERR   6
+#define Q1EOF_ERR   7
 	"Premature EOF in quoted character",
-#define Q2EOF_ERR   7
+#define Q2EOF_ERR   8
 	"Premature EOF in quoted string"
 };
 
@@ -242,18 +242,91 @@ void
 pfile()
 {
 	reject = REJ_NO;
-	doif(-1, reject, 0);
+	doif(0);
 	return;
 }
 
 void
-doif(thissym, prevreject, depth)
-	int     thissym;	/* index of the symbol who was last ifdef'ed */
-	Reject_level prevreject;/* previous value of reject */
+doif_1(depth, lineval, cursym)
+	int      depth;		/* depth of #if's */
+	int      cursym;
+	Linetype lineval;
+{
+	Reject_level savereject;
+	int     active;
+	int     inelse;
+	int     dummysym;
+
+	savereject = reject;
+	inelse = NO;
+	if (lineval == LT_IF || reject != REJ_NO) {
+		active = NO;
+		flushline(YES);
+	} else {
+		active = YES;
+		if (ignore[cursym]) {
+			flushline(YES);
+			if (lineval == LT_FALSE)
+				reject = REJ_IGNORE;
+		} else {
+			flushline(NO);
+			if (lineval == LT_FALSE)
+				reject = REJ_YES;
+		}
+	}
+	for (;;) {
+		doif(depth);
+		switch (lineval = checkline(&dummysym)) {
+		case LT_ELIF:
+			if (inelse)
+				error(ELIF_ERR, depth);
+			break;
+		case LT_ELTRUE:
+			if (inelse)
+				error(ELIF_ERR, depth);
+			break;
+		case LT_ELFALSE:
+			if (inelse)
+				error(ELIF_ERR, depth);
+			break;
+		case LT_ELSE:
+			if (inelse)
+				error(ELSE_ERR, depth);
+			if (!active)
+				flushline(YES);
+			else if (ignore[cursym]) {
+				flushline(YES);
+				if (reject == REJ_IGNORE)
+					reject = REJ_NO;
+				else
+					reject = REJ_IGNORE;
+			} else {
+				flushline(NO);
+				if (reject == REJ_YES)
+					reject = REJ_NO;
+				else
+					reject = REJ_YES;
+			}
+			inelse = YES;
+			break;
+		case LT_ENDIF:
+			if (!active || ignore[cursym])
+				flushline(YES);
+			else
+				flushline(NO);
+			reject = savereject;
+			return;
+		default:
+			/* bug */
+			abort();
+		}
+	}
+}
+void
+doif(depth)
 	int     depth;		/* depth of ifdef's */
 {
 	Linetype lineval;
-	Reject_level thisreject;
 	int     cursym;		/* index of the symbol returned by checkline */
 
 	for (;;) {
@@ -273,65 +346,26 @@ doif(thissym, prevreject, depth)
 		case LT_PLAIN:
 			flushline(YES);
 			break;
-
+		case LT_IF:
 		case LT_TRUE:
 		case LT_FALSE:
-			thisreject = reject;
-			if (lineval == LT_TRUE)
-				insym[cursym] = SYM_TRUE;
-			else {
-				if (reject != REJ_YES)
-					reject = ignore[cursym] ? REJ_IGNORE : REJ_YES;
-				insym[cursym] = SYM_FALSE;
-			}
-			if (ignore[cursym])
-				flushline(YES);
-			else {
-				exitstat = 1;
-				flushline(NO);
-			}
-			doif(cursym, thisreject, depth + 1);
+			doif_1(depth + 1, lineval, cursym);
 			break;
-
-		case LT_IF:
-			flushline(YES);
-			doif(-1, reject, depth + 1);
-			break;
-
+		case LT_ELIF:
+		case LT_ELTRUE:
+		case LT_ELFALSE:
 		case LT_ELSE:
-			if (depth == 0)
-				error(ELSE_ERR, depth);
-			if (thissym > 0) {
-				if (insym[thissym] == SYM_TRUE) {
-					reject = ignore[thissym] ? REJ_IGNORE : REJ_YES;
-					insym[thissym] = SYM_FALSE;
-				} else {	/* (insym[thissym] ==
-						 * SYM_FALSE) */
-					reject = prevreject;
-					insym[thissym] = SYM_TRUE;
-				}
-				if (!ignore[thissym]) {
-					flushline(NO);
-					break;
-				}
-			}
-			flushline(YES);
-			break;
-
 		case LT_ENDIF:
-			if (depth == 0)
+			if (depth != 0)
+				return;
+			if (lineval == LT_ENDIF)
 				error(ENDIF_ERR, depth);
-			if (thissym > 0) {
-				insym[thissym] = SYM_INACTIVE;
-				reject = prevreject;
-				if (!ignore[thissym]) {
-					flushline(NO);
-					return;
-				}
-			}
-			flushline(YES);
-			return;
-
+			if (lineval == LT_ELSE)
+				error(ELSE_ERR, depth);
+			error(ELIF_ERR, depth);
+		default:
+			/* bug */
+			abort();
 		}
 	}
 }
@@ -388,6 +422,18 @@ checkline(cursym)
 		cp = skipcomment(cp);
 		if (*cp != '\n')
 			retval = LT_IF;
+		*cursym = 0;
+	} else if (strcmp(keyword, "elif") == 0) {
+		retval = ifeval(&cp);
+		cp = skipcomment(cp);
+		if (retval == LT_IF)
+			retval = LT_ELIF;
+		if (retval == LT_TRUE)
+			retval = LT_ELTRUE;
+		if (retval == LT_FALSE)
+			retval = LT_ELFALSE;
+		if (*cp != '\n')
+			retval = LT_ELIF;
 		*cursym = 0;
 	} else if (strcmp(keyword, "else") == 0)
 		retval = LT_ELSE;
@@ -648,16 +694,14 @@ findsym(str)
 	char    chr;
 
 	for (symind = 1; symind < nsyms; ++symind) {
-		if (insym[symind] == SYM_INACTIVE) {
-			for (symp = symname[symind], cp = str
-			    ; *symp && *cp == *symp
-			    ; cp++, symp++
-			    )
-				continue;
-			chr = *cp;
-			if (*symp == '\0' && endsym(chr))
-				return symind;
-		}
+		for (symp = symname[symind], cp = str
+		    ; *symp && *cp == *symp
+		    ; cp++, symp++
+		    )
+			continue;
+		chr = *cp;
+		if (*symp == '\0' && endsym(chr))
+			return symind;
 	}
 	return 0;
 }
