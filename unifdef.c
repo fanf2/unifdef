@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.60 2002/04/28 22:32:30 fanf Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.61 2002/04/29 00:17:11 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -583,7 +583,7 @@ ifeval_2(const char **cpp)
 		cp++;
 		val = ifeval(&cp);
 		cp = skipcomment(cp);
-		if (*cp != ')')
+		if (*cp++ != ')')
 			return LT_IF;
 		break;
 
