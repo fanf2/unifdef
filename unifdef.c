@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.123 2002/12/13 11:13:02 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.124 2002/12/13 11:15:20 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -445,6 +445,8 @@ getline(void)
 		keyword = (char *)cp;
 		cp = skipsym(cp);
 		kwlen = cp - keyword;
+		if (strncmp(cp, "\\\n", 2) == 0)
+			error("Obfuscated preprocessor control line");
 		if (strlcmp("ifdef", keyword, kwlen) == 0 ||
 		    strlcmp("ifndef", keyword, kwlen) == 0) {
 			cp = skipcomment(cp);
