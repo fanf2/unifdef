@@ -34,7 +34,7 @@
 .\"
 .\"     @(#)unifdef.1	8.2 (Berkeley) 4/1/94
 .\" $FreeBSD: src/usr.bin/unifdef/unifdef.1,v 1.10 2002/04/20 12:17:43 charnier Exp $
-.\" $dotat: unifdef/unifdef.1,v 1.9 2002/04/26 19:54:54 fanf Exp $
+.\" $dotat: unifdef/unifdef.1,v 1.10 2002/04/26 20:01:06 fanf Exp $
 .\"
 .Dd April 26, 2002
 .Dt UNIFDEF 1
@@ -81,7 +81,13 @@ the operators
 and parenthesized expressions
 are handled,
 and anything more complicated is passed through unharmed.
-It also understands just enough about C
+#ifdef and #ifndef directives are only processed
+if the symbol is specified on the command line,
+otherwise they are also passed though unchanged.
+.Pp
+The
+.Nm
+utility also understands just enough about C
 to know when one of the directives is inactive
 because it is inside
 a comment,
@@ -96,20 +102,12 @@ to the end of a line and finds no backslash for continuation.
 Available options:
 .Bl -tag -width Ds
 .It Fl D Ns Ar sym Ns Oo = Ns Ar val Oc
+Specify that a symbol is defined,
+and optionally specify what value to give it
+for the purpose of handling #if and #elif directives.
+.Pp
 .It Fl U Ns Ar sym
-Specify which symbols to define or undefine.
-The lines inside those ifdefs will be copied to the output or removed as
-appropriate.
-The ifdef, ifndef, else, and endif lines associated with
-.Ar sym
-will also be removed.
-Ifdefs involving symbols you don't specify
-and ``#if'' control lines
-are untouched and copied out
-along with their associated
-ifdef, else, and endif lines.
-If an ifdef X occurs nested inside another ifdef X, then the
-inside ifdef is treated as if it were an unrecognized symbol.
+Specify that a symbol is undefined.
 If the same symbol appears in more than one argument,
 the last occurrence dominates.
 .Pp
