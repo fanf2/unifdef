@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.108 2002/12/12 19:04:56 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.109 2002/12/12 19:15:24 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -173,20 +173,20 @@ static bool             keepthis;		/* don't delete constant #if */
 
 static int              exitstat;		/* program exit status */
 
-static void             debug(const char *, ...);
 static void             addsym(bool, bool, char *);
+static void             debug(const char *, ...);
 static void             error(const char *);
 static int              findsym(const char *);
 static void             flushline(bool);
 static Linetype         getline(void);
 static Linetype         ifeval(const char **);
-/*static void             nest(void);*/
+static void             nest(void);
 static void             process(void);
 static const char      *skipcomment(const char *);
 static const char      *skipsym(const char *);
-/*static void             state(Ifstate);*/
+static void             state(Ifstate);
 static int              strlcmp(const char *, const char *, size_t);
-/*static void             unignore(void);*/
+static void             unignore(void);
 static void             usage(void);
 
 #define endsym(c) (!isalpha((unsigned char)c) && !isdigit((unsigned char)c) && c != '_')
@@ -266,102 +266,45 @@ static const struct ops {
  */
 typedef void state_fn(void);
 
-/* utility functions */
-static void
-nest(void)
-{
-	depth += 1;
-	if (depth >= MAXDEPTH)
-		error("Too many levels of nesting");
-	stifline[depth] = linenum;
-}
-static void
-state(Ifstate is)
-{
-	ifstate[depth] = is;
-}
-static void
-unignore(void)
-{
-	ignore[depth] = ignore[depth-1];
-}
 /* report an error */
-static void
-Eelif (void) { error("Inappropriate #elif"); }
-static void
-Eelse (void) { error("Inappropriate #else"); }
-static void
-Eendif(void) { error("Inappropriate #endif"); }
-static void
-Eeof  (void) { error("Premature EOF"); }
+static void Eelif (void) { error("Inappropriate #elif"); }
+static void Eelse (void) { error("Inappropriate #else"); }
+static void Eendif(void) { error("Inappropriate #endif"); }
+static void Eeof  (void) { error("Premature EOF"); }
 /* plain line handling */
-static void
-print (void) { flushline(true); }
-static void
-drop  (void) { flushline(false); }
+static void print (void) { flushline(true); }
+static void drop  (void) { flushline(false); }
 /* output lacks group's start line */
-static void
-Strue (void) { flushline(false); unignore(); state(IS_TRUE_PREFIX); }
-static void
-Sfalse(void) { flushline(false); unignore(); state(IS_FALSE_PREFIX); }
-static void
-Selse (void) { flushline(false);             state(IS_TRUE_ELSE); }
+static void Strue (void) { drop();  unignore(); state(IS_TRUE_PREFIX); }
+static void Sfalse(void) { drop();  unignore(); state(IS_FALSE_PREFIX); }
+static void Selse (void) { drop();              state(IS_TRUE_ELSE); }
 /* print/pass this block */
-static void
-Pelif (void) { flushline(true);  unignore(); state(IS_PASS_MIDDLE); }
-static void
-Pelse (void) { flushline(true);              state(IS_PASS_ELSE); }
-static void
-Pendif(void) { flushline(true);  --depth; }
+static void Pelif (void) { print(); unignore(); state(IS_PASS_MIDDLE); }
+static void Pelse (void) { print();             state(IS_PASS_ELSE); }
+static void Pendif(void) { print(); --depth; }
 /* discard this block */
-static void
-Dfalse(void) { flushline(false); unignore(); state(IS_FALSE_TRAILER); }
-static void
-Delif (void) { flushline(false); unignore(); state(IS_FALSE_MIDDLE); }
-static void
-Delse (void) { flushline(false);             state(IS_FALSE_ELSE); }
-static void
-Dendif(void) { flushline(false); --depth; }
+static void Dfalse(void) { drop();  unignore(); state(IS_FALSE_TRAILER); }
+static void Delif (void) { drop();  unignore(); state(IS_FALSE_MIDDLE); }
+static void Delse (void) { drop();              state(IS_FALSE_ELSE); }
+static void Dendif(void) { drop();  --depth; }
 /* first line of group */
-static void
-Fdrop (void) { nest(); Dfalse(); }
-static void
-Fpass (void) { nest(); Pelif(); }
-static void
-Ftrue (void) { nest(); Strue(); }
-static void
-Ffalse(void) { nest(); Sfalse(); }
+static void Fdrop (void) { nest();  Dfalse(); }
+static void Fpass (void) { nest();  Pelif(); }
+static void Ftrue (void) { nest();  Strue(); }
+static void Ffalse(void) { nest();  Sfalse(); }
 /* ignore comments in this block */
-static void
-Idrop (void) { Fdrop();  ignore[depth] = true; }
-static void
-Itrue (void) { Ftrue();  ignore[depth] = true; }
-static void
-Ifalse(void) { Ffalse(); ignore[depth] = true; }
+static void Idrop (void) { Fdrop();  ignore[depth] = true; }
+static void Itrue (void) { Ftrue();  ignore[depth] = true; }
+static void Ifalse(void) { Ffalse(); ignore[depth] = true; }
 /* modify this line */
 static void
-Mpass (void) {
-	strncpy(keyword, "if  ", 4);
-	Pelif();
-}
+Mpass (void) { strncpy(keyword, "if  ", 4); Pelif(); }
 static void
-Mtrue (void) {
-	strcpy(keyword, "else\n");
-	flushline(true);
-	state(IS_TRUE_MIDDLE);
-}
+Mtrue (void) { strcpy(keyword, "else\n");  print(); state(IS_TRUE_MIDDLE); }
 static void
-Melif (void) {
-	strcpy(keyword, "endif\n");
-	flushline(true);
-	state(IS_FALSE_TRAILER);
-}
+Melif (void) { strcpy(keyword, "endif\n"); print(); state(IS_FALSE_TRAILER); }
 static void
-Melse (void) {
-	strcpy(keyword, "endif\n");
-	flushline(true);
-	state(IS_FALSE_ELSE);
-}
+Melse (void) { strcpy(keyword, "endif\n"); print(); state(IS_FALSE_ELSE); }
 
 static state_fn * const trans_table[IS_COUNT][LT_COUNT] = {
 /* IS_OUTSIDE */
@@ -874,6 +817,31 @@ flushline(bool keep)
 	return;
 }
 
+/*
+ * State machine utility functions
+ */
+static void
+nest(void)
+{
+	depth += 1;
+	if (depth >= MAXDEPTH)
+		error("Too many levels of nesting");
+	stifline[depth] = linenum;
+}
+static void
+state(Ifstate is)
+{
+	ifstate[depth] = is;
+}
+static void
+unignore(void)
+{
+	ignore[depth] = ignore[depth-1];
+}
+
+/*
+ * Diagnostics.
+ */
 static void
 debug(const char *msg, ...)
 {
