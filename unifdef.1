@@ -33,7 +33,7 @@
 .\" SUCH DAMAGE.
 .\"
 .\"     @(#)unifdef.1	8.2 (Berkeley) 4/1/94
-.\"	$dotat: unifdef/unifdef.1,v 1.35 2002/12/12 17:17:52 fanf2 Exp $
+.\"	$dotat: unifdef/unifdef.1,v 1.36 2002/12/12 17:21:04 fanf2 Exp $
 .\" $FreeBSD: src/usr.bin/unifdef/unifdef.1,v 1.16 2002/12/04 14:42:49 ru Exp $
 .\"
 .Dd September 24, 2002
@@ -255,14 +255,18 @@ option of
 .Sh DIAGNOSTICS
 .Bl -item
 .It
-Inappropriate elif, else or endif.
+Inappropriate
+.Ic #elif ,
+.Ic #else
+or
+.Ic #endif .
 .It
 Obfuscated preprocessor control line.
 .It
 Premature
 .Tn EOF
-with line numbers of the unterminated
-.Ic #ifdef Ns s .
+(with the line number of the most recent unterminated
+.Ic #if Ns ).
 .It
 .Tn EOF
 in comment.
