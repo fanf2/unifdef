@@ -43,7 +43,7 @@ static const char copyright[] =
 
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.22 2002/04/25 20:24:16 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.23 2002/04/25 21:19:55 fanf Exp $");
 #endif
 
 /*
@@ -262,20 +262,19 @@ doif(thissym, prevreject, depth)
 	for (;;) {
 		linenum++;
 		if (getlin(tline, sizeof tline, input, NO) == EOF) {
-			int     code;
-			code = incomment
+			doret = incomment
 			    ? CEOF_ERR
 			    : inquote == QUOTE_SINGLE
 			    ? Q1EOF_ERR
 			    : inquote == QUOTE_DOUBLE
 			    ? Q2EOF_ERR
 			    : NO_ERR;
-			if (code != NO_ERR)
-				code = error(code, stqcline, depth);
+			if (doret != NO_ERR)
+				doret = error(doret, stqcline, depth);
 			if (depth != 0)
 				return error(IEOF_ERR, stline, depth);
 			else
-				return code;
+				return doret;
 		}
 		switch (lineval = checkline(&cursym)) {
 		case LT_PLAIN:
