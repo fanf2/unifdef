@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.111 2002/12/12 19:35:17 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.112 2002/12/12 19:36:23 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -384,6 +384,46 @@ static void
 unignore(void)
 {
 	ignore[depth] = ignore[depth-1];
+}
+
+/* state of #if processing */
+typedef enum {
+	IS_OUTSIDE,
+	IS_FALSE_PREFIX,	/* false #if followed by false #elifs */
+	IS_TRUE_PREFIX,		/* first non-false #(el)if is true */
+	IS_PASS_MIDDLE,		/* first non-false #(el)if is unknown */
+	IS_FALSE_MIDDLE,	/* a false #elif after a pass state */
+	IS_TRUE_MIDDLE,		/* a true #elif after a pass state */
+	IS_PASS_ELSE,		/* an else after an unknown state */
+	IS_FALSE_ELSE,		/* an else after a true state */
+	IS_TRUE_ELSE,		/* an else after only false states */
+	IS_FALSE_TRAILER,	/* #elifs after a true are false */
+	IS_COUNT
+} Ifstate;
+
+static char const * const ifstate_name[] = {
+	"OUTSIDE", "FALSE_PREFIX", "TRUE_PREFIX",
+	"PASS_MIDDLE", "FALSE_MIDDLE", 	"TRUE_MIDDLE",
+ 	"PASS_ELSE", "FALSE_ELSE", "TRUE_ELSE",
+	"FALSE_TRAILER"
+};
+
+/*
+ * Write a line to the output or not, according to command line options.
+ */
+static void
+flushline(bool keep)
+{
+	if (symlist)
+		return;
+	if (keep ^ complement)
+		fputs(tline, stdout);
+	else {
+		if (lnblank)
+			putc('\n', stdout);
+		exitstat = 1;
+	}
+	return;
 }
 
 /*
@@ -822,24 +862,6 @@ strlcmp(const char *s, const char *t, size_t n)
 		else
 			++s, ++t;
 	return (unsigned char)*s;
-}
-
-/*
- * Write a line to the output or not, according to command line options.
- */
-static void
-flushline(bool keep)
-{
-	if (symlist)
-		return;
-	if (keep ^ complement)
-		fputs(tline, stdout);
-	else {
-		if (lnblank)
-			putc('\n', stdout);
-		exitstat = 1;
-	}
-	return;
 }
 
 /*
