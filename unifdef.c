@@ -43,7 +43,7 @@ static const char copyright[] =
 
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.21 2002/04/25 20:20:05 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.22 2002/04/25 20:24:16 fanf Exp $");
 #endif
 
 /*
@@ -215,7 +215,7 @@ Reject_level reject;		/* 0 or 1: pass thru; 1 or 2: ignore comments */
 #define REJ_NO          0
 #define REJ_IGNORE      1
 #define REJ_YES         2
-int doif(int, int, Reject_level, int);
+int doif(int, Reject_level, int);
 
 int     linenum;		/* current line number */
 int     stqcline;		/* start of current coment or quote */
@@ -242,14 +242,13 @@ void
 pfile()
 {
 	reject = REJ_NO;
-	(void) doif(-1, NO, reject, 0);
+	(void) doif(-1, reject, 0);
 	return;
 }
 
 int
-doif(thissym, inif, prevreject, depth)
+doif(thissym, prevreject, depth)
 	int     thissym;	/* index of the symbol who was last ifdef'ed */
-	int     inif;		/* YES or NO we are inside an ifdef */
 	Reject_level prevreject;/* previous value of reject */
 	int     depth;		/* depth of ifdef's */
 {
@@ -273,7 +272,7 @@ doif(thissym, inif, prevreject, depth)
 			    : NO_ERR;
 			if (code != NO_ERR)
 				code = error(code, stqcline, depth);
-			if (inif)
+			if (depth != 0)
 				return error(IEOF_ERR, stline, depth);
 			else
 				return code;
@@ -299,18 +298,18 @@ doif(thissym, inif, prevreject, depth)
 				exitstat = 1;
 				flushline(NO);
 			}
-			if ((doret = doif(cursym, YES, thisreject, depth + 1)) != NO_ERR)
+			if ((doret = doif(cursym, thisreject, depth + 1)) != NO_ERR)
 				return error(doret, stline, depth);
 			break;
 
 		case LT_IF:
 			flushline(YES);
-			if ((doret = doif(-1, YES, reject, depth + 1)) != NO_ERR)
+			if ((doret = doif(-1, reject, depth + 1)) != NO_ERR)
 				return error(doret, stline, depth);
 			break;
 
 		case LT_ELSE:
-			if (!inif)
+			if (depth == 0)
 				return error(ELSE_ERR, linenum, depth);
 			if (thissym >= 0) {
 				if (insym[thissym] == SYM_TRUE) {
@@ -330,7 +329,7 @@ doif(thissym, inif, prevreject, depth)
 			break;
 
 		case LT_ENDIF:
-			if (!inif)
+			if (depth == 0)
 				return error(ENDIF_ERR, linenum, depth);
 			if (thissym >= 0) {
 				insym[thissym] = SYM_INACTIVE;
