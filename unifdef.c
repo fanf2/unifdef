@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.122 2002/12/13 11:11:11 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.123 2002/12/13 11:13:02 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -483,7 +483,7 @@ getline(void)
 				retval = LT_ELIF;
 		}
 		if (retval != LT_PLAIN && (wascomment || incomment))
-			error("Obfuscated processor control line");
+			error("Obfuscated preprocessor control line");
 		if (linestate == LS_HASH)
 			abort(); /* bug */
 	}
