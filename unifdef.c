@@ -43,7 +43,7 @@ static const char copyright[] =
 
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.26 2002/04/25 23:02:51 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.27 2002/04/25 23:25:31 fanf Exp $");
 #endif
 
 /*
@@ -98,7 +98,7 @@ char    incomment;		/* inside C comment */
 char    inquote;		/* inside single or double quotes */
 int     exitstat;
 
-void	error(int, int, int);
+void	error(int, int);
 int	findsym(char *);
 void	flushline(Bool);
 int	getlin(char *, int, FILE *, int);
@@ -262,13 +262,13 @@ doif(thissym, prevreject, depth)
 		linenum++;
 		if (getlin(tline, sizeof tline, input, NO) == EOF) {
 			if (incomment)
-				error(CEOF_ERR, stline, depth);
+				error(CEOF_ERR, depth);
 			if (inquote == QUOTE_SINGLE)
-				error(Q1EOF_ERR, stline, depth);
+				error(Q1EOF_ERR, depth);
 			if (inquote == QUOTE_DOUBLE)
-				error(Q2EOF_ERR, stline, depth);
+				error(Q2EOF_ERR, depth);
 			if (depth != 0)
-				error(IEOF_ERR, stline, depth);
+				error(IEOF_ERR, depth);
 			return;
 		}
 		switch (lineval = checkline(&cursym)) {
@@ -302,7 +302,7 @@ doif(thissym, prevreject, depth)
 
 		case LT_ELSE:
 			if (depth == 0)
-				error(ELSE_ERR, linenum, depth);
+				error(ELSE_ERR, depth);
 			if (thissym > 0) {
 				if (insym[thissym] == SYM_TRUE) {
 					reject = ignore[thissym] ? REJ_IGNORE : REJ_YES;
@@ -322,7 +322,7 @@ doif(thissym, prevreject, depth)
 
 		case LT_ENDIF:
 			if (depth == 0)
-				error(ENDIF_ERR, linenum, depth);
+				error(ENDIF_ERR, depth);
 			if (thissym > 0) {
 				insym[thissym] = SYM_INACTIVE;
 				reject = prevreject;
@@ -756,12 +756,11 @@ flushline(keep)
 }
 
 void
-error(code, line, depth)
+error(code, depth)
 	int     code;		/* type of error & index into error string
 				 * array */
-	int     line;		/* line number */
 	int     depth;		/* how many ifdefs we are inside */
 {
 	errx(2, "error in %s line %d: %s (ifdef depth %d)",
-	    filename, line, errs[code], depth);
+	    filename, linenum, errs[code], depth);
 }
