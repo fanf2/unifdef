@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.87 2002/12/11 02:07:02 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.88 2002/12/11 02:13:04 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -221,7 +221,6 @@ void            error(int, int);
 void            addsym(bool, bool, char *);
 int             findsym(const char *);
 void            flushline(bool);
-int             getline(char *, int, FILE *, bool);
 Linetype        ifeval(const char **);
 int             main(int, char **);
 const char     *skipcomment(const char *);
@@ -454,7 +453,7 @@ process(int depth)
 
 	for (;;) {
 		linenum++;
-		if (getline(tline, MAXLINE, input, false) == EOF) {
+		if (fgets(tline, MAXLINE, input) == NULL) {
 			if (incomment)
 				error(CEOF_ERR, depth);
 			if (depth != 0)
@@ -862,78 +861,6 @@ strlcmp(const char *s, const char *t, size_t n)
 		else
 			++s, ++t;
 	return (unsigned char)*s;
-}
-
-/*
- * Read a line from the input and expand tabs if requested and (if
- * compiled in) treats form-feed as an end-of-line.
- */
-int
-getline(char *line, int maxline, FILE *inp, bool expandtabs)
-{
-	int tmp;
-	int num;
-	int chr;
-#ifdef  FFSPECIAL
-	static bool havechar = false;	/* have leftover char from last time */
-	static char svchar;
-#endif	/* FFSPECIAL */
-
-	num = 0;
-#ifdef  FFSPECIAL
-	if (havechar) {
-		havechar = false;
-		chr = svchar;
-		goto ent;
-	}
-#endif	/* FFSPECIAL */
-	while (num + 8 < maxline) {	/* leave room for tab */
-		chr = getc(inp);
-		if (isprint(chr)) {
-#ifdef  FFSPECIAL
-	ent:
-#endif	/* FFSPECIAL */
-			*line++ = chr;
-			num++;
-		} else
-			switch (chr) {
-			case EOF:
-				return EOF;
-
-			case '\t':
-				if (expandtabs) {
-					num += tmp = 8 - (num & 7);
-					do
-						*line++ = ' ';
-					while (--tmp);
-					break;
-				}
-			default:
-				*line++ = chr;
-				num++;
-				break;
-
-			case '\n':
-				*line = '\n';
-				num++;
-				goto end;
-
-#ifdef  FFSPECIAL
-			case '\f':
-				if (++num == 1)
-					*line = '\f';
-				else {
-					*line = '\n';
-					havechar = true;
-					svchar = chr;
-				}
-				goto end;
-#endif	/* FFSPECIAL */
-			}
-	}
-end:
-	*++line = '\0';
-	return num;
 }
 
 /*
