@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.125 2002/12/13 11:40:08 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.126 2002/12/13 11:42:37 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -234,11 +234,11 @@ main(int argc, char *argv[])
 		case 'c': /* treat -D as -U and vice versa */
 			complement = true;
 			break;
-		case 'k': /* process constant #ifs */
-			killconsts = true;
-			break;
 		case 'd':
 			debugging = true;
+			break;
+		case 'k': /* process constant #ifs */
+			killconsts = true;
 			break;
 		case 'l': /* blank deleted lines instead of omitting them */
 			lnblank = true;
