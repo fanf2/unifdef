@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.124 2002/12/13 11:15:20 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.125 2002/12/13 11:40:08 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -141,12 +141,15 @@ static char const * const linestate_name[] = {
 };
 
 /*
+ * Minimum translation limits from ISO/IEC 9899:1999 5.2.4.1
+ */
+#define	MAXDEPTH        64			/* maximum #if nesting */
+#define	MAXLINE         4096			/* maximum length of line */
+#define	MAXSYMS         4096			/* maximum number of symbols */
+
+/*
  * Globals.
  */
-
-#define	MAXDEPTH        16			/* maximum #if nesting */
-#define	MAXLINE         1024			/* maximum length of line */
-#define	MAXSYMS         1000			/* maximum number of symbols */
 
 static bool             complement;		/* -c: do the complement */
 static bool             debugging;		/* -d: debugging reports */
