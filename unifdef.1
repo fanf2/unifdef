@@ -34,7 +34,7 @@
 .\"
 .\"     @(#)unifdef.1	8.2 (Berkeley) 4/1/94
 .\" $FreeBSD: src/usr.bin/unifdef/unifdef.1,v 1.10 2002/04/20 12:17:43 charnier Exp $
-.\" $dotat: unifdef/unifdef.1,v 1.6 2002/04/26 19:26:10 fanf Exp $
+.\" $dotat: unifdef/unifdef.1,v 1.7 2002/04/26 19:50:54 fanf Exp $
 .\"
 .Dd April 26, 2002
 .Dt UNIFDEF 1
@@ -56,14 +56,31 @@
 .Sh DESCRIPTION
 The
 .Nm
-utility removes ifdef'ed lines
+utility selectively processes conditional
+.Xr cpp 1
+directives,
+removing both the directives and any text that they control
 from a file while otherwise leaving the file alone.
+.Pp
 The
 .Nm
 utility acts on
-#ifdef, #ifndef, #else, and #endif lines,
-and it knows only enough about C
-to know when one of these is inactive
+#if, #ifdef, #ifndef, #elif, #else, and #endif lines,
+and it understands only a very limited subset
+of the expression syntax for #if and #elif lines.
+Integer values of symbols defined on the command line,
+the
+.Fn defined
+operator applied to symbols defined or undefined on the command line,
+the operators
+.Li ! ,
+.Li && ,
+.Li || ,
+and parenthesized expressions
+are handled,
+and anything more complicated is passed through unharmed.
+It also understands just enough about C
+to know when one of the directives is inactive
 because it is inside
 a comment,
 or a single or double quote.
