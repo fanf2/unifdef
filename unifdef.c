@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.126 2002/12/13 11:42:37 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.127 2002/12/13 11:44:25 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -420,8 +420,6 @@ process(void)
 /*
  * Parse a line and determine its type. We keep the preprocessor line
  * parser state between calls in a global variable.
- * XXX: Preprocessor keywords that contain a backslash-newline are not
- * handled correctly.
  */
 static Linetype
 getline(void)
