@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __RCSID
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.38 2002/04/26 16:56:34 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.39 2002/04/26 17:01:38 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -112,9 +112,7 @@ char   *skipsym(char *);
 void	usage(void);
 
 int
-main(argc, argv)
-	int     argc;
-	char  **argv;
+main(int argc, char *argv[])
 {
 	char  **curarg;
 	char   *cp;
@@ -192,7 +190,7 @@ main(argc, argv)
 }
 
 void
-usage()
+usage(void)
 {
 	fprintf (stderr, "usage: %s",
 "unifdef [-cdlt] [[-Dsym[=val]] [-Usym] [-iDsym[=val]] [-iUsym]] ... [file]\n");
@@ -252,7 +250,7 @@ char   *errs[] = {
 };
 
 void
-pfile()
+pfile(void)
 {
 	reject = REJ_NO;
 	(void) doif(0);
@@ -260,10 +258,7 @@ pfile()
 }
 
 void
-doif_1(depth, lineval, ignoring)
-	int      depth;
-	bool     ignoring;
-	Linetype lineval;
+doif_1(int depth, Linetype lineval, bool ignoring)
 {
 	Reject_level savereject;
 	bool    active;
@@ -379,8 +374,7 @@ doif_1(depth, lineval, ignoring)
 	}
 }
 Linetype
-doif(depth)
-	int     depth;		/* depth of ifdef's */
+doif(int depth)
 {
 	Linetype lineval;
 	int     cursym;		/* index of the symbol returned by checkline */
@@ -428,9 +422,7 @@ doif(depth)
 #define endsym(c) (!isalpha ((unsigned char)c) && !isdigit ((unsigned char)c) && c != '_')
 
 Linetype
-checkline(cursym)
-	int    *cursym;		/* if LT_TRUE or LT_FALSE returned, set this
-				 * to sym index */
+checkline(int *cursym)
 {
 	char   *cp;
 	char   *symp;
@@ -525,7 +517,7 @@ eol:
  *  be kept. We turn it into a #if to keep the nesting correct.
  */
 void
-elif2if()
+elif2if(void)
 {
 	strncpy(keyword, "if  ", 4);
 }
@@ -537,7 +529,7 @@ elif2if()
  *  correct.
  */
 void
-elif2endif()
+elif2endif(void)
 {
 	strcpy(keyword, "endif\n");
 }
@@ -550,8 +542,7 @@ elif2endif()
  *	defined() && || ! ( )
  */
 Linetype
-ifeval_2(cpp)
-	char   **cpp;
+ifeval_2(char **cpp)
 {
 	char    *cp;
 	int      sym;
@@ -619,8 +610,7 @@ ifeval_2(cpp)
 	return val;
 }
 Linetype
-ifeval_1(cpp)
-	char   **cpp;
+ifeval_1(char **cpp)
 {
 	char    *cp;
 	Linetype val;
@@ -643,8 +633,7 @@ ifeval_1(cpp)
 	return val;
 }
 Linetype
-ifeval(cpp)
-	char   **cpp;
+ifeval(char **cpp)
 {
 	char    *cp;
 	Linetype val;
@@ -671,8 +660,7 @@ ifeval(cpp)
  *  position that is not whitespace.
  */
 char   *
-skipcomment(cp)
-	char   *cp;
+skipcomment(char *cp)
 {
 	if (incomment)
 		goto inside;
@@ -723,9 +711,7 @@ inside:
  *  position that is not whitespace.
  */
 char   *
-skipquote(cp, type)
-	char   *cp;
-	int     type;
+skipquote(char *cp, int type)
 {
 	char    qchar;
 
@@ -753,8 +739,7 @@ inside:
  *  Skip over an identifier.
  */
 char   *
-skipsym(cp)
-	char   *cp;
+skipsym(char *cp)
 {
 	while (!endsym(*cp))
 		++cp;
@@ -766,8 +751,7 @@ skipsym(cp)
  *            else return 0.
  */
 int
-findsym(str)
-	char   *str;
+findsym(char *str)
 {
 	char   *cp;
 	char   *symp;
@@ -791,11 +775,7 @@ findsym(str)
  *            and (if compiled in) treats form-feed as an end-of-line
  */
 int
-getlin(line, maxline, inp, expandtabs)
-	char   *line;
-	int     maxline;
-	FILE   *inp;
-	bool    expandtabs;
+getlin(char *line, int maxline, FILE *inp, bool expandtabs)
 {
 	int     tmp;
 	int     num;
@@ -863,8 +843,7 @@ end:
 }
 
 void
-flushline(keep)
-	bool    keep;
+flushline(bool keep)
 {
 	if ((keep && reject != REJ_YES) ^ complement) {
 		char   *line = tline;
@@ -891,10 +870,7 @@ debug(const char *msg, ...)
 }
 
 void
-error(code, depth)
-	int     code;		/* type of error & index into error string
-				 * array */
-	int     depth;		/* how many ifdefs we are inside */
+error(int code, int depth)
 {
 	if (incomment || inquote)
 		errx(2, "error in %s line %d: %s (#if depth %d)",
