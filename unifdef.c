@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.78 2002/12/10 16:22:12 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.79 2002/12/10 17:00:39 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -205,8 +205,7 @@ int             exitstat;	/* program exit status */
 const char     *symname[MAXSYMS];	/* symbol name */
 const char     *value[MAXSYMS];		/* -Dsym=value */
 bool            ignore[MAXSYMS];	/* -iDsym or -iUsym */
-
-int             nsyms = 1;	/* symbol 0 is used for tracking #ifs */
+int             nsyms;
 
 Reject_level    reject;		/* what kind of filtering we are doing */
 Comment_state   incomment;	/* inside C comment */
@@ -215,7 +214,7 @@ Quote_state     inquote;	/* inside single or double quotes */
 Linetype        checkline(int *);
 void            debug(const char *, ...);
 Linetype        process(int);
-void            doif(int, Linetype, bool);
+void            doif(int, Linetype, int);
 void            elif2if(void);
 void            elif2endif(void);
 void            error(int, int);
@@ -285,7 +284,7 @@ main(int argc, char *argv[])
 		}
 	argc -= optind;
 	argv += optind;
-	if (nsyms == 1 && !symlist) {
+	if (nsyms == 0 && !symlist) {
 		warnx("must -D or -U at least one symbol");
 		usage();
 	}
@@ -323,11 +322,12 @@ usage(void)
  * between #if lines are handled by a recursive call to process().
  */
 void
-doif(int depth, Linetype lineval, bool ignoring)
+doif(int depth, Linetype lineval, int sym)
 {
 	Reject_level savereject;
 	bool active;
 	bool donetrue;
+	bool ignoring;
 	bool inelse;
 	int saveline;
 
@@ -338,6 +338,7 @@ doif(int depth, Linetype lineval, bool ignoring)
 	savereject = reject;
 	inelse = false;
 	donetrue = false;
+	ignoring = (sym < 0) ? false : ignore[sym];
 	if (lineval == LT_IF || reject != REJ_NO) {
 		active = false;
 		ignoring = false;
@@ -471,7 +472,7 @@ process(int depth)
 		case LT_IF:
 		case LT_TRUE:
 		case LT_FALSE:
-			doif(depth + 1, lineval, ignore[cursym]);
+			doif(depth + 1, lineval, cursym);
 			break;
 		case LT_ELIF:
 		case LT_ELTRUE:
@@ -503,7 +504,7 @@ checkline(int *cursym)
 	Linetype retval;
 	char kw[KWSIZE];
 
-	*cursym = 0;
+	*cursym = -1;
 	retval = LT_PLAIN;
 	cp = skipcomment(tline);
 	if (*cp != '#'
@@ -534,7 +535,7 @@ checkline(int *cursym)
 			retval = LT_PLAIN;
 			goto eol;
 		}
-		if ((*cursym = findsym(cp)) == 0)
+		if ((*cursym = findsym(cp)) < 0)
 			retval = LT_IF;
 		else if (value[*cursym] == NULL)
 			retval = (retval == LT_TRUE)
@@ -645,7 +646,7 @@ eval_unary(struct ops *ops, int *valp, const char **cpp)
 			return LT_IF;
 		cp = skipcomment(cp);
 		sym = findsym(cp);
-		if (sym == 0 && !symlist)
+		if (sym < 0 && !symlist)
 			return LT_IF;
 		*valp = (value[sym] != NULL);
 		cp = skipsym(cp);
@@ -656,7 +657,7 @@ eval_unary(struct ops *ops, int *valp, const char **cpp)
 	} else if (!endsym(*cp)) {
 		debug("eval%d symbol", ops - eval_ops);
 		sym = findsym(cp);
-		if (sym == 0 && !symlist)
+		if (sym < 0 && !symlist)
 			return LT_IF;
 		if (value[sym] == NULL)
 			*valp = 0;
@@ -832,7 +833,7 @@ findsym(const char *str)
 			continue;
 		printf("%.*s\n", cp-str, str);
 	}
-	for (symind = 1; symind < nsyms; ++symind) {
+	for (symind = 0; symind < nsyms; ++symind) {
 		for (cp = str, symp = symname[symind]
 		    ; *cp && *symp && *cp == *symp
 		    ; cp++, symp++
@@ -844,7 +845,7 @@ findsym(const char *str)
 			return symind;
 		}
 	}
-	return 0;
+	return -1;
 }
 
 /*
@@ -857,7 +858,7 @@ addsym(bool ignorethis, bool definethis, char *sym)
 	char *val;
 
 	symind = findsym(sym);
-	if (symind == 0) {
+	if (symind < 0) {
 		if (nsyms >= MAXSYMS)
 			errx(2, "too many symbols");
 		symind = nsyms++;
