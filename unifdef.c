@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.65 2002/05/02 12:17:31 fanf Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.66 2002/05/02 12:36:22 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -322,6 +322,13 @@ usage(void)
 	exit (2);
 }
 
+/*
+ * This function processes #if lines and alters the pass-through
+ * state accordingly. All the complicated state transition suff is
+ * dealt with in this function, as well as checking that the
+ * #if/#elif/#else/#endif lines happen in the correct order. Lines
+ * between #if lines are handled by a recursive call to doif().
+ */
 void
 doif_1(int depth, Linetype lineval, bool ignoring)
 {
@@ -439,6 +446,12 @@ doif_1(int depth, Linetype lineval, bool ignoring)
 	}
 }
 
+/*
+ * The main file processing routine. This function deals with passing
+ * through normal non-#if lines, correct nesting of #if sections, and
+ * checking that things terminate correctly at the end of file. The
+ * complicated stuff is delegated to doif_1().
+ */
 Linetype
 doif(int depth)
 {
@@ -486,6 +499,9 @@ doif(int depth)
 	}
 }
 
+/*
+ * Parse a line and determine its type.
+ */
 Linetype
 checkline(int *cursym)
 {
@@ -574,11 +590,11 @@ eol:
 }
 
 /*
- *  Turn a #elif line into a #if. This function is used when we are
- *  processing a #if/#elif/#else/#endif sequence that starts off with
- *  a #if that we understand (and therefore it has been deleted) which
- *  is followed by a #elif that we don't understand and therefore must
- *  be kept. We turn it into a #if to keep the nesting correct.
+ * Turn a #elif line into a #if. This function is used when we are
+ * processing a #if/#elif/#else/#endif sequence that starts off with a
+ * #if that we understand (and therefore it has been deleted) which is
+ * followed by a #elif that we don't understand and therefore must be
+ * kept. We turn it into a #if to keep the nesting correct.
  */
 void
 elif2if(void)
@@ -587,11 +603,11 @@ elif2if(void)
 }
 
 /*
- *  Turn a #elif line into a #endif. This is used in the opposite
- *  situation to elif2if, i.e. a #if that we don't understand is
- *  followed by a #elif that we do; rather than deleting the #elif (as
- *  we would for a #if) we turn it into a #endif to keep the nesting
- *  correct.
+ * Turn a #elif line into a #endif. This is used in the opposite
+ * situation to elif2if, i.e. a #if that we don't understand is
+ * followed by a #elif that we do; rather than deleting the #elif (as
+ * we would for a #if) we turn it into a #endif to keep the nesting
+ * correct.
  */
 void
 elif2endif(void)
@@ -664,6 +680,9 @@ eval_unary(struct ops *ops, int *valp, const char **cpp)
 	return *valp ? LT_TRUE : LT_FALSE;
 }
 
+/*
+ * Table-driven evaluation of binary operators.
+ */
 Linetype
 eval_table(struct ops *ops, int *valp, const char **cpp)
 {
@@ -694,6 +713,11 @@ eval_table(struct ops *ops, int *valp, const char **cpp)
 	return *valp ? LT_TRUE : LT_FALSE;
 }
 
+/*
+ * Evaluate the expression on a #if or #elif line. If we can work out
+ * the result we return LT_TRUE or LT_FALSE accordingly, otherwise we
+ * return just a generic LT_IF.
+ */
 Linetype
 ifeval(const char **cpp)
 {
@@ -703,8 +727,8 @@ ifeval(const char **cpp)
 }
 
 /*
- *  Skip over comments and stop at the next charaacter
- *  position that is not whitespace.
+ * Skip over comments and stop at the next character position that is
+ * not whitespace.
  */
 const char *
 skipcomment(const char *cp)
@@ -755,8 +779,8 @@ inside:
 }
 
 /*
- *  Skip over a quoted string or character and stop at the next charaacter
- *  position that is not whitespace.
+ * Skip over a quoted string or character and stop at the next charaacter
+ * position that is not whitespace.
  */
 const char *
 skipquote(const char *cp, Quote_state type)
@@ -785,7 +809,7 @@ inside:
 }
 
 /*
- *  Skip over an identifier.
+ * Skip over an identifier.
  */
 const char *
 skipsym(const char *cp)
@@ -796,9 +820,8 @@ skipsym(const char *cp)
 }
 
 /*
- *  findsym - look for the symbol in the symbol table.
- *            if found, return symbol table index,
- *            else return 0.
+ * Look for the symbol in the symbol table. If is is found, we return
+ * the symbol table index, else we return 0.
  */
 int
 findsym(const char *str)
@@ -828,8 +851,8 @@ findsym(const char *str)
 }
 
 /*
- *   getline - expands tabs if asked for
- *            and (if compiled in) treats form-feed as an end-of-line
+ * Read a line from the input and expand tabs if requested and (if
+ * compiled in) treats form-feed as an end-of-line.
  */
 int
 getline(char *line, int maxline, FILE *inp, bool expandtabs)
@@ -899,6 +922,10 @@ end:
 	return num;
 }
 
+/*
+ * Write a line to the output or not, according to the current
+ * filtering state.
+ */
 void
 flushline(bool keep)
 {
