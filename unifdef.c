@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.71 2002/05/15 19:36:10 fanf Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.72 2002/05/15 19:37:50 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -211,22 +211,22 @@ Comment_state   incomment;	/* inside C comment */
 Quote_state     inquote;	/* inside single or double quotes */
 
 Linetype        checkline(int *);
-void	        debug(const char *, ...);
+void            debug(const char *, ...);
 Linetype        process(int);
 void            doif(int, Linetype, bool);
 void            elif2if(void);
 void            elif2endif(void);
-void	        error(int, int);
+void            error(int, int);
 void            addsym(bool, bool, char *);
-int	        findsym(const char *);
-void	        flushline(bool);
-int	        getline(char *, int, FILE *, bool);
+int             findsym(const char *);
+void            flushline(bool);
+int             getline(char *, int, FILE *, bool);
 Linetype        ifeval(const char **);
-int	        main(int, char **);
+int             main(int, char **);
 const char     *skipcomment(const char *);
 const char     *skipquote(const char *, Quote_state);
 const char     *skipsym(const char *);
-void	        usage(void);
+void            usage(void);
 
 #define endsym(c) (!isalpha((unsigned char)c) && !isdigit((unsigned char)c) && c != '_')
 
