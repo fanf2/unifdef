@@ -1,10 +1,13 @@
 /*
  * Copyright (c) 2002, 2003 Tony Finch <dot@dotat.at>.  All rights reserved.
+ *
+ * This code is derived from software contributed to Berkeley by Dave Yost.
+ * It was rewritten to support ANSI C by Tony Finch. The original version of
+ * unifdef carried the following copyright notice. None of its code remains
+ * in this version (though some of the names remain).
+ *
  * Copyright (c) 1985, 1993
  *	The Regents of the University of California.  All rights reserved.
- *
- * This code is derived from software contributed to Berkeley by
- * Dave Yost. It was rewritten to support ANSI C by Tony Finch.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -14,14 +17,11 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
  * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
@@ -35,7 +35,7 @@ static const char * const copyright[] = {
     "@(#) Copyright (c) 1985, 1993\n\
 	The Regents of the University of California.  All rights reserved.\n",
     "@(#)unifdef.c	8.1 (Berkeley) 6/6/93",
-    "$dotat: unifdef/unifdef.c,v 1.169 2003/08/12 20:51:30 fanf2 Exp $",
+    "$dotat: unifdef/unifdef.c,v 1.170 2005/03/08 12:07:27 fanf2 Exp $",
 };
 
 /*
@@ -118,11 +118,13 @@ typedef enum {
 	C_COMMENT,		/* in a comment like this one */
 	CXX_COMMENT,		/* between // and end of line */
 	STARTING_COMMENT,	/* just after slash-backslash-newline */
-	FINISHING_COMMENT	/* star-backslash-newline in a C comment */
+	FINISHING_COMMENT,	/* star-backslash-newline in a C comment */
+	CHAR_LITERAL,		/* inside '' */
+	STRING_LITERAL		/* inside "" */
 } Comment_state;
 
 static char const * const comment_name[] = {
-	"NO", "C", "CXX", "STARTING", "FINISHING"
+	"NO", "C", "CXX", "STARTING", "FINISHING", "CHAR", "STRING"
 };
 
 /* state of preprocessor line parser */
@@ -762,10 +764,10 @@ ifeval(const char **cpp)
 }
 
 /*
- * Skip over comments and stop at the next character position that is
- * not whitespace. Between calls we keep the comment state in the
- * global variable incomment, and we also adjust the global variable
- * linestate when we see a newline.
+ * Skip over comments, strings, and character literals and stop at the
+ * next character position that is not whitespace. Between calls we keep
+ * the comment state in the global variable incomment, and we also adjust
+ * the global variable linestate when we see a newline.
  * XXX: doesn't cope with the buffer splitting inside a state transition.
  */
 static const char *
@@ -792,6 +794,14 @@ skipcomment(const char *cp)
 			} else if (strncmp(cp, "//", 2) == 0) {
 				incomment = CXX_COMMENT;
 				cp += 2;
+			} else if (strncmp(cp, "\'", 1) == 0) {
+				incomment = CHAR_LITERAL;
+				linestate = LS_DIRTY;
+				cp += 1;
+			} else if (strncmp(cp, "\"", 1) == 0) {
+				incomment = STRING_LITERAL;
+				linestate = LS_DIRTY;
+				cp += 1;
 			} else if (strncmp(cp, "\n", 1) == 0) {
 				linestate = LS_START;
 				cp += 1;
@@ -806,6 +816,25 @@ skipcomment(const char *cp)
 				linestate = LS_START;
 			}
 			cp += 1;
+			continue;
+		case CHAR_LITERAL:
+		case STRING_LITERAL:
+			if ((incomment == CHAR_LITERAL && cp[0] == '\'') ||
+			    (incomment == STRING_LITERAL && cp[0] == '\"')) {
+				incomment = NO_COMMENT;
+				cp += 1;
+			} else if (cp[0] == '\\') {
+				if (cp[1] == '\0')
+					cp += 1;
+				else
+					cp += 2;
+			} else if (strncmp(cp, "\n", 1) == 0) {
+				if (incomment == CHAR_LITERAL)
+					error("unterminated char literal");
+				else
+					error("unterminated string literal");
+			} else
+				cp += 1;
 			continue;
 		case C_COMMENT:
 			if (strncmp(cp, "*\\\n", 3) == 0) {
