@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __RCSID
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.39 2002/04/26 17:01:38 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.40 2002/04/26 17:02:17 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -86,7 +86,7 @@ char   *symname[MAXSYMS];	/* symbol name */
 char   *value[MAXSYMS];		/* -Dsym=value */
 char    ignore[MAXSYMS];	/* -iDsym or -iUsym */
 
-char    nsyms = 1;		/* symbol 0 is used for tracking #ifs */
+int     nsyms = 1;		/* symbol 0 is used for tracking #ifs */
 
 #define NO_COMMENT  0
 #define C_COMMENT   1
