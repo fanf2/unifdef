@@ -42,7 +42,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.166 2003/08/12 19:39:53 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.167 2003/08/12 20:12:24 fanf2 Exp $");
 #endif
 #endif /* not lint */
 #ifdef __FBSDID
@@ -58,7 +58,6 @@ __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.18 2003/07/01 15:30:43 fan
  *      provide an option which will check symbols after
  *        #else's and #endif's to see that they match their
  *        corresponding #ifdef or #ifndef
- *      generate #line directives in place of deleted code
  *
  *   The first two items above require better buffer handling, which would
  *     also make it possible to handle all "dodgy" directives correctly.
@@ -170,6 +169,7 @@ static bool             debugging;		/* -d: debugging reports */
 static bool             iocccok;		/* -e: fewer IOCCC errors */
 static bool             killconsts;		/* -k: eval constant #ifs */
 static bool             lnblank;		/* -l: blank deleted lines */
+static bool             lnnum;			/* -n: add #line directives */
 static bool             symlist;		/* -s: output symbol list */
 static bool             text;			/* -t: this is a text file */
 
@@ -191,6 +191,7 @@ static Ifstate          ifstate[MAXDEPTH];	/* #if processor state */
 static bool             ignoring[MAXDEPTH];	/* ignore comments state */
 static int              stifline[MAXDEPTH];	/* start of current #if */
 static int              depth;			/* current #if nesting */
+static int              delcount;		/* count of deleted lines */
 static bool             keepthis;		/* don't delete constant #if */
 
 static int              exitstat;		/* program exit status */
@@ -225,7 +226,7 @@ main(int argc, char *argv[])
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "i:D:U:I:cdeklst")) != -1)
+	while ((opt = getopt(argc, argv, "i:D:U:I:cdeklnst")) != -1)
 		switch (opt) {
 		case 'i': /* treat stuff controlled by these symbols as text */
 			/*
@@ -265,6 +266,9 @@ main(int argc, char *argv[])
 		case 'l': /* blank deleted lines instead of omitting them */
 			lnblank = true;
 			break;
+		case 'n': /* add #line directive after deleted lines */
+			lnnum = true;
+			break;
 		case 's': /* only output list of symbols that control #ifs */
 			symlist = true;
 			break;
@@ -294,7 +298,7 @@ main(int argc, char *argv[])
 static void
 usage(void)
 {
-	fprintf(stderr, "usage: unifdef [-cdeklst]"
+	fprintf(stderr, "usage: unifdef [-cdeklnst]"
 	    " [-Dsym[=val]] [-Usym] [-iDsym[=val]] [-iUsym] ... [file]\n");
 	exit(2);
 }
@@ -474,12 +478,16 @@ flushline(bool keep)
 {
 	if (symlist)
 		return;
-	if (keep ^ complement)
+	if (keep ^ complement) {
+		if (lnnum && delcount > 0)
+			printf("#line %d\n", linenum);
 		fputs(tline, stdout);
-	else {
+		delcount = 0;
+	} else {
 		if (lnblank)
 			putc('\n', stdout);
 		exitstat = 1;
+		delcount += 1;
 	}
 }
 
