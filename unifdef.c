@@ -51,7 +51,7 @@ __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
 #endif
 
 #ifndef lint
-__RCSID("$dotat: unifdef/unifdef.c,v 1.14 2002/04/25 16:12:23 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.15 2002/04/25 16:16:26 fanf Exp $");
 #endif
 
 /*
@@ -382,7 +382,8 @@ checkline(cursym)
 		return LT_LEOF;
 
 	retval = LT_PLAIN;
-	if (*(cp = tline) != '#'
+	cp = skipcomment(tline);
+	if (*cp != '#'
 	    || incomment
 	    || inquote == QUOTE_SINGLE
 	    || inquote == QUOTE_DOUBLE
