@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.63 2002/04/29 02:53:58 fanf Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.64 2002/05/02 00:03:41 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -62,6 +62,7 @@ __FBSDID("$FreeBSD$");
  *      provide an option which will check symbols after
  *        #else's and #endif's to see that they match their
  *        corresponding #ifdef or #ifndef
+ *      generate #line directives in place of deleted code
  */
 
 #include <ctype.h>
