@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __RCSID
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.37 2002/04/26 16:49:11 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.38 2002/04/26 16:56:34 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -67,22 +67,18 @@ __FBSDID("$FreeBSD$");
 #include <ctype.h>
 #include <err.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 FILE   *input;
-#ifndef YES
-#define YES 1
-#define NO  0
-#endif /* YES */
-typedef int Bool;
-
 char   *filename;
-char    debugging;		/* -d option in effect: debugging reports */
-char    text;			/* -t option in effect: this is a text file */
-char    lnblank;		/* -l option in effect: blank deleted lines */
-char    complement;		/* -c option in effect: complement the
+
+bool    debugging;		/* -d option in effect: debugging reports */
+bool    text;			/* -t option in effect: this is a text file */
+bool    lnblank;		/* -l option in effect: blank deleted lines */
+bool    complement;		/* -c option in effect: complement the
 				 * operation */
 
 #define MAXSYMS 1000
@@ -106,8 +102,8 @@ int     exitstat;
 void	debug(const char *, ...);
 void	error(int, int);
 int	findsym(char *);
-void	flushline(Bool);
-int	getlin(char *, int, FILE *, int);
+void	flushline(bool);
+int	getlin(char *, int, FILE *, bool);
 int	main(int, char **);
 void	pfile(void);
 char   *skipcomment(char *);
@@ -123,16 +119,16 @@ main(argc, argv)
 	char  **curarg;
 	char   *cp;
 	char   *cp1;
-	char    ignorethis;
+	bool    ignorethis;
 
 	for (curarg = &argv[1]; --argc > 0; curarg++) {
 		if (*(cp1 = cp = *curarg) != '-')
 			break;
 		if (*++cp1 == 'i') {
-			ignorethis = YES;
+			ignorethis = true;
 			cp1++;
 		} else
-			ignorethis = NO;
+			ignorethis = false;
 		if ((*cp1 == 'D'
 			|| *cp1 == 'U'
 		    )
@@ -162,13 +158,13 @@ main(argc, argv)
 		} else if (ignorethis)
 			goto unrec;
 		else if (strcmp(&cp[1], "d") == 0)
-			debugging = YES;
+			debugging = true;
 		else if (strcmp(&cp[1], "t") == 0)
-			text = YES;
+			text = true;
 		else if (strcmp(&cp[1], "l") == 0)
-			lnblank = YES;
+			lnblank = true;
 		else if (strcmp(&cp[1], "c") == 0)
-			complement = YES;
+			complement = true;
 		else {
 		unrec:
 			warnx("unrecognized option: %s", cp);
@@ -266,40 +262,40 @@ pfile()
 void
 doif_1(depth, lineval, ignoring)
 	int      depth;
-	int      ignoring;
+	bool     ignoring;
 	Linetype lineval;
 {
 	Reject_level savereject;
+	bool    active;
+	bool    donetrue;
+	bool    inelse;
 	int     saveline;
-	int     active;
-	int     inelse;
-	int     donetrue;
 
 	debug("#if line %d code %d depth %d",
 	    linenum, lineval, depth);
 	saveline = stifline;
 	stifline = linenum;
 	savereject = reject;
-	inelse = NO;
-	donetrue = NO;
+	inelse = false;
+	donetrue = false;
 	if (lineval == LT_IF || reject != REJ_NO) {
-		active = NO;
-		ignoring = NO;
-		flushline(YES);
+		active = false;
+		ignoring = false;
+		flushline(true);
 	} else if (ignoring) {
-		active = NO;
-		flushline(YES);
+		active = false;
+		flushline(true);
 		if (lineval == LT_FALSE)
 			reject = REJ_IGNORE;
 		else
-			donetrue = YES;
+			donetrue = true;
 	} else {
-		active = YES;
-		flushline(NO);
+		active = true;
+		flushline(false);
 		if (lineval == LT_FALSE)
 			reject = REJ_YES;
 		else
-			donetrue = YES;
+			donetrue = true;
 	}
 	debug("active %d ignore %d", active, ignoring);
 	for (;;) {
@@ -309,14 +305,14 @@ doif_1(depth, lineval, ignoring)
 			    stifline, linenum, lineval, depth);
 			if (inelse)
 				error(ELIF_ERR, depth);
-			donetrue = NO;
+			donetrue = false;
 			if (active) {
-				active = NO;
+				active = false;
 				elif2if();
-				flushline(YES);
+				flushline(true);
 			} else {
-				ignoring = NO;
-				flushline(YES);
+				ignoring = false;
+				flushline(true);
 				reject = savereject;
 			}
 			debug("active %d ignore %d", active, ignoring);
@@ -328,18 +324,18 @@ doif_1(depth, lineval, ignoring)
 			if (inelse)
 				error(ELIF_ERR, depth);
 			if (active) {
-				flushline(NO);
+				flushline(false);
 			} else {
-				ignoring = NO;
-				active = YES;
+				ignoring = false;
+				active = true;
 				elif2endif();
-				flushline(YES);
+				flushline(true);
 			}
 			if (lineval == LT_ELFALSE)
 				reject = REJ_YES;
 			else {
 				reject = REJ_NO;
-				donetrue = YES;
+				donetrue = true;
 			}
 			debug("active %d ignore %d", active, ignoring);
 			break;
@@ -349,13 +345,13 @@ doif_1(depth, lineval, ignoring)
 			if (inelse)
 				error(ELSE_ERR, depth);
 			if (active) {
-				flushline(NO);
+				flushline(false);
 				if (reject == REJ_YES && !donetrue)
 					reject = REJ_NO;
 				else
 					reject = REJ_YES;
 			} else {
-				flushline(YES);
+				flushline(true);
 				if (ignoring) {
 					if (reject == REJ_IGNORE)
 						reject = REJ_NO;
@@ -363,16 +359,16 @@ doif_1(depth, lineval, ignoring)
 						reject = REJ_IGNORE;
 				}
 			}
-			inelse = YES;
+			inelse = true;
 			debug("active %d ignore %d", active, ignoring);
 			break;
 		case LT_ENDIF:
 			debug("#endif start %d line %d code %d depth %d",
 			    stifline, linenum, lineval, depth);
 			if (active)
-				flushline(NO);
+				flushline(false);
 			else
-				flushline(YES);
+				flushline(true);
 			reject = savereject;
 			stifline = saveline;
 			return;
@@ -391,7 +387,7 @@ doif(depth)
 
 	for (;;) {
 		linenum++;
-		if (getlin(tline, sizeof tline, input, NO) == EOF) {
+		if (getlin(tline, sizeof tline, input, false) == EOF) {
 			if (incomment)
 				error(CEOF_ERR, depth);
 			if (inquote == QUOTE_SINGLE)
@@ -404,7 +400,7 @@ doif(depth)
 		}
 		switch (lineval = checkline(&cursym)) {
 		case LT_PLAIN:
-			flushline(YES);
+			flushline(true);
 			break;
 		case LT_IF:
 		case LT_TRUE:
@@ -799,20 +795,20 @@ getlin(line, maxline, inp, expandtabs)
 	char   *line;
 	int     maxline;
 	FILE   *inp;
-	int     expandtabs;
+	bool    expandtabs;
 {
 	int     tmp;
 	int     num;
 	int     chr;
 #ifdef  FFSPECIAL
-	static char havechar = NO;	/* have leftover char from last time */
+	static bool havechar = false;	/* have leftover char from last time */
 	static char svchar;
 #endif	/* FFSPECIAL */
 
 	num = 0;
 #ifdef  FFSPECIAL
 	if (havechar) {
-		havechar = NO;
+		havechar = false;
 		chr = svchar;
 		goto ent;
 	}
@@ -854,7 +850,7 @@ getlin(line, maxline, inp, expandtabs)
 					*line = '\f';
 				else {
 					*line = '\n';
-					havechar = YES;
+					havechar = true;
 					svchar = chr;
 				}
 				goto end;
@@ -868,7 +864,7 @@ end:
 
 void
 flushline(keep)
-	Bool    keep;
+	bool    keep;
 {
 	if ((keep && reject != REJ_YES) ^ complement) {
 		char   *line = tline;
