@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.99 2002/12/12 17:06:15 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.100 2002/12/12 17:11:28 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -249,9 +249,9 @@ state_fn *trans_table[IS_COUNT][LT_COUNT] = {
 FILE           *input;
 const char     *filename;
 int             linenum;	/* current line number */
+bool            keepthis;	/* ignore this #if's value 'cause it's const */
 Comment_state   incomment;	/* translation phase 2/3 parser state */
 Line_state      linestate;	/* preprocessor line parser state */
-bool            constexpr;	/* the current expression is constant */
 
 #define MAXDEPTH 16
 int     depth;			/* current #if nesting */
@@ -551,7 +551,7 @@ getline(void)
 /*
  * Function for evaluating the innermost parts of expressions,
  * viz. !expr (expr) defined(symbol) symbol number
- * We reset the constexpr flag when we find a non-constant subexpression.
+ * We reset the keepthis flag when we find a non-constant subexpression.
  */
 Linetype
 eval_unary(struct ops *ops, int *valp, const char **cpp)
@@ -593,7 +593,7 @@ eval_unary(struct ops *ops, int *valp, const char **cpp)
 		cp = skipcomment(cp);
 		if (*cp++ != ')')
 			return LT_IF;
-		constexpr = false;
+		keepthis = false;
 	} else if (!endsym(*cp)) {
 		debug("eval%d symbol", ops - eval_ops);
 		sym = findsym(cp);
@@ -607,7 +607,7 @@ eval_unary(struct ops *ops, int *valp, const char **cpp)
 				return LT_IF;
 		}
 		cp = skipsym(cp);
-		constexpr = false;
+		keepthis = false;
 	} else
 		return LT_IF;
 
@@ -661,9 +661,9 @@ ifeval(const char **cpp)
 	int val;
 
 	debug("eval %s", *cpp);
-	constexpr = killconsts ? false : true;
+	keepthis = killconsts ? false : true;
 	ret = eval_table(eval_ops, &val, cpp);
-	return constexpr ? LT_IF : ret;
+	return keepthis ? LT_IF : ret;
 }
 
 /*
