@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.57 2002/04/27 17:27:14 fanf Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.58 2002/04/28 22:14:07 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -233,8 +233,10 @@ main(int argc, char *argv[])
 			usage();
 		}
 	}
-	if (nsyms == 1 && !symlist)
+	if (nsyms == 1 && !symlist) {
+		warnx("must -D or -U at least one symbol");
 		usage();
+	}
 	if (argc > 1) {
 		errx(2, "can only do one file");
 	} else if (argc == 1) {
