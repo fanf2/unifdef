@@ -51,7 +51,7 @@ __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
 #endif
 
 #ifndef lint
-__RCSID("$dotat: unifdef/unifdef.c,v 1.13 2002/04/25 16:11:54 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.14 2002/04/25 16:12:23 fanf Exp $");
 #endif
 
 /*
@@ -338,7 +338,7 @@ doif(thissym, inif, prevreject, depth)
 			flushline(YES);
 			return NO_ERR;
 
-		case LT_LEOF:{
+		case LT_LEOF: {
 				int     code;
 				code = incomment
 				    ? CEOF_ERR
