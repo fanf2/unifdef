@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.128 2002/12/13 13:58:00 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.129 2002/12/13 15:20:05 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -444,7 +444,7 @@ getline(void)
 			linestate = LS_DIRTY;
 	}
 	if (!incomment && linestate == LS_HASH) {
-		keyword = (char *)cp;
+		keyword = tline + (cp - tline);
 		cp = skipsym(cp);
 		kwlen = cp - keyword;
 		if (strncmp(cp, "\\\n", 2) == 0)
@@ -802,7 +802,7 @@ addsym(bool ignorethis, bool definethis, char *sym)
 	}
 	symname[symind] = sym;
 	ignore[symind] = ignorethis;
-	val = (char *)skipsym(sym);
+	val = sym + (skipsym(sym) - sym);
 	if (definethis) {
 		if (*val == '=') {
 			value[symind] = val+1;
