@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.56 2002/04/27 17:26:53 fanf Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.57 2002/04/27 17:27:14 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -131,7 +131,7 @@ int             linenum;	/* current line number */
 int             stifline;	/* start of current #if */
 int             stqcline;	/* start of current coment or quote */
 
-#define MAXLINE 256
+#define MAXLINE 1024
 #define KWSIZE 8
 /* tline has extra space so that it isn't overflowed when editing #elifs */
 char    tline[MAXLINE+KWSIZE];	/* input buffer */
