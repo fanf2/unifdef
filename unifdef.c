@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.70 2002/05/15 19:34:40 fanf Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.71 2002/05/15 19:36:10 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -508,7 +508,7 @@ checkline(int *cursym)
 		goto eol;
 
 	cp = skipcomment(++cp);
-	keyword = tline + (cp - tline);
+	keyword = (char*)cp;
 	symp = kw;
 	while (!endsym(*cp)) {
 		*symp = *cp++;
