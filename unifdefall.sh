@@ -2,7 +2,8 @@
 #
 # remove all the #if's from a source file
 #
-# $dotat: unifdef/unifdefall.sh,v 1.7 2002/04/29 16:41:08 fanf Exp $
+#	$dotat: unifdef/unifdefall.sh,v 1.8 2002/05/15 10:31:20 fanf Exp $
+# $FreeBSD$
 
 set -e
 
