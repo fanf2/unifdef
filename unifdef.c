@@ -46,7 +46,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.156 2003/06/30 14:30:54 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.157 2003/07/01 08:19:58 fanf2 Exp $");
 #endif
 #endif /* not lint */
 #ifdef __FBSDID
@@ -703,8 +703,10 @@ eval_unary(const struct ops *ops, int *valp, const char **cpp)
 		}
 		cp = skipsym(cp);
 		keepthis = false;
-	} else
+	} else {
+		debug("eval%d bad expr", ops - eval_ops);
 		return (LT_IF);
+	}
 
 	*cpp = cp;
 	debug("eval%d = %d", ops - eval_ops, *valp);
@@ -758,6 +760,7 @@ ifeval(const char **cpp)
 	debug("eval %s", *cpp);
 	keepthis = killconsts ? false : true;
 	ret = eval_table(eval_ops, &val, cpp);
+	debug("eval = %d", val);
 	return (keepthis ? LT_IF : ret);
 }
 
