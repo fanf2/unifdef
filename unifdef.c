@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.89 2002/12/11 02:28:22 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.90 2002/12/11 20:05:52 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -77,6 +77,8 @@ __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fan
 /* types of input lines: */
 typedef enum {
 	LT_PLAIN,		/* ordinary line */
+	LT_TRUEI,		/* a true #if with ignore flag */
+	LT_FALSEI,		/* a false #if with ignore flag */
 	LT_IF,			/* an unknown #if */
 	LT_TRUE,		/* a true #if */
 	LT_FALSE,		/* a false #if */
@@ -85,14 +87,36 @@ typedef enum {
 	LT_ELFALSE,		/* a false #elif */
 	LT_ELSE,		/* #else */
 	LT_ENDIF,		/* #endif */
-	LT_EOF			/* end of file */
+	LT_EOF,			/* end of file */
+	LT_COUNT
 } Linetype;
 
-typedef enum {		/* 0 or 1: pass thru; 1 or 2: ignore comments */
-	REJ_NO,
-	REJ_IGNORE,
-	REJ_YES
-} Reject_level;
+const char *linetype_name[] = {
+	"PLAIN", "TRUEI", "FALSEI", "IF", "TRUE", "FALSE",
+	"ELIF", "ELTRUE", "ELFALSE", "ELSE", "ENDIF", "EOF"
+};
+
+/* state of #if processing */
+typedef enum {
+	IS_OUTSIDE,
+	IS_FALSE_PREFIX,	/* false #if followed by false #elifs */
+	IS_TRUE_PREFIX,		/* first non-false #(el)if is true */
+	IS_PASS_MIDDLE,		/* first non-false #(el)if is unknown */
+	IS_FALSE_MIDDLE,	/* a false #elif after a pass state */
+	IS_TRUE_MIDDLE,		/* a true #elif after a pass state */
+	IS_PASS_ELSE,		/* an else after an unknown state */
+	IS_FALSE_ELSE,		/* an else after a true state */
+	IS_TRUE_ELSE,		/* an else after only false states */
+	IS_FALSE_TRAILER,	/* #elifs after a true are false */
+	IS_COUNT
+} Ifstate;
+
+const char *ifstate_name[] = {
+	"OUTSIDE", "FALSE_PREFIX", "TRUE_PREFIX",
+	"PASS_MIDDLE", "FALSE_MIDDLE", 	"TRUE_MIDDLE",
+ 	"PASS_ELSE", "FALSE_ELSE", "TRUE_ELSE",
+	"FALSE_TRAILER"
+};
 
 typedef enum {
 	NO_COMMENT,
@@ -102,6 +126,10 @@ typedef enum {
 	FINISHING_COMMENT
 } Comment_state;
 
+const char *comment_name[] = {
+	"NO", "C", "CXX", "STARTING", "FINISHING"
+};
+
 typedef enum {
 	LS_START,
 	LS_HASH,
@@ -110,21 +138,8 @@ typedef enum {
 	LS_DIRTY
 } Line_state;
 
-const char *const errs[] = {
-#define NO_ERR      0
-	"",
-#define END_ERR     1
-	"",
-#define ELIF_ERR    2
-	"Inappropriate elif",
-#define ELSE_ERR    3
-	"Inappropriate else",
-#define ENDIF_ERR   4
-	"Inappropriate endif",
-#define IEOF_ERR    5
-	"Premature EOF in ifdef",
-#define CEOF_ERR    6
-	"Premature EOF in comment"
+const char *linestate_name[] = {
+	"START", "HASH", "KEYWORD", "TRAILER", "DIRTY"
 };
 
 /*
@@ -179,20 +194,78 @@ struct ops {
 			{ ">", op_gt } } }
 };
 
+/*
+ * A state transition function alters the global state in a particular
+ * way. The table below is indexed by the current processing state and
+ * the type of the current line. NULL entries indicate that processing
+ * is complete.
+ *
+ * Nesting is handled by keeping a stack of states; some transition
+ * functions increase or decrease the depth. They also maintin the
+ * ignore state on a stack. In some complicated cases they have to
+ * alter the preprocessor directive.
+ *
+ * When we have processed a group that starts off with a known-false
+ * #if/#elif sequence (which has therefore been deleted) followed by a
+ * #elif that we don't understand and therefore must keep, we turn the
+ * latter into a #if to keep the nesting correct.
+ *
+ * When we find a true #elif in a group, the following block will
+ * always be kept and the rest of the sequence after the next #elif or
+ * #else will be discarded. We change the #elif to #else and the
+ * followinf directive to #endif since this is equivalent.
+ */
+typedef void state_fn(void);
+
+state_fn print, drop;			/* plain line handling */
+state_fn Itrue, Ifalse;			/* ignore comments in this block */
+state_fn Fpass, Ftrue, Ffalse;		/* first line of group */
+state_fn Strue, Sfalse, Selse;		/* output lacks group's start line */
+state_fn Pelif, Pelse, Pendif;		/* print/pass this block */
+state_fn Dfalse, Delif, Delse, Dendif;	/* discard this block */
+state_fn Mpass, Mtrue, Melif, Melse;	/* modify this line as above */
+state_fn Eelif, Eelse, Eendif, Eeof;	/* report an error */
+
+/*	PLAIN	TRUEI	FALSEI	IF	TRUE	FALSE	ELIF	ELTRUE	ELFALSE	ELSE	ENDIF	EOF	*/
+state_fn *trans_table[IS_COUNT][LT_COUNT] = {
+/* IS_OUTSIDE */
+{	print,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Eelif,	Eelif,	Eelif,	Eelse,	Eendif,	NULL	},
+/* IS_FALSE_PREFIX */
+{	drop,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Mpass,	Strue,	Sfalse,	Selse,	Dendif,	Eeof	},
+/* IS_TRUE_PREFIX */
+{	print,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Dfalse,	Dfalse,	Dfalse,	Delse,	Dendif,	Eeof	},
+/* IS_PASS_MIDDLE */
+{	print,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Pelif,	Mtrue,	Delif,	Pelse,	Pendif,	Eeof	},
+/* IS_FALSE_MIDDLE */
+{	drop,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Pelif,	Mtrue,	Delif,	Pelse,	Pendif,	Eeof	},
+/* IS_TRUE_MIDDLE */
+{	print,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Melif,	Melif,	Melif,	Melse,	Pendif, Eeof	},
+/* IS_PASS_ELSE */
+{	print,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Eelif,	Eelif,	Eelif,	Eelse,	Pendif,	Eeof	},
+/* IS_FALSE_ELSE */
+{	drop,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Eelif,	Eelif,	Eelif,	Eelse,	Dendif,	Eeof	},
+/* IS_TRUE_ELSE */
+{	print,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Eelif,	Eelif,	Eelif,	Eelse,	Dendif,	Eeof	},
+/* IS_FALSE_TRAILER */
+{	drop,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Dfalse,	Dfalse,	Dfalse,	Delse,	Dendif,	Eeof	}
+};
+
 FILE           *input;
 const char     *filename;
 int             linenum;	/* current line number */
-int             stifline;	/* start of current #if */
 int             stcomline;	/* start of current comment */
 Comment_state   incomment;	/* translation phase 2/3 parser state */
 Line_state      linestate;	/* preprocessor line parser state */
-Reject_level    reject;		/* what kind of filtering we are doing */
 bool            constexpr;	/* the current expression is constant */
 
+#define MAXDEPTH 16
+int     depth;			/* current #if nesting */
+Ifstate ifstate[MAXDEPTH];	/* #if processor state */
+bool    ignoring[MAXDEPTH];	/* ignore comments state */
+int     stifline[MAXDEPTH];	/* start of current #if */
+
 #define MAXLINE 1024
-#define KWSIZE 8
-/* tline has extra space so that it isn't overflowed when editing #elifs */
-char    tline[MAXLINE+KWSIZE];	/* input buffer */
+char    tline[MAXLINE+10];	/* input buffer plus space for editing */
 char   *keyword;        	/* used for editing #elif's */
 
 bool            complement;	/* -c option in effect: do the complement */
@@ -210,21 +283,20 @@ const char     *value[MAXSYMS];		/* -Dsym=value */
 bool            ignore[MAXSYMS];	/* -iDsym or -iUsym */
 int             nsyms;
 
-Linetype        checkline(int *);
+Linetype        checkline(void);
 void            debug(const char *, ...);
-Linetype        process(int);
-void            doif(int, Linetype, int);
-void            elif2if(void);
-void            elif2endif(void);
-void            error(int, int);
 void            addsym(bool, bool, char *);
+void            error(const char *);
 int             findsym(const char *);
 void            flushline(bool);
 Linetype        ifeval(const char **);
 int             main(int, char **);
+void            nest(void);
+void            process(void);
 const char     *skipcomment(const char *);
 const char     *skipsym(const char *);
 int             strlcmp(const char *, const char *, size_t);
+void            unignore(void);
 void            usage(void);
 
 #define endsym(c) (!isalpha((unsigned char)c) && !isdigit((unsigned char)c) && c != '_')
@@ -291,14 +363,14 @@ main(int argc, char *argv[])
 	} else if (argc == 1 && strcmp(*argv, "-") != 0) {
 		filename = *argv;
 		if ((input = fopen(filename, "r")) != NULL) {
-			(void) process(0);
+			process();
 			(void) fclose(input);
 		} else
 			err(2, "can't open %s", *argv);
 	} else {
 		filename = "[stdin]";
 		input = stdin;
-		(void) process(0);
+		process();
 	}
 
 	exit(exitstat);
@@ -313,178 +385,97 @@ usage(void)
 }
 
 /*
- * This function processes #if lines and alters the pass-through
- * state accordingly. All the complicated state transition suff is
- * dealt with in this function, as well as checking that the
- * #if/#elif/#else/#endif lines happen in the correct order. Lines
- * between #if lines are handled by a recursive call to process().
+ * The driver for the state machine.
  */
 void
-doif(int depth, Linetype lineval, int sym)
+process(void)
 {
-	Reject_level savereject;
-	bool active;
-	bool donetrue;
-	bool ignoring;
-	bool inelse;
-	int saveline;
+	Linetype linetype;
+	state_fn *trans;
 
-	debug("#if line %d code %d depth %d",
-	    linenum, lineval, depth);
-	saveline = stifline;
-	stifline = linenum;
-	savereject = reject;
-	inelse = false;
-	donetrue = false;
-	ignoring = (sym < 0) ? false : ignore[sym];
-	if (lineval == LT_IF || reject != REJ_NO) {
-		active = false;
-		ignoring = false;
-		flushline(true);
-	} else if (ignoring) {
-		active = false;
-		flushline(true);
-		if (lineval == LT_FALSE)
-			reject = REJ_IGNORE;
-		else
-			donetrue = true;
-	} else {
-		active = true;
-		flushline(false);
-		if (lineval == LT_FALSE)
-			reject = REJ_YES;
-		else
-			donetrue = true;
-	}
-	debug("active %d ignore %d", active, ignoring);
 	for (;;) {
-		switch (lineval = process(depth)) {
-		case LT_ELIF:
-			debug("#elif start %d line %d code %d depth %d",
-			    stifline, linenum, lineval, depth);
-			if (inelse)
-				error(ELIF_ERR, depth);
-			donetrue = false;
-			reject = savereject;
-			if (active) {
-				active = false;
-				elif2if();
-				flushline(true);
-			} else {
-				ignoring = false;
-				flushline(true);
-			}
-			debug("active %d ignore %d", active, ignoring);
-			break;
-		case LT_ELTRUE:
-		case LT_ELFALSE:
-			debug("#elif start %d line %d code %d depth %d",
-			    stifline, linenum, lineval, depth);
-			if (inelse)
-				error(ELIF_ERR, depth);
-			if (active) {
-				flushline(false);
-			} else {
-				ignoring = false;
-				active = true;
-				elif2endif();
-				flushline(true);
-			}
-			if (lineval == LT_ELFALSE)
-				reject = REJ_YES;
-			else {
-				reject = REJ_NO;
-				donetrue = true;
-			}
-			debug("active %d ignore %d", active, ignoring);
-			break;
-		case LT_ELSE:
-			debug("#else start %d line %d code %d depth %d",
-			    stifline, linenum, lineval, depth);
-			if (inelse)
-				error(ELSE_ERR, depth);
-			if (active) {
-				flushline(false);
-				if (reject == REJ_YES && !donetrue)
-					reject = REJ_NO;
-				else
-					reject = REJ_YES;
-			} else {
-				flushline(true);
-				if (ignoring) {
-					if (reject == REJ_IGNORE)
-						reject = REJ_NO;
-					else
-						reject = REJ_IGNORE;
-				}
-			}
-			inelse = true;
-			debug("active %d ignore %d", active, ignoring);
-			break;
-		case LT_ENDIF:
-			debug("#endif start %d line %d code %d depth %d",
-			    stifline, linenum, lineval, depth);
-			if (active)
-				flushline(false);
-			else
-				flushline(true);
-			reject = savereject;
-			stifline = saveline;
+		linenum++;
+		if (fgets(tline, MAXLINE, input) == NULL)
+			linetype = LT_EOF;
+		else
+			linetype = checkline();
+		trans = trans_table[ifstate[depth]][linetype];
+		if (trans == NULL)
 			return;
-		default:
-			/* bug */
-			abort();
-		}
+		trans();
+		debug("process %s -> %s depth %d",
+		    linetype_name[linetype],
+		    ifstate_name[ifstate[depth]], depth);
 	}
 }
 
 /*
- * The main file processing routine. This function deals with passing
- * through normal non-#if lines, correct nesting of #if sections, and
- * checking that things terminate correctly at the end of file. The
- * complicated stuff is delegated to doif().
+ * State transition functions.
  */
-Linetype
-process(int depth)
-{
-	Linetype lineval;
-	int cursym;
 
-	for (;;) {
-		linenum++;
-		if (fgets(tline, MAXLINE, input) == NULL) {
-			if (incomment)
-				error(CEOF_ERR, depth);
-			if (depth != 0)
-				error(IEOF_ERR, depth);
-			return LT_EOF;
-		}
-		switch (lineval = checkline(&cursym)) {
-		case LT_PLAIN:
-			flushline(true);
-			break;
-		case LT_IF:
-		case LT_TRUE:
-		case LT_FALSE:
-			doif(depth + 1, lineval, cursym);
-			break;
-		case LT_ELIF:
-		case LT_ELTRUE:
-		case LT_ELFALSE:
-		case LT_ELSE:
-		case LT_ENDIF:
-			if (depth != 0)
-				return lineval;
-			if (lineval == LT_ENDIF)
-				error(ENDIF_ERR, depth);
-			if (lineval == LT_ELSE)
-				error(ELSE_ERR, depth);
-			error(ELIF_ERR, depth);
-		default:
-			/* bug */
-			abort();
-		}
-	}
+/* utilities */
+void
+error(const char *msg)
+{
+	errx(1, "%s: %d: %s (#if line %d depth %d)",
+	    filename, linenum, msg, stifline[depth], depth);
+}
+void nest(void) {
+	depth += 1;
+	if (depth >= MAXDEPTH)
+		error("Too many levels of nesting");
+	stifline[depth] = linenum;
+}
+void unignore(void) {
+	ignore[depth] = ignore[depth-1];
+}
+/* report an error */
+void Eelif (void) { error("Inappropriate #elif"); }
+void Eelse (void) { error("Inappropriate #else"); }
+void Eendif(void) { error("Inappropriate #endif"); }
+void Eeof  (void) { error("Premature EOF"); }
+/* plain line handling */
+void print (void) { flushline(true); }
+void drop  (void) { flushline(false); }
+/* ignore comments in this block */
+void Itrue (void) {         Ftrue();  ignore[depth] = true; }
+void Ifalse(void) {         Ffalse(); ignore[depth] = true; }
+/* first line of group */
+void Fpass (void) {                   nest();     Pelif(); }
+void Ftrue (void) {                   nest();     Strue(); }
+void Ffalse(void) {                   nest();     Sfalse(); }
+/* output lacks group's start line */
+void Strue (void) { flushline(false); unignore(); ifstate[depth] = IS_TRUE_PREFIX; }
+void Sfalse(void) { flushline(false); unignore(); ifstate[depth] = IS_FALSE_PREFIX; }
+void Selse (void) { flushline(false);             ifstate[depth] = IS_TRUE_ELSE; }
+/* print/pass this block */
+void Pelif (void) { flushline(true);  unignore(); ifstate[depth] = IS_PASS_MIDDLE; }
+void Pelse (void) { flushline(true);              ifstate[depth] = IS_PASS_ELSE; }
+void Pendif(void) { flushline(true);  --depth; }
+/* discard this block */
+void Dfalse(void) { flushline(false); unignore(); ifstate[depth] = IS_FALSE_TRAILER; }
+void Delif (void) { flushline(false);             ifstate[depth] = IS_FALSE_MIDDLE; }
+void Delse (void) { flushline(false);             ifstate[depth] = IS_FALSE_ELSE; }
+void Dendif(void) { flushline(false); --depth; }
+/* modify this line */
+void Mpass(void) {
+	strncpy(keyword, "if  ", 4);
+	Pelif();
+}
+void Mtrue(void) {
+	strcpy(keyword, "else\n");
+	flushline(true);
+	ifstate[depth] = IS_TRUE_MIDDLE;
+}
+void Melif(void) {
+	strcpy(keyword, "endif\n");
+	flushline(true);
+	ifstate[depth] = IS_FALSE_TRAILER;
+}
+void Melse(void) {
+	strcpy(keyword, "endif\n");
+	flushline(true);
+	ifstate[depth] = IS_FALSE_ELSE;
 }
 
 /*
@@ -494,16 +485,16 @@ process(int depth)
  * across multiple physical lines correctly in many cases.
  */
 Linetype
-checkline(int *cursym)
+checkline(void)
 {
 	const char *cp;
+	int cursym;
+	int kwlen;
 	Linetype retval;
 	Comment_state wascomment;
-	int kwlen;
 
-	wascomment = incomment;
 	retval = LT_PLAIN;
-	*cursym = -1;
+	wascomment = incomment;
 	cp = skipcomment(tline);
 	if (linestate == LS_START) {
 		if (*cp == '#') {
@@ -522,11 +513,16 @@ checkline(int *cursym)
 		    (retval = LT_FALSE,
 		     strlcmp("ifndef", keyword, kwlen) == 0)) {
 			cp = skipcomment(cp);
-			if ((*cursym = findsym(cp)) < 0)
+			if ((cursym = findsym(cp)) < 0)
 				retval = LT_IF;
-			else if (value[*cursym] == NULL)
-				retval = (retval == LT_TRUE)
-				    ? LT_FALSE : LT_TRUE;
+			else {
+				if (value[cursym] == NULL)
+					retval = (retval == LT_TRUE)
+					    ? LT_FALSE : LT_TRUE;
+				if (ignore[cursym])
+					retval = (retval == LT_TRUE)
+					    ? LT_TRUEI : LT_FALSEI;
+			}
 			cp = skipsym(cp);
 		} else if (strlcmp("if", keyword, kwlen) == 0)
 			retval = ifeval(&cp);
@@ -551,34 +547,9 @@ checkline(int *cursym)
 		while (*cp != '\0')
 			cp = skipcomment(cp + 1);
 	}
-	debug("state incomment %d linestate %d", incomment, linestate);
+	debug("parser %s comment %s line",
+	    comment_name[incomment], linestate_name[linestate]);
 	return retval;
-}
-
-/*
- * Turn a #elif line into a #if. This function is used when we are
- * processing a #if/#elif/#else/#endif sequence that starts off with a
- * #if that we understand (and therefore it has been deleted) which is
- * followed by a #elif that we don't understand and therefore must be
- * kept. We turn it into a #if to keep the nesting correct.
- */
-void
-elif2if(void)
-{
-	strncpy(keyword, "if  ", 4);
-}
-
-/*
- * Turn a #elif line into a #endif. This is used in the opposite
- * situation to elif2if, i.e. a #if that we don't understand is
- * followed by a #elif that we do; rather than deleting the #elif (as
- * we would for a #if) we turn it into a #endif to keep the nesting
- * correct.
- */
-void
-elif2endif(void)
-{
-	strcpy(keyword, "endif\n");
 }
 
 /*
@@ -708,7 +679,7 @@ ifeval(const char **cpp)
 const char *
 skipcomment(const char *cp)
 {
-	if (text || reject == REJ_IGNORE) {
+	if (text || ignoring[depth]) {
 		while (isspace((unsigned char)*cp))
 			cp += 1;
 		return cp;
@@ -862,15 +833,14 @@ strlcmp(const char *s, const char *t, size_t n)
 }
 
 /*
- * Write a line to the output or not, according to the current
- * filtering state.
+ * Write a line to the output or not, according to command line options.
  */
 void
 flushline(bool keep)
 {
 	if (symlist)
 		return;
-	if ((keep && reject != REJ_YES) ^ complement)
+	if (keep ^ complement)
 		fputs(tline, stdout);
 	else if (lnblank)
 		putc('\n', stdout);
@@ -887,16 +857,4 @@ debug(const char *msg, ...)
 		vwarnx(msg, ap);
 		va_end(ap);
 	}
-}
-
-void
-error(int code, int depth)
-{
-	if (incomment)
-		errx(2, "error in %s line %d: %s (#if depth %d)",
-		    filename, stcomline, errs[code], depth);
-	else
-		errx(2, "error in %s line %d: %s"
-		    " (#if depth %d start line %d)",
-		    filename, linenum, errs[code], depth, stifline);
 }
