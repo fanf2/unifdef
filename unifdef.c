@@ -51,7 +51,7 @@ __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
 #endif
 
 #ifndef lint
-__RCSID("$dotat: unifdef/unifdef.c,v 1.3 2002/04/25 14:55:27 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.4 2002/04/25 14:57:56 fanf Exp $");
 #endif
 
 /*
@@ -72,7 +72,6 @@ __RCSID("$dotat: unifdef/unifdef.c,v 1.3 2002/04/25 14:55:27 fanf Exp $");
 #include <string.h>
 #include <ctype.h>
 
-#define BSS
 FILE   *input;
 #ifndef YES
 #define YES 1
@@ -82,30 +81,30 @@ FILE   *input;
 #define CXX_COMMENT 2
 typedef int Bool;
 
-char   *progname BSS;
-char   *filename BSS;
-char text BSS;			/* -t option in effect: this is a text file */
-char lnblank BSS;		/* -l option in effect: blank deleted lines */
-char complement BSS;		/* -c option in effect: complement the
+char   *progname;
+char   *filename;
+char text;			/* -t option in effect: this is a text file */
+char lnblank;			/* -l option in effect: blank deleted lines */
+char complement;		/* -c option in effect: complement the
 				 * operation */
 
 #define MAXSYMS 100
-char   *symname[MAXSYMS] BSS;	/* symbol name */
-char    true[MAXSYMS] BSS;	/* -Dsym */
-char    ignore[MAXSYMS] BSS;	/* -iDsym or -iUsym */
-char    insym[MAXSYMS] BSS;	/* state: false, inactive, true */
+char   *symname[MAXSYMS];	/* symbol name */
+char    true[MAXSYMS];		/* -Dsym */
+char    ignore[MAXSYMS];	/* -iDsym or -iUsym */
+char    insym[MAXSYMS];		/* state: false, inactive, true */
 #define SYM_INACTIVE 0		/* symbol is currently inactive */
 #define SYM_FALSE    1		/* symbol is currently false */
 #define SYM_TRUE     2		/* symbol is currently true  */
 
-char nsyms BSS;
-char incomment BSS;		/* inside C comment */
+char nsyms;
+char incomment;			/* inside C comment */
 
 #define QUOTE_NONE   0
 #define QUOTE_SINGLE 1
 #define QUOTE_DOUBLE 2
-char inquote BSS;		/* inside single or double quotes */
-int exitstat BSS;
+char inquote;			/* inside single or double quotes */
+int exitstat;
 
 int	error(int, int, int);
 int	findsym(char *);
@@ -218,14 +217,14 @@ typedef int Linetype;
 Linetype checkline(int *);
 
 typedef int Reject_level;
-Reject_level reject BSS;	/* 0 or 1: pass thru; 1 or 2: ignore comments */
+Reject_level reject;		/* 0 or 1: pass thru; 1 or 2: ignore comments */
 #define REJ_NO          0
 #define REJ_IGNORE      1
 #define REJ_YES         2
 int doif(int, int, Reject_level, int);
 
-int linenum BSS;		/* current line number */
-int stqcline BSS;		/* start of current coment or quote */
+int linenum;			/* current line number */
+int stqcline;			/* start of current coment or quote */
 char   *errs[] = {
 #define NO_ERR      0
 	"",
@@ -364,7 +363,7 @@ doif(thissym, inif, prevreject, depth)
 #define endsym(c) (!isalpha ((unsigned char)c) && !isdigit ((unsigned char)c) && c != '_')
 
 #define MAXLINE 256
-char    tline[MAXLINE] BSS;
+char    tline[MAXLINE];
 
 Linetype
 checkline(cursym)
@@ -581,7 +580,7 @@ getlin(line, maxline, inp, expandtabs)
 	int     chr;
 #ifdef  FFSPECIAL
 	static char havechar = NO;	/* have leftover char from last time */
-	static char svchar BSS;
+	static char svchar;
 #endif				/* FFSPECIAL */
 
 	num = 0;
