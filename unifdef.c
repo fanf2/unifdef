@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.121 2002/12/13 11:04:43 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.122 2002/12/13 11:11:11 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -445,14 +445,14 @@ getline(void)
 		keyword = (char *)cp;
 		cp = skipsym(cp);
 		kwlen = cp - keyword;
-		if ((retval = LT_TRUE,
-		     strlcmp("ifdef", keyword, kwlen) == 0) ||
-		    (retval = LT_FALSE,
-		     strlcmp("ifndef", keyword, kwlen) == 0)) {
+		if (strlcmp("ifdef", keyword, kwlen) == 0 ||
+		    strlcmp("ifndef", keyword, kwlen) == 0) {
 			cp = skipcomment(cp);
 			if ((cursym = findsym(cp)) < 0)
 				retval = LT_IF;
 			else {
+				retval = (keyword[2] == 'n')
+				    ? LT_FALSE : LT_TRUE;
 				if (value[cursym] == NULL)
 					retval = (retval == LT_TRUE)
 					    ? LT_FALSE : LT_TRUE;
