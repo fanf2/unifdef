@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.91 2002/12/11 20:15:57 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.92 2002/12/11 20:42:47 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -216,8 +216,8 @@ struct ops {
 typedef void state_fn(void);
 
 state_fn print, drop;			/* plain line handling */
-state_fn Itrue, Ifalse;			/* ignore comments in this block */
-state_fn Fpass, Ftrue, Ffalse;		/* first line of group */
+state_fn Idrop, Itrue, Ifalse;		/* ignore comments in this block */
+state_fn Fdrop, Fpass, Ftrue, Ffalse;	/* first line of group */
 state_fn Strue, Sfalse, Selse;		/* output lacks group's start line */
 state_fn Pelif, Pelse, Pendif;		/* print/pass this block */
 state_fn Dfalse, Delif, Delse, Dendif;	/* discard this block */
@@ -229,23 +229,23 @@ state_fn *trans_table[IS_COUNT][LT_COUNT] = {
 /* IS_OUTSIDE */
 {	print,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Eelif,	Eelif,	Eelif,	Eelse,	Eendif,	NULL	},
 /* IS_FALSE_PREFIX */
-{	drop,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Mpass,	Strue,	Sfalse,	Selse,	Dendif,	Eeof	},
+{	drop,	Idrop,	Idrop,	Fdrop,	Fdrop,	Fdrop,	Mpass,	Strue,	Sfalse,	Selse,	Dendif,	Eeof	},
 /* IS_TRUE_PREFIX */
 {	print,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Dfalse,	Dfalse,	Dfalse,	Delse,	Dendif,	Eeof	},
 /* IS_PASS_MIDDLE */
 {	print,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Pelif,	Mtrue,	Delif,	Pelse,	Pendif,	Eeof	},
 /* IS_FALSE_MIDDLE */
-{	drop,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Pelif,	Mtrue,	Delif,	Pelse,	Pendif,	Eeof	},
+{	drop,	Idrop,	Idrop,	Fdrop,	Fdrop,	Fdrop,	Pelif,	Mtrue,	Delif,	Pelse,	Pendif,	Eeof	},
 /* IS_TRUE_MIDDLE */
 {	print,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Melif,	Melif,	Melif,	Melse,	Pendif, Eeof	},
 /* IS_PASS_ELSE */
 {	print,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Eelif,	Eelif,	Eelif,	Eelse,	Pendif,	Eeof	},
 /* IS_FALSE_ELSE */
-{	drop,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Eelif,	Eelif,	Eelif,	Eelse,	Dendif,	Eeof	},
+{	drop,	Idrop,	Idrop,	Fdrop,	Fdrop,	Fdrop,	Eelif,	Eelif,	Eelif,	Eelse,	Dendif,	Eeof	},
 /* IS_TRUE_ELSE */
 {	print,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Eelif,	Eelif,	Eelif,	Eelse,	Dendif,	Eeof	},
 /* IS_FALSE_TRAILER */
-{	drop,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Dfalse,	Dfalse,	Dfalse,	Delse,	Dendif,	Eeof	}
+{	drop,	Idrop,	Idrop,	Fdrop,	Fdrop,	Fdrop,	Dfalse,	Dfalse,	Dfalse,	Delse,	Dendif,	Eeof	}
 };
 
 FILE           *input;
@@ -436,9 +436,11 @@ void Eeof  (void) { error("Premature EOF"); }
 void print (void) { flushline(true); }
 void drop  (void) { flushline(false); }
 /* ignore comments in this block */
+void Idrop (void) {         Fdrop();  ignore[depth] = true; }
 void Itrue (void) {         Ftrue();  ignore[depth] = true; }
 void Ifalse(void) {         Ffalse(); ignore[depth] = true; }
 /* first line of group */
+void Fdrop (void) {                   nest();     Dfalse(); }
 void Fpass (void) {                   nest();     Pelif(); }
 void Ftrue (void) {                   nest();     Strue(); }
 void Ffalse(void) {                   nest();     Sfalse(); }
