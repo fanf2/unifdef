@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.54 2002/04/26 20:44:33 fanf Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.55 2002/04/27 17:23:47 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -164,7 +164,7 @@ void            elif2endif(void);
 void	        error(int, int);
 int	        findsym(const char *);
 void	        flushline(bool);
-int	        getlin(char *, int, FILE *, bool);
+int	        getline(char *, int, FILE *, bool);
 Linetype        ifeval(const char **);
 Linetype        ifeval_1(const char **);
 Linetype        ifeval_2(const char **);
@@ -385,7 +385,7 @@ doif(int depth)
 
 	for (;;) {
 		linenum++;
-		if (getlin(tline, sizeof tline, input, false) == EOF) {
+		if (getline(tline, sizeof tline, input, false) == EOF) {
 			if (incomment)
 				error(CEOF_ERR, depth);
 			if (inquote == QUOTE_SINGLE)
@@ -785,11 +785,11 @@ findsym(const char *str)
 }
 
 /*
- *   getlin - expands tabs if asked for
+ *   getline - expands tabs if asked for
  *            and (if compiled in) treats form-feed as an end-of-line
  */
 int
-getlin(char *line, int maxline, FILE *inp, bool expandtabs)
+getline(char *line, int maxline, FILE *inp, bool expandtabs)
 {
 	int     tmp;
 	int     num;
