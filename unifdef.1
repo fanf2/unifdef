@@ -1,8 +1,9 @@
 .\" Copyright (c) 1985, 1991, 1993
 .\"	The Regents of the University of California.  All rights reserved.
+.\" Copyright (c) 2002, 2003 Tony Finch <dot@dotat.at>
 .\"
 .\" This code is derived from software contributed to Berkeley by
-.\" Dave Yost. Support for #if and #elif was added by Tony Finch.
+.\" Dave Yost. It was rewritten to support ANSI C by Tony Finch.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -12,11 +13,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 3. All advertising materials mentioning features or use of this software
-.\"    must display the following acknowledgement:
-.\"	This product includes software developed by the University of
-.\"	California, Berkeley and its contributors.
-.\" 4. Neither the name of the University nor the names of its contributors
+.\" 3. Neither the name of the University nor the names of its contributors
 .\"    may be used to endorse or promote products derived from this software
 .\"    without specific prior written permission.
 .\"
@@ -33,7 +30,7 @@
 .\" SUCH DAMAGE.
 .\"
 .\"     @(#)unifdef.1	8.2 (Berkeley) 4/1/94
-.\"	$dotat: unifdef/unifdef.1,v 1.45 2003/01/20 14:37:08 fanf2 Exp $
+.\"	$dotat: unifdef/unifdef.1,v 1.46 2003/07/31 08:10:39 fanf2 Exp $
 .\" $FreeBSD: src/usr.bin/unifdef/unifdef.1,v 1.19 2003/01/20 12:41:41 fanf Exp $
 .\"
 .Dd September 24, 2002
