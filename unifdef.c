@@ -51,7 +51,7 @@ __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
 #endif
 
 #ifndef lint
-__RCSID("$dotat: unifdef/unifdef.c,v 1.12 2002/04/25 16:05:30 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.13 2002/04/25 16:11:54 fanf Exp $");
 #endif
 
 /*
@@ -214,6 +214,7 @@ typedef int Linetype;
 #define LT_ENDIF       6	/* #endif */
 #define LT_LEOF        7	/* end of file */
 Linetype checkline(int *);
+Linetype ifeval(char *cp);
 
 typedef int Reject_level;
 Reject_level reject;		/* 0 or 1: pass thru; 1 or 2: ignore comments */
@@ -414,7 +415,7 @@ checkline(cursym)
 			retval = (retval == LT_TRUE)
 			    ? LT_FALSE : LT_TRUE;
 	} else if (strcmp(keyword, "if") == 0)
-		retval = LT_IF;
+		retval = ifeval(cp);
 	else if (strcmp(keyword, "else") == 0)
 		retval = LT_ELSE;
 	else if (strcmp(keyword, "endif") == 0)
@@ -440,6 +441,14 @@ eol:
 		}
 	return retval;
 }
+
+Linetype
+ifeval(cp)
+	char   *cp;
+{
+	return LT_IF;
+}
+
 /*
  *  Skip over comments and stop at the next charaacter
  *  position that is not whitespace.
