@@ -46,7 +46,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.153 2003/06/30 14:03:56 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.154 2003/06/30 14:22:40 fanf2 Exp $");
 #endif
 #endif /* not lint */
 #ifdef __FBSDID
@@ -770,8 +770,9 @@ static const char *
 skipcomment(const char *cp)
 {
 	if (text || ignoring[depth]) {
-		while (isspace((unsigned char)*cp))
-			cp += 1;
+		for (; isspace((unsigned char)*cp); cp++)
+			if (*cp == '\n')
+				linestate = LS_START;
 		return (cp);
 	}
 	while (*cp != '\0')
