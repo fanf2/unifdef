@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.79 2002/12/10 17:00:39 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.80 2002/12/10 17:12:58 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -507,11 +507,7 @@ checkline(int *cursym)
 	*cursym = -1;
 	retval = LT_PLAIN;
 	cp = skipcomment(tline);
-	if (*cp != '#'
-	    || incomment
-	    || inquote == QUOTE_SINGLE
-	    || inquote == QUOTE_DOUBLE
-	    )
+	if (*cp != '#' || incomment || inquote)
 		goto eol;
 
 	cp = skipcomment(++cp);
@@ -566,10 +562,8 @@ eol:
 		for (; *cp;) {
 			if (incomment)
 				cp = skipcomment(cp);
-			else if (inquote == QUOTE_SINGLE)
-				cp = skipquote(cp, QUOTE_SINGLE);
-			else if (inquote == QUOTE_DOUBLE)
-				cp = skipquote(cp, QUOTE_DOUBLE);
+			else if (inquote)
+				cp = skipquote(cp, inquote);
 			else if (*cp == '/' && (cp[1] == '*' || cp[1] == '/'))
 				cp = skipcomment(cp);
 			else if (*cp == '\'')
