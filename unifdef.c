@@ -42,7 +42,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.165 2003/08/12 19:35:31 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.166 2003/08/12 19:39:53 fanf2 Exp $");
 #endif
 #endif /* not lint */
 #ifdef __FBSDID
@@ -212,6 +212,7 @@ static const char      *skipcomment(const char *);
 static const char      *skipsym(const char *);
 static void             state(Ifstate);
 static int              strlcmp(const char *, const char *, size_t);
+static void             unnest(void);
 static void             usage(void);
 
 #define endsym(c) (!isalpha((unsigned char)c) && !isdigit((unsigned char)c) && c != '_')
@@ -345,12 +346,12 @@ static void Selse (void) { drop();               state(IS_TRUE_ELSE); }
 /* print/pass this block */
 static void Pelif (void) { print(); ignoreoff(); state(IS_PASS_MIDDLE); }
 static void Pelse (void) { print();              state(IS_PASS_ELSE); }
-static void Pendif(void) { print(); --depth; }
+static void Pendif(void) { print(); unnest(); }
 /* discard this block */
 static void Dfalse(void) { drop();  ignoreoff(); state(IS_FALSE_TRAILER); }
 static void Delif (void) { drop();  ignoreoff(); state(IS_FALSE_MIDDLE); }
 static void Delse (void) { drop();               state(IS_FALSE_ELSE); }
-static void Dendif(void) { drop();  --depth; }
+static void Dendif(void) { drop();  unnest(); }
 /* first line of group */
 static void Fdrop (void) { nest();  Dfalse(); }
 static void Fpass (void) { nest();  Pelif(); }
@@ -429,6 +430,8 @@ done(void)
 static void
 ignoreoff(void)
 {
+	if (depth == 0)
+		abort(); /* bug */
 	ignoring[depth] = ignoring[depth-1];
 }
 static void
@@ -449,6 +452,13 @@ nest(void)
 	if (depth >= MAXDEPTH)
 		error("Too many levels of nesting");
 	stifline[depth] = linenum;
+}
+static void
+unnest(void)
+{
+	if (depth == 0)
+		abort(); /* bug */
+	depth -= 1;
 }
 static void
 state(Ifstate is)
