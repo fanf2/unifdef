@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.110 2002/12/12 19:29:02 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.111 2002/12/12 19:35:17 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -392,18 +392,18 @@ unignore(void)
 static void
 process(void)
 {
-	Linetype linetype;
+	Linetype lineval;
 	state_fn *trans;
 
 	for (;;) {
 		linenum++;
-		linetype = getline();
-		trans = trans_table[ifstate[depth]][linetype];
+		lineval = getline();
+		trans = trans_table[ifstate[depth]][lineval];
 		if (trans == NULL)
 			break;
 		trans();
 		debug("process %s -> %s depth %d",
-		    linetype_name[linetype],
+		    linetype_name[lineval],
 		    ifstate_name[ifstate[depth]], depth);
 	}
 	if (incomment)
