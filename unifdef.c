@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.145 2003/01/20 11:46:53 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.146 2003/01/20 12:03:10 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.14 2003/01/17 19:12:02 fanf Exp $");
@@ -374,14 +374,10 @@ static void Idrop (void) { Fdrop();  ignoreon(); }
 static void Itrue (void) { Ftrue();  ignoreon(); }
 static void Ifalse(void) { Ffalse(); ignoreon(); }
 /* modify this line */
-static void
-Mpass (void) { strncpy(keyword, "if  ", 4); Pelif(); }
-static void
-Mtrue (void) { keywordedit("else\n");  print(); state(IS_TRUE_MIDDLE); }
-static void
-Melif (void) { keywordedit("endif\n"); print(); state(IS_FALSE_TRAILER); }
-static void
-Melse (void) { keywordedit("endif\n"); print(); state(IS_FALSE_ELSE); }
+static void Mpass (void) { strncpy(keyword, "if  ", 4); Pelif(); }
+static void Mtrue (void) { keywordedit("else\n");  state(IS_TRUE_MIDDLE); }
+static void Melif (void) { keywordedit("endif\n"); state(IS_FALSE_TRAILER); }
+static void Melse (void) { keywordedit("endif\n"); state(IS_FALSE_ELSE); }
 
 static state_fn * const trans_table[IS_COUNT][LT_COUNT] = {
 /* IS_OUTSIDE */
@@ -446,6 +442,7 @@ static void
 keywordedit(const char *replacement)
 {
 	strlcpy(keyword, replacement, tline + sizeof(tline) - keyword);
+	print();
 }
 static void
 nest(void)
