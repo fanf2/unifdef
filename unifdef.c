@@ -43,7 +43,7 @@ static const char copyright[] =
 
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.29 2002/04/25 23:46:55 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.30 2002/04/26 13:51:41 fanf Exp $");
 #endif
 
 /*
@@ -193,6 +193,7 @@ usage()
 
 #define MAXLINE 256
 char    tline[MAXLINE];
+char   *keyword;
 
 /* types of input lines: */
 typedef int Linetype;
@@ -214,6 +215,8 @@ Reject_level reject;		/* 0 or 1: pass thru; 1 or 2: ignore comments */
 #define REJ_IGNORE      1
 #define REJ_YES         2
 void doif(int);
+void elif2if(void);
+void elif2endif(void);
 
 int     linenum;		/* current line number */
 int     stqcline;		/* start of current coment or quote */
@@ -247,32 +250,38 @@ pfile()
 }
 
 void
-doif_1(depth, lineval, cursym)
-	int      depth;		/* depth of #if's */
-	int      cursym;
+doif_1(depth, lineval, ignoring)
+	int      depth;
+	int      ignoring;
 	Linetype lineval;
 {
 	Reject_level savereject;
 	int     active;
 	int     inelse;
 	int     dummysym;
+	int     donetrue;
 
 	savereject = reject;
 	inelse = NO;
+	donetrue = NO;
 	if (lineval == LT_IF || reject != REJ_NO) {
 		active = NO;
+		ignoring = NO;
 		flushline(YES);
+	} else if (ignoring) {
+		active = NO;
+		flushline(YES);
+		if (lineval == LT_FALSE)
+			reject = REJ_IGNORE;
+		else
+			donetrue = YES;
 	} else {
 		active = YES;
-		if (ignore[cursym]) {
-			flushline(YES);
-			if (lineval == LT_FALSE)
-				reject = REJ_IGNORE;
-		} else {
-			flushline(NO);
-			if (lineval == LT_FALSE)
-				reject = REJ_YES;
-		}
+		flushline(NO);
+		if (lineval == LT_FALSE)
+			reject = REJ_YES;
+		else
+			donetrue = YES;
 	}
 	for (;;) {
 		doif(depth);
@@ -280,40 +289,61 @@ doif_1(depth, lineval, cursym)
 		case LT_ELIF:
 			if (inelse)
 				error(ELIF_ERR, depth);
+			donetrue = NO;
+			if (active) {
+				active = NO;
+				elif2if();
+				flushline(YES);
+			} else {
+				ignoring = NO;
+				flushline(YES);
+				reject = savereject;
+			}
 			break;
 		case LT_ELTRUE:
-			if (inelse)
-				error(ELIF_ERR, depth);
-			break;
 		case LT_ELFALSE:
 			if (inelse)
 				error(ELIF_ERR, depth);
+			if (active) {
+				flushline(NO);
+			} else {
+				ignoring = NO;
+				active = YES;
+				elif2endif();
+				flushline(YES);
+			}
+			if (lineval == LT_ELFALSE)
+				reject = REJ_YES;
+			else {
+				reject = REJ_NO;
+				donetrue = YES;
+			}
 			break;
 		case LT_ELSE:
 			if (inelse)
 				error(ELSE_ERR, depth);
-			if (!active)
-				flushline(YES);
-			else if (ignore[cursym]) {
-				flushline(YES);
-				if (reject == REJ_IGNORE)
-					reject = REJ_NO;
-				else
-					reject = REJ_IGNORE;
-			} else {
+			if (active) {
 				flushline(NO);
-				if (reject == REJ_YES)
+				if (reject == REJ_YES && !donetrue)
 					reject = REJ_NO;
 				else
 					reject = REJ_YES;
+			} else {
+				flushline(YES);
+				if (ignoring) {
+					if (reject == REJ_IGNORE)
+						reject = REJ_NO;
+					else
+						reject = REJ_IGNORE;
+				}
 			}
 			inelse = YES;
 			break;
 		case LT_ENDIF:
-			if (!active || ignore[cursym])
-				flushline(YES);
-			else
+			if (active)
 				flushline(NO);
+			else
+				flushline(YES);
 			reject = savereject;
 			return;
 		default:
@@ -349,7 +379,7 @@ doif(depth)
 		case LT_IF:
 		case LT_TRUE:
 		case LT_FALSE:
-			doif_1(depth + 1, lineval, cursym);
+			doif_1(depth + 1, lineval, ignore[cursym]);
 			break;
 		case LT_ELIF:
 		case LT_ELTRUE:
@@ -381,7 +411,7 @@ checkline(cursym)
 	char   *scp;
 	Linetype retval;
 #define KWSIZE 8
-	char    keyword[KWSIZE];
+	char    kw[KWSIZE];
 
 	retval = LT_PLAIN;
 	cp = skipcomment(tline);
@@ -393,18 +423,19 @@ checkline(cursym)
 		goto eol;
 
 	cp = skipcomment(++cp);
-	symp = keyword;
+	keyword = cp;
+	symp = kw;
 	while (!endsym(*cp)) {
 		*symp = *cp++;
-		if (++symp >= &keyword[KWSIZE])
+		if (++symp >= &kw[KWSIZE])
 			goto eol;
 	}
 	*symp = '\0';
 
-	if (strcmp(keyword, "ifdef") == 0) {
+	if (strcmp(kw, "ifdef") == 0) {
 		retval = LT_TRUE;
 		goto ifdef;
-	} else if (strcmp(keyword, "ifndef") == 0) {
+	} else if (strcmp(kw, "ifndef") == 0) {
 		retval = LT_FALSE;
 	ifdef:
 		scp = cp = skipcomment(++cp);
@@ -417,13 +448,13 @@ checkline(cursym)
 		else if (value[*cursym] == NULL)
 			retval = (retval == LT_TRUE)
 			    ? LT_FALSE : LT_TRUE;
-	} else if (strcmp(keyword, "if") == 0) {
+	} else if (strcmp(kw, "if") == 0) {
 		retval = ifeval(&cp);
 		cp = skipcomment(cp);
 		if (*cp != '\n')
 			retval = LT_IF;
 		*cursym = 0;
-	} else if (strcmp(keyword, "elif") == 0) {
+	} else if (strcmp(kw, "elif") == 0) {
 		retval = ifeval(&cp);
 		cp = skipcomment(cp);
 		if (retval == LT_IF)
@@ -435,9 +466,9 @@ checkline(cursym)
 		if (*cp != '\n')
 			retval = LT_ELIF;
 		*cursym = 0;
-	} else if (strcmp(keyword, "else") == 0)
+	} else if (strcmp(kw, "else") == 0)
 		retval = LT_ELSE;
-	else if (strcmp(keyword, "endif") == 0)
+	else if (strcmp(kw, "endif") == 0)
 		retval = LT_ENDIF;
 
 eol:
@@ -459,6 +490,30 @@ eol:
 				cp++;
 		}
 	return retval;
+}
+/*
+ *  Turn a #elif line into a #if. This function is used when we are
+ *  processing a #if/#elif/#else/#endif sequence that starts off with
+ *  a #if that we understand (and therefore it has been deleted) which
+ *  is followed by a #elif that we don't understand and therefore must
+ *  be kept. We turn it into a #if to keep the nesting correct.
+ */
+void
+elif2if()
+{
+	strncpy(keyword, "if  ", 4);
+}
+/*
+ *  Turn a #elif line into a #endif. This is used in the opposite
+ *  situation to elif2if, i.e. a #if that we don't understand is
+ *  followed by a #elif that we do; rather than deleting the #elif (as
+ *  we would for a #if) we turn it into a #endif to keep the nesting
+ *  correct.
+ */
+void
+elif2endif()
+{
+	strcpy(keyword, "endif");
 }
 /*
  *  Evaluate the expression on a #if line. If we can't work out the
