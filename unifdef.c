@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.137 2003/01/20 01:32:23 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.138 2003/01/20 01:51:11 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -342,9 +342,9 @@ static void Fpass (void) { nest();  Pelif(); }
 static void Ftrue (void) { nest();  Strue(); }
 static void Ffalse(void) { nest();  Sfalse(); }
 /* ignore comments in this block */
-static void Idrop (void) { Fdrop();  ignore[depth] = true; }
-static void Itrue (void) { Ftrue();  ignore[depth] = true; }
-static void Ifalse(void) { Ffalse(); ignore[depth] = true; }
+static void Idrop (void) { Fdrop();  ignoring[depth] = true; }
+static void Itrue (void) { Ftrue();  ignoring[depth] = true; }
+static void Ifalse(void) { Ffalse(); ignoring[depth] = true; }
 /* modify this line */
 static void
 Mpass (void) { strncpy(keyword, "if  ", 4); Pelif(); }
@@ -403,7 +403,7 @@ state(Ifstate is)
 static void
 unignore(void)
 {
-	ignore[depth] = ignore[depth-1];
+	ignoring[depth] = ignoring[depth-1];
 }
 
 /*
