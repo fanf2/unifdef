@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.76 2002/09/24 19:52:11 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.77 2002/12/10 16:10:51 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -503,6 +503,7 @@ checkline(int *cursym)
 	Linetype retval;
 	char kw[KWSIZE];
 
+	*cursym = 0;
 	retval = LT_PLAIN;
 	cp = skipcomment(tline);
 	if (*cp != '#'
@@ -543,7 +544,6 @@ checkline(int *cursym)
 		cp = skipcomment(cp);
 		if (*cp != '\n' || keepthis)
 			retval = LT_IF;
-		*cursym = 0;
 	} else if (strcmp(kw, "elif") == 0) {
 		retval = ifeval(&cp);
 		cp = skipcomment(cp);
@@ -555,7 +555,6 @@ checkline(int *cursym)
 			retval = LT_ELTRUE;
 		if (retval == LT_FALSE)
 			retval = LT_ELFALSE;
-		*cursym = 0;
 	} else if (strcmp(kw, "else") == 0)
 		retval = LT_ELSE;
 	else if (strcmp(kw, "endif") == 0)
