@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.83 2002/12/10 23:02:11 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.84 2002/12/10 23:20:14 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -77,12 +77,12 @@ __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fan
 /* types of input lines: */
 typedef enum {
 	LT_PLAIN,		/* ordinary line */
+	LT_IF,			/* an unknown #if */
 	LT_TRUE,		/* a true #if */
 	LT_FALSE,		/* a false #if */
+	LT_ELIF,		/* an unknown #elif */
 	LT_ELTRUE,		/* a true #elif */
 	LT_ELFALSE,		/* a false #elif */
-	LT_IF,			/* an unknown #if */
-	LT_ELIF,		/* an unknown #elif */
 	LT_ELSE,		/* #else */
 	LT_ENDIF,		/* #endif */
 	LT_EOF			/* end of file */
@@ -526,16 +526,10 @@ checkline(int *cursym)
 		if (*cp != '\n' || keepthis)
 			retval = LT_IF;
 	} else if (strcmp(kw, "elif") == 0) {
-		retval = ifeval(&cp);
+		retval = ifeval(&cp) - LT_IF + LT_ELIF;
 		cp = skipcomment(cp);
 		if (*cp != '\n' || keepthis)
 			retval = LT_ELIF;
-		if (retval == LT_IF)
-			retval = LT_ELIF;
-		if (retval == LT_TRUE)
-			retval = LT_ELTRUE;
-		if (retval == LT_FALSE)
-			retval = LT_ELFALSE;
 	} else if (strcmp(kw, "else") == 0)
 		retval = LT_ELSE;
 	else if (strcmp(kw, "endif") == 0)
