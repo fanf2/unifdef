@@ -2,7 +2,7 @@
 #
 # remove all the #if's from a source file
 #
-# $dotat: unifdef/unifdefall.sh,v 1.5 2002/04/29 03:08:10 fanf Exp $
+# $dotat: unifdef/unifdefall.sh,v 1.6 2002/04/29 16:17:39 fanf Exp $
 
 set -e
 
@@ -10,7 +10,7 @@ basename=`basename $0`
 tmp=`mktemp -d -t $basename` || exit 2
 
 unifdef -s "$@" | sort | uniq > $tmp/ctrl
-cpp -dM "$@" |
+cpp -dM "$@" | sort |
 	sed -Ee 's/^#define[ 	]+(.*[^	 ])[ 	]*$/\1/' > $tmp/hashdefs
 sed -Ee 's/^([A-Za-z0-9_]+).*$/\1/' $tmp/hashdefs > $tmp/alldef
 comm -23 $tmp/ctrl $tmp/alldef > $tmp/undef
