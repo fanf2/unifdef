@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.88 2002/12/11 02:13:04 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.89 2002/12/11 02:28:22 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -184,7 +184,10 @@ const char     *filename;
 int             linenum;	/* current line number */
 int             stifline;	/* start of current #if */
 int             stcomline;	/* start of current comment */
-bool            keepthis;	/* treat this const #if as unknown */
+Comment_state   incomment;	/* translation phase 2/3 parser state */
+Line_state      linestate;	/* preprocessor line parser state */
+Reject_level    reject;		/* what kind of filtering we are doing */
+bool            constexpr;	/* the current expression is constant */
 
 #define MAXLINE 1024
 #define KWSIZE 8
@@ -206,10 +209,6 @@ const char     *symname[MAXSYMS];	/* symbol name */
 const char     *value[MAXSYMS];		/* -Dsym=value */
 bool            ignore[MAXSYMS];	/* -iDsym or -iUsym */
 int             nsyms;
-
-Reject_level    reject;		/* what kind of filtering we are doing */
-Comment_state   incomment;	/* inside C comment */
-Line_state      linestate;	/* how to look for a #if here */
 
 Linetype        checkline(int *);
 void            debug(const char *, ...);
@@ -585,7 +584,7 @@ elif2endif(void)
 /*
  * Function for evaluating the innermost parts of expressions,
  * viz. !expr (expr) defined(symbol) symbol number
- * We reset the keepthis flag when we find a non-constant subexpression.
+ * We reset the constexpr flag when we find a non-constant subexpression.
  */
 Linetype
 eval_unary(struct ops *ops, int *valp, const char **cpp)
@@ -627,7 +626,7 @@ eval_unary(struct ops *ops, int *valp, const char **cpp)
 		cp = skipcomment(cp);
 		if (*cp++ != ')')
 			return LT_IF;
-		keepthis = false;
+		constexpr = false;
 	} else if (!endsym(*cp)) {
 		debug("eval%d symbol", ops - eval_ops);
 		sym = findsym(cp);
@@ -641,7 +640,7 @@ eval_unary(struct ops *ops, int *valp, const char **cpp)
 				return LT_IF;
 		}
 		cp = skipsym(cp);
-		keepthis = false;
+		constexpr = false;
 	} else
 		return LT_IF;
 
@@ -686,8 +685,7 @@ eval_table(struct ops *ops, int *valp, const char **cpp)
 /*
  * Evaluate the expression on a #if or #elif line. If we can work out
  * the result we return LT_TRUE or LT_FALSE accordingly, otherwise we
- * return just a generic LT_IF. If the expression is constant and
- * we are not processing constant #ifs then the keepthis flag is true.
+ * return just a generic LT_IF.
  */
 Linetype
 ifeval(const char **cpp)
@@ -696,9 +694,9 @@ ifeval(const char **cpp)
 	int val;
 
 	debug("eval %s", *cpp);
-	keepthis = killconsts ? false : true;
+	constexpr = killconsts ? false : true;
 	ret = eval_table(eval_ops, &val, cpp);
-	return keepthis ? LT_IF : ret;
+	return constexpr ? LT_IF : ret;
 }
 
 /*
