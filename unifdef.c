@@ -43,7 +43,7 @@ static const char copyright[] =
 
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.34 2002/04/26 15:38:59 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.35 2002/04/26 15:47:04 fanf Exp $");
 #endif
 
 /*
@@ -870,5 +870,5 @@ error(code, depth)
 	else
 		errx(2, "error in %s line %d: %s"
 		    " (#if depth %d start line %d)",
-		    filename, stqcline, errs[code], depth, stifline);
+		    filename, linenum, errs[code], depth, stifline);
 }
