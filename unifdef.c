@@ -1,5 +1,3 @@
-/*	$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $	*/
-
 /*
  * Copyright (c) 1985, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -37,17 +35,24 @@
  */
 
 #include <sys/cdefs.h>
-#ifndef lint
-__COPYRIGHT("@(#) Copyright (c) 1985, 1993\n\
-	The Regents of the University of California.  All rights reserved.\n");
-#endif				/* not lint */
 
 #ifndef lint
-#if 0
-static char sccsid[] = "@(#)unifdef.c	8.1 (Berkeley) 6/6/93";
+static const char copyright[] =
+"@(#) Copyright (c) 1985, 1993\n\
+	The Regents of the University of California.  All rights reserved.\n";
 #endif
+
+#ifndef lint
+static const char sccsid[] = "@(#)unifdef.c	8.1 (Berkeley) 6/6/93";
+#endif
+
+#ifndef lint
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-#endif				/* not lint */
+#endif
+
+#ifndef lint
+__RCSID("$dotat: unifdef/unifdef.c,v 1.2 2002/04/25 14:52:54 fanf Exp $");
+#endif
 
 /*
  * unifdef - remove ifdef'ed lines
