@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __RCSID
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.49 2002/04/26 19:02:45 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.50 2002/04/26 19:03:48 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -135,10 +135,10 @@ int             stqcline;	/* start of current coment or quote */
 char            tline[MAXLINE];	/* input buffer */
 char           *keyword;	/* used for editing #elif's */
 
-bool            debugging;	/* -d option in effect: debugging reports */
-bool            text;		/* -t option in effect: this is a text file */
-bool            lnblank;	/* -l option in effect: blank deleted lines */
 bool            complement;	/* -c option in effect: do the complement */
+bool            debugging;	/* -d option in effect: debugging reports */
+bool            lnblank;	/* -l option in effect: blank deleted lines */
+bool            text;		/* -t option in effect: this is a text file */
 
 int             exitstat;	/* program exit status */
 
