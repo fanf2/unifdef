@@ -43,7 +43,7 @@ static const char copyright[] =
 
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.32 2002/04/26 15:06:30 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.33 2002/04/26 15:34:44 fanf Exp $");
 #endif
 
 /*
@@ -70,8 +70,6 @@ FILE   *input;
 #define YES 1
 #define NO  0
 #endif /* YES */
-#define C_COMMENT   1
-#define CXX_COMMENT 2
 typedef int Bool;
 
 char   *filename;
@@ -86,6 +84,10 @@ char   *value[MAXSYMS];		/* -Dsym=value */
 char    ignore[MAXSYMS];	/* -iDsym or -iUsym */
 
 char    nsyms = 1;		/* symbol 0 is used for tracking #ifs */
+
+#define NO_COMMENT  0
+#define C_COMMENT   1
+#define CXX_COMMENT 2
 char    incomment;		/* inside C comment */
 
 #define QUOTE_NONE   0
@@ -678,7 +680,7 @@ inside:
 					if (*cp == '\0')
 						return cp;
 				if (*++cp == '/') {
-					incomment = NO;
+					incomment = NO_COMMENT;
 					break;
 				}
 			}
@@ -687,7 +689,7 @@ inside:
 			for (; *cp != '\n'; cp++)
 				if (*cp == '\0')
 					return cp;
-			incomment = NO;
+			incomment = NO_COMMENT;
 		}
 	}
 }
