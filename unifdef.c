@@ -43,7 +43,7 @@ static const char copyright[] =
 
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.30 2002/04/26 13:51:41 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.31 2002/04/26 13:54:16 fanf Exp $");
 #endif
 
 /*
@@ -513,7 +513,7 @@ elif2if()
 void
 elif2endif()
 {
-	strcpy(keyword, "endif");
+	strcpy(keyword, "endif\n");
 }
 /*
  *  Evaluate the expression on a #if line. If we can't work out the
