@@ -43,7 +43,7 @@ static const char copyright[] =
 
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.31 2002/04/26 13:54:16 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.32 2002/04/26 15:06:30 fanf Exp $");
 #endif
 
 /*
@@ -206,6 +206,7 @@ typedef int Linetype;
 #define LT_ELIF        6	/* an unknown #elif */
 #define LT_ELSE        7	/* #else */
 #define LT_ENDIF       8	/* #endif */
+#define LT_EOF         9	/* end of file */
 Linetype checkline(int *);
 Linetype ifeval(char **);
 
@@ -214,7 +215,7 @@ Reject_level reject;		/* 0 or 1: pass thru; 1 or 2: ignore comments */
 #define REJ_NO          0
 #define REJ_IGNORE      1
 #define REJ_YES         2
-void doif(int);
+Linetype doif(int);
 void elif2if(void);
 void elif2endif(void);
 
@@ -245,7 +246,7 @@ void
 pfile()
 {
 	reject = REJ_NO;
-	doif(0);
+	(void) doif(0);
 	return;
 }
 
@@ -258,7 +259,6 @@ doif_1(depth, lineval, ignoring)
 	Reject_level savereject;
 	int     active;
 	int     inelse;
-	int     dummysym;
 	int     donetrue;
 
 	savereject = reject;
@@ -284,8 +284,7 @@ doif_1(depth, lineval, ignoring)
 			donetrue = YES;
 	}
 	for (;;) {
-		doif(depth);
-		switch (lineval = checkline(&dummysym)) {
+		switch (lineval = doif(depth)) {
 		case LT_ELIF:
 			if (inelse)
 				error(ELIF_ERR, depth);
@@ -352,7 +351,7 @@ doif_1(depth, lineval, ignoring)
 		}
 	}
 }
-void
+Linetype
 doif(depth)
 	int     depth;		/* depth of ifdef's */
 {
@@ -370,7 +369,7 @@ doif(depth)
 				error(Q2EOF_ERR, depth);
 			if (depth != 0)
 				error(IEOF_ERR, depth);
-			return;
+			return LT_EOF;
 		}
 		switch (lineval = checkline(&cursym)) {
 		case LT_PLAIN:
@@ -387,7 +386,7 @@ doif(depth)
 		case LT_ELSE:
 		case LT_ENDIF:
 			if (depth != 0)
-				return;
+				return lineval;
 			if (lineval == LT_ENDIF)
 				error(ENDIF_ERR, depth);
 			if (lineval == LT_ELSE)
