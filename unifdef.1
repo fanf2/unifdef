@@ -34,7 +34,7 @@
 .\"
 .\"     @(#)unifdef.1	8.2 (Berkeley) 4/1/94
 .\" $FreeBSD: src/usr.bin/unifdef/unifdef.1,v 1.10 2002/04/20 12:17:43 charnier Exp $
-.\" $dotat: unifdef/unifdef.1,v 1.16 2002/04/26 20:17:35 fanf Exp $
+.\" $dotat: unifdef/unifdef.1,v 1.17 2002/04/26 20:18:07 fanf Exp $
 .\"
 .Dd April 26, 2002
 .Dt UNIFDEF 1
@@ -175,11 +175,11 @@ which symbols are used for that purpose so that it won't try to parse
 for quotes and comments
 inside those ifdefs.
 One specifies ignored symbols with
-.Fl iD Ns Ar sym
+.Fl iD Ns Ar sym Ns Oo = Ns Ar val Oc
 and
 .Fl iU Ns Ar sym
 similar to
-.Fl D Ns Ar sym
+.Fl D Ns Ar sym Ns Oo = Ns Ar val Oc
 and
 .Fl U Ns Ar sym
 above.
