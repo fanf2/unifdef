@@ -1,6 +1,11 @@
-# $dotat: unifdef/Makefile,v 1.1 2003/01/20 14:43:55 fanf2 Exp $
+# $dotat: unifdef/Makefile,v 1.2 2003/07/01 14:53:50 fanf2 Exp $
 
-all: unifdef unifdef.log unifdef.man
+TARGETS=	unifdef unifdef.log unifdef.man
+
+all: ${TARGETS}
+
+clean:
+	rm -f ${TARGETS}
 
 unifdef: unifdef.c
 
