@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.64 2002/05/02 00:03:41 fanf Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.65 2002/05/02 12:17:31 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -231,10 +231,10 @@ void	        usage(void);
 int
 main(int argc, char *argv[])
 {
-	char  **curarg;
-	char   *cp;
-	char   *cp1;
-	bool    ignorethis;
+	char **curarg;
+	char *cp;
+	char *cp1;
+	bool ignorethis;
 
 	for (curarg = &argv[1]; --argc > 0; curarg++) {
 		if (*(cp1 = cp = *curarg) != '-')
@@ -326,10 +326,10 @@ void
 doif_1(int depth, Linetype lineval, bool ignoring)
 {
 	Reject_level savereject;
-	bool    active;
-	bool    donetrue;
-	bool    inelse;
-	int     saveline;
+	bool active;
+	bool donetrue;
+	bool inelse;
+	int saveline;
 
 	debug("#if line %d code %d depth %d",
 	    linenum, lineval, depth);
@@ -443,7 +443,7 @@ Linetype
 doif(int depth)
 {
 	Linetype lineval;
-	int     cursym;		/* index of the symbol returned by checkline */
+	int cursym;
 
 	for (;;) {
 		linenum++;
@@ -761,7 +761,7 @@ inside:
 const char *
 skipquote(const char *cp, Quote_state type)
 {
-	char    qchar;
+	char qchar;
 
 	qchar = type == QUOTE_SINGLE ? '\'' : '"';
 
@@ -805,7 +805,7 @@ findsym(const char *str)
 {
 	const char *cp;
 	const char *symp;
-	int         symind;
+	int symind;
 
 	if (symlist) {
 		for (cp = str; !endsym(*cp); cp++)
@@ -834,9 +834,9 @@ findsym(const char *str)
 int
 getline(char *line, int maxline, FILE *inp, bool expandtabs)
 {
-	int     tmp;
-	int     num;
-	int     chr;
+	int tmp;
+	int num;
+	int chr;
 #ifdef  FFSPECIAL
 	static bool havechar = false;	/* have leftover char from last time */
 	static char svchar;
@@ -904,14 +904,9 @@ flushline(bool keep)
 {
 	if (symlist)
 		return;
-	if ((keep && reject != REJ_YES) ^ complement) {
-		char   *line = tline;
-		FILE   *out = stdout;
-		char    chr;
-
-		while ((chr = *line++) != 0)
-			putc(chr, out);
-	} else if (lnblank)
+	if ((keep && reject != REJ_YES) ^ complement)
+		fputs(tline, stdout);
+	else if (lnblank)
 		putc('\n', stdout);
 	return;
 }
