@@ -43,7 +43,7 @@ static const char copyright[] =
 
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.25 2002/04/25 21:44:51 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.26 2002/04/25 23:02:51 fanf Exp $");
 #endif
 
 /*
@@ -98,7 +98,7 @@ char    incomment;		/* inside C comment */
 char    inquote;		/* inside single or double quotes */
 int     exitstat;
 
-int	error(int, int, int);
+void	error(int, int, int);
 int	findsym(char *);
 void	flushline(Bool);
 int	getlin(char *, int, FILE *, int);
@@ -215,7 +215,7 @@ Reject_level reject;		/* 0 or 1: pass thru; 1 or 2: ignore comments */
 #define REJ_NO          0
 #define REJ_IGNORE      1
 #define REJ_YES         2
-int doif(int, Reject_level, int);
+void doif(int, Reject_level, int);
 
 int     linenum;		/* current line number */
 int     stqcline;		/* start of current coment or quote */
@@ -242,11 +242,11 @@ void
 pfile()
 {
 	reject = REJ_NO;
-	(void) doif(-1, reject, 0);
+	doif(-1, reject, 0);
 	return;
 }
 
-int
+void
 doif(thissym, prevreject, depth)
 	int     thissym;	/* index of the symbol who was last ifdef'ed */
 	Reject_level prevreject;/* previous value of reject */
@@ -254,7 +254,6 @@ doif(thissym, prevreject, depth)
 {
 	Linetype lineval;
 	Reject_level thisreject;
-	int     doret;		/* tmp return value of doif */
 	int     cursym;		/* index of the symbol returned by checkline */
 	int     stline;		/* line number when called this time */
 
@@ -262,19 +261,15 @@ doif(thissym, prevreject, depth)
 	for (;;) {
 		linenum++;
 		if (getlin(tline, sizeof tline, input, NO) == EOF) {
-			doret = incomment
-			    ? CEOF_ERR
-			    : inquote == QUOTE_SINGLE
-			    ? Q1EOF_ERR
-			    : inquote == QUOTE_DOUBLE
-			    ? Q2EOF_ERR
-			    : NO_ERR;
-			if (doret != NO_ERR)
-				doret = error(doret, stqcline, depth);
+			if (incomment)
+				error(CEOF_ERR, stline, depth);
+			if (inquote == QUOTE_SINGLE)
+				error(Q1EOF_ERR, stline, depth);
+			if (inquote == QUOTE_DOUBLE)
+				error(Q2EOF_ERR, stline, depth);
 			if (depth != 0)
-				return error(IEOF_ERR, stline, depth);
-			else
-				return doret;
+				error(IEOF_ERR, stline, depth);
+			return;
 		}
 		switch (lineval = checkline(&cursym)) {
 		case LT_PLAIN:
@@ -297,19 +292,17 @@ doif(thissym, prevreject, depth)
 				exitstat = 1;
 				flushline(NO);
 			}
-			if ((doret = doif(cursym, thisreject, depth + 1)) != NO_ERR)
-				return error(doret, stline, depth);
+			doif(cursym, thisreject, depth + 1);
 			break;
 
 		case LT_IF:
 			flushline(YES);
-			if ((doret = doif(-1, reject, depth + 1)) != NO_ERR)
-				return error(doret, stline, depth);
+			doif(-1, reject, depth + 1);
 			break;
 
 		case LT_ELSE:
 			if (depth == 0)
-				return error(ELSE_ERR, linenum, depth);
+				error(ELSE_ERR, linenum, depth);
 			if (thissym > 0) {
 				if (insym[thissym] == SYM_TRUE) {
 					reject = ignore[thissym] ? REJ_IGNORE : REJ_YES;
@@ -329,17 +322,17 @@ doif(thissym, prevreject, depth)
 
 		case LT_ENDIF:
 			if (depth == 0)
-				return error(ENDIF_ERR, linenum, depth);
+				error(ENDIF_ERR, linenum, depth);
 			if (thissym > 0) {
 				insym[thissym] = SYM_INACTIVE;
 				reject = prevreject;
 				if (!ignore[thissym]) {
 					flushline(NO);
-					return NO_ERR;
+					return;
 				}
 			}
 			flushline(YES);
-			return NO_ERR;
+			return;
 
 		}
 	}
@@ -762,23 +755,13 @@ flushline(keep)
 	return;
 }
 
-int
+void
 error(code, line, depth)
 	int     code;		/* type of error & index into error string
 				 * array */
 	int     line;		/* line number */
 	int     depth;		/* how many ifdefs we are inside */
 {
-	if (code == END_ERR)
-		return code;
-
-#ifndef TESTING
-	warnx("error in %s line %d: %s", filename, line, errs[code]);
-#else	/* TESTING */
-	warnx("error in %s line %d: %s (ifdef depth %d)",
+	errx(2, "error in %s line %d: %s (ifdef depth %d)",
 	    filename, line, errs[code], depth);
-#endif	/* TESTING */
-
-	exitstat = 2;
-	return depth > 1 ? IEOF_ERR : END_ERR;
 }
