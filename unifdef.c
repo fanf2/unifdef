@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.105 2002/12/12 17:30:55 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.106 2002/12/12 17:41:39 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -222,28 +222,28 @@ state_fn Dfalse, Delif, Delse, Dendif;	/* discard this block */
 state_fn Mpass, Mtrue, Melif, Melse;	/* modify this line as above */
 state_fn Eelif, Eelse, Eendif, Eeof;	/* report an error */
 
-/*	PLAIN	TRUEI	FALSEI	IF	TRUE	FALSE	ELIF	ELTRUE	ELFALSE	ELSE	ENDIF	EOF	*/
 state_fn *trans_table[IS_COUNT][LT_COUNT] = {
 /* IS_OUTSIDE */
-{	print,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Eelif,	Eelif,	Eelif,	Eelse,	Eendif,	NULL	},
+{print,Itrue,Ifalse,Fpass,Ftrue,Ffalse,Eelif, Eelif, Eelif, Eelse,Eendif,NULL},
 /* IS_FALSE_PREFIX */
-{	drop,	Idrop,	Idrop,	Fdrop,	Fdrop,	Fdrop,	Mpass,	Strue,	Sfalse,	Selse,	Dendif,	Eeof	},
+{drop, Idrop,Idrop, Fdrop,Fdrop,Fdrop, Mpass, Strue, Sfalse,Selse,Dendif,Eeof},
 /* IS_TRUE_PREFIX */
-{	print,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Dfalse,	Dfalse,	Dfalse,	Delse,	Dendif,	Eeof	},
+{print,Itrue,Ifalse,Fpass,Ftrue,Ffalse,Dfalse,Dfalse,Dfalse,Delse,Dendif,Eeof},
 /* IS_PASS_MIDDLE */
-{	print,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Pelif,	Mtrue,	Delif,	Pelse,	Pendif,	Eeof	},
+{print,Itrue,Ifalse,Fpass,Ftrue,Ffalse,Pelif, Mtrue, Delif, Pelse,Pendif,Eeof},
 /* IS_FALSE_MIDDLE */
-{	drop,	Idrop,	Idrop,	Fdrop,	Fdrop,	Fdrop,	Pelif,	Mtrue,	Delif,	Pelse,	Pendif,	Eeof	},
+{drop, Idrop,Idrop, Fdrop,Fdrop,Fdrop, Pelif, Mtrue, Delif, Pelse,Pendif,Eeof},
 /* IS_TRUE_MIDDLE */
-{	print,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Melif,	Melif,	Melif,	Melse,	Pendif, Eeof	},
+{print,Itrue,Ifalse,Fpass,Ftrue,Ffalse,Melif, Melif, Melif, Melse,Pendif,Eeof},
 /* IS_PASS_ELSE */
-{	print,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Eelif,	Eelif,	Eelif,	Eelse,	Pendif,	Eeof	},
+{print,Itrue,Ifalse,Fpass,Ftrue,Ffalse,Eelif, Eelif, Eelif, Eelse,Pendif,Eeof},
 /* IS_FALSE_ELSE */
-{	drop,	Idrop,	Idrop,	Fdrop,	Fdrop,	Fdrop,	Eelif,	Eelif,	Eelif,	Eelse,	Dendif,	Eeof	},
+{drop, Idrop,Idrop, Fdrop,Fdrop,Fdrop, Eelif, Eelif, Eelif, Eelse,Dendif,Eeof},
 /* IS_TRUE_ELSE */
-{	print,	Itrue,	Ifalse,	Fpass,	Ftrue,	Ffalse,	Eelif,	Eelif,	Eelif,	Eelse,	Dendif,	Eeof	},
+{print,Itrue,Ifalse,Fpass,Ftrue,Ffalse,Eelif, Eelif, Eelif, Eelse,Dendif,Eeof},
 /* IS_FALSE_TRAILER */
-{	drop,	Idrop,	Idrop,	Fdrop,	Fdrop,	Fdrop,	Dfalse,	Dfalse,	Dfalse,	Delse,	Dendif,	Eeof	}
+{drop, Idrop,Idrop, Fdrop,Fdrop,Fdrop, Dfalse,Dfalse,Dfalse,Delse,Dendif,Eeof}
+/*PLAIN TRUEI FALSEI IF	  TRUE  FALSE  ELIF  ELTRUE ELFALSE ELSE  ENDIF  EOF*/
 };
 
 FILE           *input;
