@@ -33,7 +33,7 @@
 .\" SUCH DAMAGE.
 .\"
 .\"     @(#)unifdef.1	8.2 (Berkeley) 4/1/94
-.\"	$dotat: unifdef/unifdef.1,v 1.36 2002/12/12 17:21:04 fanf2 Exp $
+.\"	$dotat: unifdef/unifdef.1,v 1.37 2002/12/12 19:04:56 fanf2 Exp $
 .\" $FreeBSD: src/usr.bin/unifdef/unifdef.1,v 1.16 2002/12/04 14:42:49 ru Exp $
 .\"
 .Dd September 24, 2002
@@ -254,6 +254,8 @@ option of
 .Xr diff 1
 .Sh DIAGNOSTICS
 .Bl -item
+.It
+Too many levels of nesting.
 .It
 Inappropriate
 .Ic #elif ,
