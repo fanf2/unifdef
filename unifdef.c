@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.55 2002/04/27 17:23:47 fanf Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.56 2002/04/27 17:26:53 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -133,8 +133,9 @@ int             stqcline;	/* start of current coment or quote */
 
 #define MAXLINE 256
 #define KWSIZE 8
-char            tline[MAXLINE];	/* input buffer */
-char           *keyword;	/* used for editing #elif's */
+/* tline has extra space so that it isn't overflowed when editing #elifs */
+char    tline[MAXLINE+KWSIZE];	/* input buffer */
+char   *keyword;        	/* used for editing #elif's */
 
 bool            complement;	/* -c option in effect: do the complement */
 bool            debugging;	/* -d option in effect: debugging reports */
@@ -385,7 +386,7 @@ doif(int depth)
 
 	for (;;) {
 		linenum++;
-		if (getline(tline, sizeof tline, input, false) == EOF) {
+		if (getline(tline, MAXLINE, input, false) == EOF) {
 			if (incomment)
 				error(CEOF_ERR, depth);
 			if (inquote == QUOTE_SINGLE)
