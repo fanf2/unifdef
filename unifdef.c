@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.129 2002/12/13 15:20:05 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.130 2002/12/13 15:26:41 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -392,6 +392,23 @@ static void
 unignore(void)
 {
 	ignore[depth] = ignore[depth-1];
+}
+
+/*
+ * Write a line to the output or not, according to command line options.
+ */
+static void
+flushline(bool keep)
+{
+	if (symlist)
+		return;
+	if (keep ^ complement)
+		fputs(tline, stdout);
+	else {
+		if (lnblank)
+			putc('\n', stdout);
+		exitstat = 1;
+	}
 }
 
 /*
@@ -831,24 +848,6 @@ strlcmp(const char *s, const char *t, size_t n)
 		else
 			++s, ++t;
 	return (unsigned char)*s;
-}
-
-/*
- * Write a line to the output or not, according to command line options.
- */
-static void
-flushline(bool keep)
-{
-	if (symlist)
-		return;
-	if (keep ^ complement)
-		fputs(tline, stdout);
-	else {
-		if (lnblank)
-			putc('\n', stdout);
-		exitstat = 1;
-	}
-	return;
 }
 
 /*
