@@ -40,18 +40,10 @@
 static const char copyright[] =
 "@(#) Copyright (c) 1985, 1993\n\
 	The Regents of the University of California.  All rights reserved.\n";
-#endif
 
-#ifndef lint
-static const char sccsid[] = "@(#)unifdef.c	8.1 (Berkeley) 6/6/93";
-#endif
-
-#ifndef lint
+__RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-#endif
-
-#ifndef lint
-__RCSID("$dotat: unifdef/unifdef.c,v 1.16 2002/04/25 18:10:00 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.17 2002/04/25 18:15:23 fanf Exp $");
 #endif
 
 /*
