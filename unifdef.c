@@ -43,7 +43,7 @@ static const char copyright[] =
 
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.23 2002/04/25 21:19:55 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.24 2002/04/25 21:43:07 fanf Exp $");
 #endif
 
 /*
@@ -134,7 +134,7 @@ main(argc, argv)
 		    ) {
 			int     symind;
 
-			if ((symind = findsym(&cp1[1])) < 0) {
+			if ((symind = findsym(&cp1[1])) == 0) {
 				if (nsyms >= MAXSYMS)
 					errx(2, "too many symbols");
 				symind = nsyms++;
@@ -310,7 +310,7 @@ doif(thissym, prevreject, depth)
 		case LT_ELSE:
 			if (depth == 0)
 				return error(ELSE_ERR, linenum, depth);
-			if (thissym >= 0) {
+			if (thissym > 0) {
 				if (insym[thissym] == SYM_TRUE) {
 					reject = ignore[thissym] ? REJ_IGNORE : REJ_YES;
 					insym[thissym] = SYM_FALSE;
@@ -330,7 +330,7 @@ doif(thissym, prevreject, depth)
 		case LT_ENDIF:
 			if (depth == 0)
 				return error(ENDIF_ERR, linenum, depth);
-			if (thissym >= 0) {
+			if (thissym > 0) {
 				insym[thissym] = SYM_INACTIVE;
 				reject = prevreject;
 				if (!ignore[thissym]) {
@@ -354,7 +354,6 @@ checkline(cursym)
 	char   *cp;
 	char   *symp;
 	char   *scp;
-	int     symind;
 	Linetype retval;
 #define KWSIZE 8
 	char    keyword[KWSIZE];
@@ -388,9 +387,9 @@ checkline(cursym)
 			retval = LT_PLAIN;
 			goto eol;
 		}
-		if ((symind = findsym(scp)) < 0)
+		if ((*cursym = findsym(scp)) == 0)
 			retval = LT_IF;
-		else if (value[*cursym = symind] == NULL)
+		else if (value[*cursym] == NULL)
 			retval = (retval == LT_TRUE)
 			    ? LT_FALSE : LT_TRUE;
 	} else if (strcmp(keyword, "if") == 0) {
@@ -472,8 +471,7 @@ ifeval_2(cpp)
 			if (*cp++ != '(')
 				return LT_IF;
 			cp = skipcomment(cp);
-			sym = findsym(cp);
-			if (sym < 0)
+			if ((sym = findsym(cp)) == 0)
 				return LT_IF;
 			if (value[sym] != NULL)
 				val = LT_TRUE;
@@ -484,8 +482,7 @@ ifeval_2(cpp)
 			if (*cp++ != ')')
 				return LT_IF;
 		} else {
-			sym = findsym(cp);
-			if (sym < 0)
+			if ((sym = findsym(cp)) == 0)
 				return LT_IF;
 			val = LT_FALSE;
 			if (value[sym] != NULL) {
@@ -671,7 +668,7 @@ findsym(str)
 				return symind;
 		}
 	}
-	return -1;
+	return 0;
 }
 /*
  *   getlin - expands tabs if asked for
