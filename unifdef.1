@@ -34,7 +34,7 @@
 .\"
 .\"     @(#)unifdef.1	8.2 (Berkeley) 4/1/94
 .\" $FreeBSD: src/usr.bin/unifdef/unifdef.1,v 1.10 2002/04/20 12:17:43 charnier Exp $
-.\" $dotat: unifdef/unifdef.1,v 1.4 2002/04/26 19:20:34 fanf Exp $
+.\" $dotat: unifdef/unifdef.1,v 1.5 2002/04/26 19:24:47 fanf Exp $
 .\"
 .Dd April 26, 2002
 .Dt UNIFDEF 1
@@ -44,11 +44,11 @@
 .Nd selectively remove #ifdef and #if from code
 .Sh SYNOPSIS
 .Nm
-.Op Fl clt
+.Op Fl clst
 .Oo
-.Fl D Ns Ar sym
+.Fl D Ns Ar sym Ns Oo = Ns Ar val Oc
 .Fl U Ns Ar sym
-.Fl iD Ns Ar sym
+.Fl iD Ns Ar sym Ns Oo = Ns Ar val Oc
 .Fl iU Ns Ar sym
 .Oc
 .Ar ...
@@ -76,7 +76,7 @@ to the end of a line and finds no backslash for continuation.
 .Pp
 Available options:
 .Bl -tag -width Ds -compact
-.It Fl D Ns Ar sym
+.It Fl D Ns Ar sym Ns Oo = Ns Ar val Oc
 .It Fl U Ns Ar sym
 Specify which symbols to define or undefine.
 The lines inside those ifdefs will be copied to the output or removed as
@@ -111,7 +111,7 @@ instead of deleting them.
 Disables parsing for C comments and quotes, which is useful
 for plain text.
 .Pp
-.It Fl iD Ns Ar sym
+.It Fl iD Ns Ar sym Ns Oo = Ns Ar val Oc
 .It Fl iU Ns Ar sym
 Ignore ifdefs.
 If your C code uses ifdefs to delimit non-C lines,
