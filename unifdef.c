@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.85 2002/12/11 00:00:47 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.86 2002/12/11 01:44:04 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -215,6 +215,7 @@ Linetype        ifeval(const char **);
 int             main(int, char **);
 const char     *skipcomment(const char *);
 const char     *skipsym(const char *);
+int             strlcmp(const char *, const char *, size_t);
 void            usage(void);
 
 #define endsym(c) (!isalpha((unsigned char)c) && !isdigit((unsigned char)c) && c != '_')
@@ -769,8 +770,7 @@ findsym(const char *str)
 	if (symlist)
 		printf("%.*s\n", cp-str, str);
 	for (symind = 0; symind < nsyms; ++symind) {
-		if (symname[symind][cp-str] == '\0' &&
-		    strncmp(symname[symind], str, cp-str) == 0) {
+		if (strlcmp(symname[symind], str, cp-str) == 0) {
 			debug("findsym %s %s", symname[symind],
 			    value[symind] ? value[symind] : "");
 			return symind;
@@ -810,6 +810,20 @@ addsym(bool ignorethis, bool definethis, char *sym)
 			usage();
 		value[symind] = NULL;
 	}
+}
+
+/*
+ * Compare s with n characters of t.
+ */
+int
+strlcmp(const char *s, const char *t, size_t n)
+{
+	while (n-- && *t != '\0')
+		if (*s != *t)
+			return (unsigned char)*s - (unsigned char)*t;
+		else
+			++s, ++t;
+	return (unsigned char)*s;
 }
 
 /*
