@@ -43,7 +43,7 @@ static const char copyright[] =
 
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.24 2002/04/25 21:43:07 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.25 2002/04/25 21:44:51 fanf Exp $");
 #endif
 
 /*
@@ -645,7 +645,7 @@ skipsym(cp)
 /*
  *  findsym - look for the symbol in the symbol table.
  *            if found, return symbol table index,
- *            else return -1.
+ *            else return 0.
  */
 int
 findsym(str)
