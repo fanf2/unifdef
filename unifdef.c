@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __RCSID
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.42 2002/04/26 17:23:57 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.43 2002/04/26 17:25:50 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -372,6 +372,7 @@ doif_1(int depth, Linetype lineval, bool ignoring)
 		}
 	}
 }
+
 Linetype
 doif(int depth)
 {
@@ -418,6 +419,7 @@ doif(int depth)
 		}
 	}
 }
+
 #define endsym(c) (!isalpha ((unsigned char)c) && !isdigit ((unsigned char)c) && c != '_')
 
 Linetype
@@ -507,6 +509,7 @@ eol:
 		}
 	return retval;
 }
+
 /*
  *  Turn a #elif line into a #if. This function is used when we are
  *  processing a #if/#elif/#else/#endif sequence that starts off with
@@ -519,6 +522,7 @@ elif2if(void)
 {
 	strncpy(keyword, "if  ", 4);
 }
+
 /*
  *  Turn a #elif line into a #endif. This is used in the opposite
  *  situation to elif2if, i.e. a #if that we don't understand is
@@ -531,6 +535,7 @@ elif2endif(void)
 {
 	strcpy(keyword, "endif\n");
 }
+
 /*
  *  Evaluate the expression on a #if line. If we can't work out the
  *  value then LT_IF is returned (so the #if block is passed through)
@@ -607,6 +612,7 @@ ifeval_2(const char **cpp)
 	*cpp = cp;
 	return val;
 }
+
 Linetype
 ifeval_1(const char **cpp)
 {
@@ -630,6 +636,7 @@ ifeval_1(const char **cpp)
 	*cpp = cp;
 	return val;
 }
+
 Linetype
 ifeval(const char **cpp)
 {
@@ -653,6 +660,7 @@ ifeval(const char **cpp)
 	*cpp = cp;
 	return val;
 }
+
 /*
  *  Skip over comments and stop at the next charaacter
  *  position that is not whitespace.
@@ -704,6 +712,7 @@ inside:
 		}
 	}
 }
+
 /*
  *  Skip over a quoted string or character and stop at the next charaacter
  *  position that is not whitespace.
@@ -733,6 +742,7 @@ inside:
 		inquote = QUOTE_NONE;
 	}
 }
+
 /*
  *  Skip over an identifier.
  */
@@ -743,6 +753,7 @@ skipsym(const char *cp)
 		++cp;
 	return cp;
 }
+
 /*
  *  findsym - look for the symbol in the symbol table.
  *            if found, return symbol table index,
@@ -766,6 +777,7 @@ findsym(const char *str)
 	}
 	return 0;
 }
+
 /*
  *   getlin - expands tabs if asked for
  *            and (if compiled in) treats form-feed as an end-of-line
