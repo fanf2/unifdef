@@ -43,7 +43,7 @@ static const char copyright[] =
 
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.33 2002/04/26 15:34:44 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.34 2002/04/26 15:38:59 fanf Exp $");
 #endif
 
 /*
@@ -222,6 +222,7 @@ void elif2if(void);
 void elif2endif(void);
 
 int     linenum;		/* current line number */
+int     stifline;		/* start of current #if */
 int     stqcline;		/* start of current coment or quote */
 char   *errs[] = {
 #define NO_ERR      0
@@ -259,10 +260,13 @@ doif_1(depth, lineval, ignoring)
 	Linetype lineval;
 {
 	Reject_level savereject;
+	int     saveline;
 	int     active;
 	int     inelse;
 	int     donetrue;
 
+	saveline = stifline;
+	stifline = linenum;
 	savereject = reject;
 	inelse = NO;
 	donetrue = NO;
@@ -346,6 +350,7 @@ doif_1(depth, lineval, ignoring)
 			else
 				flushline(YES);
 			reject = savereject;
+			stifline = saveline;
 			return;
 		default:
 			/* bug */
@@ -859,6 +864,11 @@ error(code, depth)
 				 * array */
 	int     depth;		/* how many ifdefs we are inside */
 {
-	errx(2, "error in %s line %d: %s (ifdef depth %d)",
-	    filename, linenum, errs[code], depth);
+	if (incomment || inquote)
+		errx(2, "error in %s line %d: %s (#if depth %d)",
+		    filename, stqcline, errs[code], depth);
+	else
+		errx(2, "error in %s line %d: %s"
+		    " (#if depth %d start line %d)",
+		    filename, stqcline, errs[code], depth, stifline);
 }
