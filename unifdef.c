@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.62 2002/04/29 00:18:06 fanf Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.63 2002/04/29 02:53:58 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -125,6 +125,58 @@ const char *const errs[] = {
 	"Premature EOF in quoted string"
 };
 
+/*
+ * These are the operators that are supported by the expression evaluator.
+ */
+static int op_lt(int a, int b) { return a < b; }
+static int op_gt(int a, int b) { return a > b; }
+static int op_le(int a, int b) { return a <= b; }
+static int op_ge(int a, int b) { return a >= b; }
+static int op_eq(int a, int b) { return a == b; }
+static int op_ne(int a, int b) { return a != b; }
+static int op_or(int a, int b) { return a || b; }
+static int op_and(int a, int b) { return a && b; }
+
+struct ops;
+
+/*
+ * An evaluation function takes three arguments, as follows: (1) a pointer to
+ * an element of the precedence table which lists the operators at the current
+ * level of precedence; (2) a pointer to an integer which will receive the
+ * value of the expression; and (3) a pointer to a char* that points to the
+ * expression to be evaluated and that is updated to the end of the expression
+ * when evaluation is complete. The function returns LT_FALSE if the value of
+ * the expression is zero, LT_TRUE if it is non-zero, or LT_IF if the
+ * expression could not be evaluated.
+ */
+typedef Linetype eval_fn(struct ops *, int *, const char **);
+
+eval_fn eval_table, eval_unary;
+
+/*
+ * The precedence table. Expressions involving binary operators are evaluated
+ * in a table-driven way by eval_table. When it evaluates a subexpression it
+ * calls the inner function with its first argument pointing to the next
+ * element of the table. Innermost expressions have special non-table-driven
+ * handling.
+ */
+struct ops {
+	eval_fn *inner;
+	struct op {
+		const char *str;
+		int (*fn)(int,int);
+	} op[5];
+} eval_ops[] = {
+	{ eval_table, { { "||", op_or } } },
+	{ eval_table, { { "&&", op_and } } },
+	{ eval_table, { { "==", op_eq },
+			{ "!=", op_ne } } },
+	{ eval_unary, { { "<=", op_le },
+			{ ">=", op_ge },
+			{ "<", op_lt },
+			{ ">", op_gt } } }
+};
+
 FILE           *input;
 const char     *filename;
 int             linenum;	/* current line number */
@@ -167,8 +219,6 @@ int	        findsym(const char *);
 void	        flushline(bool);
 int	        getline(char *, int, FILE *, bool);
 Linetype        ifeval(const char **);
-Linetype        ifeval_1(const char **);
-Linetype        ifeval_2(const char **);
 int	        main(int, char **);
 const char     *skipcomment(const char *);
 const char     *skipquote(const char *, Quote_state);
@@ -549,128 +599,106 @@ elif2endif(void)
 }
 
 /*
- *  Evaluate the expression on a #if line. If we can't work out the
- *  value then LT_IF is returned (so the #if block is passed through)
- *  otherwise we return LT_TRUE or LT_FALSE accordingly.
- *
- *  We only deal with a limited set of operators, as follows:
- *	defined() && || ! ( )
+ * Function for evaluating the innermost parts of expressions,
+ * viz. !expr (expr) defined(symbol) symbol number
  */
 Linetype
-ifeval_2(const char **cpp)
+eval_unary(struct ops *ops, int *valp, const char **cpp)
 {
 	const char *cp;
-	Linetype val;
+	char *ep;
 	int sym;
 
-	cp = *cpp;
-	cp = skipcomment(cp);
-
-	switch (*cp) {
-
-	case '!':
+	cp = skipcomment(*cpp);
+	if(*cp == '!') {
+		debug("eval%d !", ops - eval_ops);
 		cp++;
-		val = ifeval_2(&cp);
-		if (val == LT_TRUE)
-			val = LT_FALSE;
-		else if (val == LT_FALSE)
-			val = LT_TRUE;
-		else
+		if (eval_unary(ops, valp, &cp) == LT_IF)
 			return LT_IF;
-		break;
-
-	case '(':
+		*valp = !*valp;
+	} else if (*cp == '(') {
 		cp++;
-		val = ifeval(&cp);
+		debug("eval%d (", ops - eval_ops);
+		if (eval_table(eval_ops, valp, &cp) == LT_IF)
+			return LT_IF;
 		cp = skipcomment(cp);
 		if (*cp++ != ')')
 			return LT_IF;
-		break;
-
-	default:
-		if (endsym(*cp))
+	} else if (isdigit((unsigned char)*cp)) {
+		debug("eval%d number", ops - eval_ops);
+		*valp = strtol(cp, &ep, 0);
+		cp = skipsym(cp);
+	} else if (strncmp(cp, "defined", 7) == 0 && endsym(cp[7])) {
+		cp = skipcomment(cp+7);
+		debug("eval%d defined", ops - eval_ops);
+		if (*cp++ != '(')
 			return LT_IF;
-		if (strncmp(cp, "defined", 7) == 0 && endsym(cp[7])) {
-			cp = skipcomment(cp+7);
-			if (*cp++ != '(')
+		cp = skipcomment(cp);
+		sym = findsym(cp);
+		if (sym == 0 && !symlist)
+			return LT_IF;
+		*valp = (value[sym] != NULL);
+		cp = skipsym(cp);
+		cp = skipcomment(cp);
+		if (*cp++ != ')')
+			return LT_IF;
+	} else if (!endsym(*cp)) {
+		debug("eval%d symbol", ops - eval_ops);
+		sym = findsym(cp);
+		if (sym == 0 && !symlist)
+			return LT_IF;
+		if (value[sym] == NULL)
+			*valp = 0;
+		else {
+			*valp = strtol(value[sym], &ep, 0);
+			if (*ep != '\0' || ep == value[sym])
 				return LT_IF;
-			cp = skipcomment(cp);
-			if ((sym = findsym(cp)) == 0)
-				return LT_IF;
-			if (value[sym] != NULL)
-				val = LT_TRUE;
-			else
-				val = LT_FALSE;
-			cp = skipsym(cp);
-			cp = skipcomment(cp);
-			if (*cp++ != ')')
-				return LT_IF;
-		} else {
-			if ((sym = findsym(cp)) == 0)
-				return LT_IF;
-			val = LT_FALSE;
-			if (value[sym] != NULL) {
-				char *ep;
-				if (strtol(value[sym], &ep, 0))
-					val = LT_TRUE;
-				if (*ep != '\0' || ep == value[sym])
-					return LT_IF;
-			}
-			cp = skipsym(cp);
 		}
-		break;
-	}
+		cp = skipsym(cp);
+	} else
+		return LT_IF;
 
 	*cpp = cp;
-	return val;
+	debug("eval%d = %d", ops - eval_ops, *valp);
+	return *valp ? LT_TRUE : LT_FALSE;
 }
 
 Linetype
-ifeval_1(const char **cpp)
+eval_table(struct ops *ops, int *valp, const char **cpp)
 {
 	const char *cp;
-	Linetype val;
-	Linetype v;
+	struct op *op;
+	int val;
 
+	debug("eval%d", ops - eval_ops);
 	cp = *cpp;
-	val = LT_TRUE;
+	if (ops->inner(ops+1, valp, &cp) == LT_IF)
+		return LT_IF;
 	for (;;) {
-		v = ifeval_2(&cp);
-		if (v == LT_FALSE)
-			val = LT_FALSE;
-		else if (v != LT_TRUE)
-			return LT_IF;
 		cp = skipcomment(cp);
-		if (strncmp(cp, "&&", 2) != 0)
+		for (op = ops->op; op->str != NULL; op++)
+			if (strncmp(cp, op->str, strlen(op->str)) == 0)
+				break;
+		if (op->str == NULL)
 			break;
-		cp += 2;
+		cp += strlen(op->str);
+		debug("eval%d %s", ops - eval_ops, op->str);
+		if (ops->inner(ops+1, &val, &cp) == LT_IF)
+			return LT_IF;
+		*valp = op->fn(*valp, val);
 	}
+
 	*cpp = cp;
-	return val;
+	debug("eval%d = %d", ops - eval_ops, *valp);
+	return *valp ? LT_TRUE : LT_FALSE;
 }
 
 Linetype
 ifeval(const char **cpp)
 {
-	const char *cp;
-	Linetype val;
-	Linetype v;
-
-	cp = *cpp;
-	val = LT_FALSE;
-	for (;;) {
-		v = ifeval_1(&cp);
-		if (v == LT_TRUE)
-			val = LT_TRUE;
-		else if (v != LT_FALSE)
-			return LT_IF;
-		cp = skipcomment(cp);
-		if (strncmp(cp, "||", 2) != 0)
-			break;
-		cp += 2;
-	}
-	*cpp = cp;
-	return val;
+	int val;
+	debug("eval %s", *cpp);
+	return eval_table(eval_ops, &val, cpp);
 }
 
 /*
@@ -789,8 +817,11 @@ findsym(const char *str)
 		    ; cp++, symp++
 		    )
 			continue;
-		if (*symp == '\0' && endsym(*cp))
+		if (*symp == '\0' && endsym(*cp)) {
+			debug("findsym %s %s", symname[symind],
+			    value[symind] ? value[symind] : "");
 			return symind;
+		}
 	}
 	return 0;
 }
