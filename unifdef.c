@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.53 2002/04/26 20:32:23 fanf Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.54 2002/04/26 20:44:33 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -169,7 +169,6 @@ Linetype        ifeval(const char **);
 Linetype        ifeval_1(const char **);
 Linetype        ifeval_2(const char **);
 int	        main(int, char **);
-void        	pfile(void);
 const char     *skipcomment(const char *);
 const char     *skipquote(const char *, Quote_state);
 const char     *skipsym(const char *);
@@ -240,14 +239,14 @@ main(int argc, char *argv[])
 	} else if (argc == 1) {
 		filename = *curarg;
 		if ((input = fopen(filename, "r")) != NULL) {
-			pfile();
+			(void) doif(0);
 			(void) fclose(input);
 		} else
 			err(2, "can't open %s", *curarg);
 	} else {
 		filename = "[stdin]";
 		input = stdin;
-		pfile();
+		(void) doif(0);
 	}
 
 	exit(exitstat);
@@ -259,14 +258,6 @@ usage(void)
 	fprintf (stderr, "usage: %s",
 "unifdef [-cdlst] [[-Dsym[=val]] [-Usym] [-iDsym[=val]] [-iUsym]] ... [file]\n");
 	exit (2);
-}
-
-void
-pfile(void)
-{
-	reject = REJ_NO;
-	(void) doif(0);
-	return;
 }
 
 void
