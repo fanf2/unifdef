@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.120 2002/12/12 19:53:53 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.121 2002/12/13 11:04:43 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -94,30 +94,6 @@ static char const * const linetype_name[] = {
 	"ELIF", "ELTRUE", "ELFALSE", "ELSE", "ENDIF", "EOF"
 };
 
-/* state of comment parser */
-typedef enum {
-	NO_COMMENT = false,
-	C_COMMENT,
-	CXX_COMMENT,
-	STARTING_COMMENT,
-	FINISHING_COMMENT
-} Comment_state;
-
-static char const * const comment_name[] = {
-	"NO", "C", "CXX", "STARTING", "FINISHING"
-};
-
-/* state of preprocessor line parser */
-typedef enum {
-	LS_START,
-	LS_HASH,
-	LS_DIRTY
-} Line_state;
-
-static char const * const linestate_name[] = {
-	"START", "HASH", "DIRTY"
-};
-
 /* state of #if processing */
 typedef enum {
 	IS_OUTSIDE,
@@ -138,6 +114,30 @@ static char const * const ifstate_name[] = {
 	"PASS_MIDDLE", "FALSE_MIDDLE", 	"TRUE_MIDDLE",
  	"PASS_ELSE", "FALSE_ELSE", "TRUE_ELSE",
 	"FALSE_TRAILER"
+};
+
+/* state of comment parser */
+typedef enum {
+	NO_COMMENT = false,	/* outside a comment */
+	C_COMMENT,		/* in a comment like this one */
+	CXX_COMMENT,		/* between // and end of line */
+	STARTING_COMMENT,	/* just after slash-backslash-newline */
+	FINISHING_COMMENT	/* star-backslash-newline in a C comment */
+} Comment_state;
+
+static char const * const comment_name[] = {
+	"NO", "C", "CXX", "STARTING", "FINISHING"
+};
+
+/* state of preprocessor line parser */
+typedef enum {
+	LS_START,		/* only space and comments on this line */
+	LS_HASH,		/* only space, comments, and a hash */
+	LS_DIRTY		/* this line can't be a preprocessor line */
+} Line_state;
+
+static char const * const linestate_name[] = {
+	"START", "HASH", "DIRTY"
 };
 
 /*
