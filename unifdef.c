@@ -51,7 +51,7 @@ __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
 #endif
 
 #ifndef lint
-__RCSID("$dotat: unifdef/unifdef.c,v 1.7 2002/04/25 15:31:28 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.8 2002/04/25 15:37:25 fanf Exp $");
 #endif
 
 /*
@@ -166,24 +166,20 @@ main(argc, argv)
 				}
 			} else
 				value[symind] = NULL;
-		} else
-			if (ignorethis)
-				goto unrec;
-			else
-				if (strcmp(&cp[1], "t") == 0)
-					text = YES;
-				else
-					if (strcmp(&cp[1], "l") == 0)
-						lnblank = YES;
-					else
-						if (strcmp(&cp[1], "c") == 0)
-							complement = YES;
-						else {
-					unrec:
-							prname();
-							fprintf(stderr, "unrecognized option: %s\n", cp);
-							goto usage;
-						}
+		} else if (ignorethis)
+			goto unrec;
+		else if (strcmp(&cp[1], "t") == 0)
+			text = YES;
+		else if (strcmp(&cp[1], "l") == 0)
+			lnblank = YES;
+		else if (strcmp(&cp[1], "c") == 0)
+			complement = YES;
+		else {
+		unrec:
+			prname();
+			fprintf(stderr, "unrecognized option: %s\n", cp);
+			goto usage;
+		}
 	}
 	if (nsyms == 0) {
 usage:
@@ -195,22 +191,21 @@ Usage: %s [-l] [-t] [-c] [[-Dsym] [-Usym] [-iDsym] [-iUsym]]... [file]\n\
 	if (argc > 1) {
 		prname();
 		fprintf(stderr, "can only do one file.\n");
-	} else
-		if (argc == 1) {
-			filename = *curarg;
-			if ((input = fopen(filename, "r")) != NULL) {
-				pfile();
-				(void) fclose(input);
-			} else {
-				prname();
-				fprintf(stderr, "can't open ");
-				perror(*curarg);
-			}
-		} else {
-			filename = "[stdin]";
-			input = stdin;
+	} else if (argc == 1) {
+		filename = *curarg;
+		if ((input = fopen(filename, "r")) != NULL) {
 			pfile();
+			(void) fclose(input);
+		} else {
+			prname();
+			fprintf(stderr, "can't open ");
+			perror(*curarg);
 		}
+	} else {
+		filename = "[stdin]";
+		input = stdin;
+		pfile();
+	}
 
 	(void) fflush(stdout);
 	exit(exitstat);
@@ -362,11 +357,10 @@ doif(thissym, inif, prevreject, depth)
 					if (err != NO_ERR)
 						(void) error(err, stqcline, depth);
 					return error(IEOF_ERR, stline, depth);
-				} else
-					if (err != NO_ERR)
-						return error(err, stqcline, depth);
-					else
-						return NO_ERR;
+				} else if (err != NO_ERR)
+					return error(err, stqcline, depth);
+				else
+					return NO_ERR;
 			}
 		}
 	}
@@ -412,56 +406,47 @@ checkline(cursym)
 	if (strcmp(keyword, "ifdef") == 0) {
 		retval = LT_TRUE;
 		goto ifdef;
-	} else
-		if (strcmp(keyword, "ifndef") == 0) {
-			retval = LT_FALSE;
+	} else if (strcmp(keyword, "ifndef") == 0) {
+		retval = LT_FALSE;
 	ifdef:
-			scp = cp = skipcomment(++cp);
-			if (incomment) {
-				retval = LT_PLAIN;
-				goto eol;
-			} {
-				int     symind;
+		scp = cp = skipcomment(++cp);
+		if (incomment) {
+			retval = LT_PLAIN;
+			goto eol;
+		}
+		{
+			int     symind;
 
-				if ((symind = findsym(scp)) < 0)
-					retval = LT_OTHER;
-				else
-					if (value[*cursym = symind] == NULL)
-						retval = (retval == LT_TRUE)
-						    ? LT_FALSE : LT_TRUE;
-			}
-		} else
-			if (strcmp(keyword, "if") == 0)
-				retval = LT_IF;
-			else
-				if (strcmp(keyword, "else") == 0)
-					retval = LT_ELSE;
-				else
-					if (strcmp(keyword, "endif") == 0)
-						retval = LT_ENDIF;
+			if ((symind = findsym(scp)) < 0)
+				retval = LT_OTHER;
+			else if (value[*cursym = symind] == NULL)
+				retval = (retval == LT_TRUE)
+				    ? LT_FALSE : LT_TRUE;
+		}
+	} else if (strcmp(keyword, "if") == 0)
+		retval = LT_IF;
+	else if (strcmp(keyword, "else") == 0)
+		retval = LT_ELSE;
+	else if (strcmp(keyword, "endif") == 0)
+		retval = LT_ENDIF;
 
 eol:
 	if (!text && reject != REJ_IGNORE)
 		for (; *cp;) {
 			if (incomment)
 				cp = skipcomment(cp);
+			else if (inquote == QUOTE_SINGLE)
+				cp = skipquote(cp, QUOTE_SINGLE);
+			else if (inquote == QUOTE_DOUBLE)
+				cp = skipquote(cp, QUOTE_DOUBLE);
+			else if (*cp == '/' && (cp[1] == '*' || cp[1] == '/'))
+				cp = skipcomment(cp);
+			else if (*cp == '\'')
+				cp = skipquote(cp, QUOTE_SINGLE);
+			else if (*cp == '"')
+				cp = skipquote(cp, QUOTE_DOUBLE);
 			else
-				if (inquote == QUOTE_SINGLE)
-					cp = skipquote(cp, QUOTE_SINGLE);
-				else
-					if (inquote == QUOTE_DOUBLE)
-						cp = skipquote(cp, QUOTE_DOUBLE);
-					else
-						if (*cp == '/' && (cp[1] == '*' || cp[1] == '/'))
-							cp = skipcomment(cp);
-						else
-							if (*cp == '\'')
-								cp = skipquote(cp, QUOTE_SINGLE);
-							else
-								if (*cp == '"')
-									cp = skipquote(cp, QUOTE_DOUBLE);
-								else
-									cp++;
+				cp++;
 		}
 	return retval;
 }
@@ -663,9 +648,8 @@ flushline(keep)
 
 		while ((chr = *line++) != 0)
 			putc(chr, out);
-	} else
-		if (lnblank)
-			putc('\n', stdout);
+	} else if (lnblank)
+		putc('\n', stdout);
 	return;
 }
 
