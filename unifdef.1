@@ -33,7 +33,7 @@
 .\" SUCH DAMAGE.
 .\"
 .\"     @(#)unifdef.1	8.2 (Berkeley) 4/1/94
-.\"	$dotat: unifdef/unifdef.1,v 1.28 2002/12/10 17:23:54 fanf2 Exp $
+.\"	$dotat: unifdef/unifdef.1,v 1.29 2002/12/10 17:28:09 fanf2 Exp $
 .\" $FreeBSD: src/usr.bin/unifdef/unifdef.1,v 1.16 2002/12/04 14:42:49 ru Exp $
 .\"
 .Dd September 24, 2002
@@ -272,6 +272,8 @@ utility exits 0 if the output is an exact copy of the input,
 1 if not, and 2 if in trouble.
 .Sh BUGS
 Expression evaluation is very limited.
+.Pp
+C string parsing is completely bogus.
 .Pp
 Does not work correctly if input contains null characters.
 .Sh HISTORY
