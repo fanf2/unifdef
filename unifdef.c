@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __RCSID
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.46 2002/04/26 18:13:43 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.47 2002/04/26 18:51:19 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -313,6 +313,7 @@ doif_1(int depth, Linetype lineval, bool ignoring)
 			if (inelse)
 				error(ELIF_ERR, depth);
 			donetrue = false;
+			reject = savereject;
 			if (active) {
 				active = false;
 				elif2if();
@@ -320,7 +321,6 @@ doif_1(int depth, Linetype lineval, bool ignoring)
 			} else {
 				ignoring = false;
 				flushline(true);
-				reject = savereject;
 			}
 			debug("active %d ignore %d", active, ignoring);
 			break;
