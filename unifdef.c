@@ -51,7 +51,7 @@ __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
 #endif
 
 #ifndef lint
-__RCSID("$dotat: unifdef/unifdef.c,v 1.11 2002/04/25 16:04:55 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.12 2002/04/25 16:05:30 fanf Exp $");
 #endif
 
 /*
@@ -192,7 +192,6 @@ main(argc, argv)
 		pfile();
 	}
 
-	(void) fflush(stdout);
 	exit(exitstat);
 }
 
