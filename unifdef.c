@@ -31,23 +31,12 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-
-#ifndef lint
-#if 0
-static const char copyright[] =
-"@(#) Copyright (c) 1985, 1993\n\
-	The Regents of the University of California.  All rights reserved.\n";
-#endif
-#ifdef __IDSTRING
-__IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
-__IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.167 2003/08/12 20:12:24 fanf2 Exp $");
-#endif
-#endif /* not lint */
-#ifdef __FBSDID
-__FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.18 2003/07/01 15:30:43 fanf Exp $");
-#endif
+static const void * const copyright[] = {
+    "@(#) Copyright (c) 1985, 1993\n\
+	The Regents of the University of California.  All rights reserved.\n",
+    "@(#)unifdef.c	8.1 (Berkeley) 6/6/93",
+    "$dotat: unifdef/unifdef.c,v 1.168 2003/08/12 20:33:59 fanf2 Exp $",
+    copyright };
 
 /*
  * unifdef - remove ifdef'ed lines
