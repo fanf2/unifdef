@@ -43,7 +43,7 @@ static const char copyright[] =
 
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.18 2002/04/25 18:17:09 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.19 2002/04/25 18:45:54 fanf Exp $");
 #endif
 
 /*
@@ -201,8 +201,7 @@ typedef int Linetype;
 #define LT_PLAIN       0	/* ordinary line */
 #define LT_TRUE        1	/* a true  #ifdef of a symbol known to us */
 #define LT_FALSE       2	/* a false #ifdef of a symbol known to us */
-#define LT_OTHER       3	/* an #ifdef of a symbol not known to us */
-#define LT_IF          4	/* an #ifdef of a symbol not known to us */
+#define LT_IF          3	/* an #ifdef of a symbol not known to us */
 #define LT_ELSE        5	/* #else */
 #define LT_ENDIF       6	/* #endif */
 #define LT_LEOF        7	/* end of file */
@@ -290,7 +289,6 @@ doif(thissym, inif, prevreject, depth)
 			break;
 
 		case LT_IF:
-		case LT_OTHER:
 			flushline(YES);
 			if ((doret = doif(-1, IN_IF, reject, depth + 1)) != NO_ERR)
 				return error(doret, stline, depth);
@@ -404,7 +402,7 @@ checkline(cursym)
 			goto eol;
 		}
 		if ((symind = findsym(scp)) < 0)
-			retval = LT_OTHER;
+			retval = LT_IF;
 		else if (value[*cursym = symind] == NULL)
 			retval = (retval == LT_TRUE)
 			    ? LT_FALSE : LT_TRUE;
