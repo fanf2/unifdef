@@ -44,10 +44,10 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.73 2002/05/21 17:33:41 fanf Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.74 2002/05/30 11:50:13 fanf Exp $");
 #endif
 #ifdef __FBSDID
-__FBSDID("$FreeBSD$");
+__FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.9 2002/05/23 16:50:41 fanf Exp $");
 #endif
 #endif
 
