@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.67 2002/05/02 12:38:29 fanf Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.68 2002/05/15 15:43:14 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -54,7 +54,7 @@ __FBSDID("$FreeBSD$");
 /*
  * unifdef - remove ifdef'ed lines
  *
- *  Warning: will not work correctly if input contains null characters.
+ *  Warning: will not work correctly if input contains nul characters.
  *
  *  Wishlist:
  *      provide an option which will append the name of the
@@ -165,7 +165,7 @@ struct ops {
 	eval_fn *inner;
 	struct op {
 		const char *str;
-		int (*fn)(int,int);
+		int (*fn)(int, int);
 	} op[5];
 } eval_ops[] = {
 	{ eval_table, { { "||", op_or } } },
