@@ -51,7 +51,7 @@ __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
 #endif
 
 #ifndef lint
-__RCSID("$dotat: unifdef/unifdef.c,v 1.15 2002/04/25 16:16:26 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.16 2002/04/25 18:10:00 fanf Exp $");
 #endif
 
 /*
@@ -97,7 +97,7 @@ char    insym[MAXSYMS];		/* state: false, inactive, true */
 #define SYM_FALSE    1		/* symbol is currently false */
 #define SYM_TRUE     2		/* symbol is currently true  */
 
-char    nsyms;
+char    nsyms = 1;		/* symbol 0 is used for tracking #ifs */
 char    incomment;		/* inside C comment */
 
 #define QUOTE_NONE   0
@@ -114,6 +114,7 @@ int	main(int, char **);
 void	pfile(void);
 char   *skipcomment(char *);
 char   *skipquote(char *, int);
+char   *skipsym(char *);
 void	usage(void);
 
 int
@@ -214,7 +215,7 @@ typedef int Linetype;
 #define LT_ENDIF       6	/* #endif */
 #define LT_LEOF        7	/* end of file */
 Linetype checkline(int *);
-Linetype ifeval(char *cp);
+Linetype ifeval(char **);
 
 typedef int Reject_level;
 Reject_level reject;		/* 0 or 1: pass thru; 1 or 2: ignore comments */
@@ -415,9 +416,13 @@ checkline(cursym)
 		else if (value[*cursym = symind] == NULL)
 			retval = (retval == LT_TRUE)
 			    ? LT_FALSE : LT_TRUE;
-	} else if (strcmp(keyword, "if") == 0)
-		retval = ifeval(cp);
-	else if (strcmp(keyword, "else") == 0)
+	} else if (strcmp(keyword, "if") == 0) {
+		retval = ifeval(&cp);
+		cp = skipcomment(cp);
+		if (*cp != '\n')
+			retval = LT_IF;
+		*cursym = 0;
+	} else if (strcmp(keyword, "else") == 0)
 		retval = LT_ELSE;
 	else if (strcmp(keyword, "endif") == 0)
 		retval = LT_ENDIF;
@@ -442,14 +447,133 @@ eol:
 		}
 	return retval;
 }
-
+/*
+ *  Evaluate the expression on a #if line. If we can't work out the
+ *  value then LT_IF is returned (so the #if block is passed through)
+ *  otherwise we return LT_TRUE or LT_FALSE accordingly.
+ *
+ *  We only deal with a limited set of operators, as follows:
+ *	defined() && || ! ( )
+ */
 Linetype
-ifeval(cp)
-	char   *cp;
+ifeval_2(cpp)
+	char   **cpp;
 {
-	return LT_IF;
-}
+	char    *cp;
+	int      sym;
+	Linetype val;
 
+	cp = *cpp;
+	cp = skipcomment(cp);
+
+	switch (*cp) {
+
+	case '!':
+		cp++;
+		val = ifeval_2(&cp);
+		if (val == LT_TRUE)
+			val = LT_FALSE;
+		else if (val == LT_FALSE)
+			val = LT_TRUE;
+		else
+			return LT_IF;
+		break;
+
+	case '(':
+		cp++;
+		val = ifeval(&cp);
+		cp = skipcomment(cp);
+		if (*cp != ')')
+			return LT_IF;
+		break;
+
+	default:
+		if (endsym(*cp))
+			return LT_IF;
+		if (strncmp(cp, "defined", 7) == 0 && endsym(cp[7])) {
+			cp = skipcomment(cp+7);
+			if (*cp++ != '(')
+				return LT_IF;
+			cp = skipcomment(cp);
+			sym = findsym(cp);
+			if (sym < 0)
+				return LT_IF;
+			if (value[sym] != NULL)
+				val = LT_TRUE;
+			else
+				val = LT_FALSE;
+			cp = skipsym(cp);
+			cp = skipcomment(cp);
+			if (*cp++ != ')')
+				return LT_IF;
+		} else {
+			sym = findsym(cp);
+			if (sym < 0)
+				return LT_IF;
+			val = LT_FALSE;
+			if (value[sym] != NULL) {
+				char *ep;
+				if (strtol(value[sym], &ep, 0))
+					val = LT_TRUE;
+				if (*ep != '\0' || ep == value[sym])
+					return LT_IF;
+			}
+			cp = skipsym(cp);
+		}
+		break;
+	}
+
+	*cpp = cp;
+	return val;
+}
+Linetype
+ifeval_1(cpp)
+	char   **cpp;
+{
+	char    *cp;
+	Linetype val;
+	Linetype v;
+
+	cp = *cpp;
+	val = LT_TRUE;
+	for (;;) {
+		v = ifeval_2(&cp);
+		if (v == LT_FALSE)
+			val = LT_FALSE;
+		else if (v != LT_TRUE)
+			return LT_IF;
+		cp = skipcomment(cp);
+		if (strncmp(cp, "&&", 2) != 0)
+			break;
+		cp += 2;
+	}
+	*cpp = cp;
+	return val;
+}
+Linetype
+ifeval(cpp)
+	char   **cpp;
+{
+	char    *cp;
+	Linetype val;
+	Linetype v;
+
+	cp = *cpp;
+	val = LT_FALSE;
+	for (;;) {
+		v = ifeval_1(&cp);
+		if (v == LT_TRUE)
+			val = LT_TRUE;
+		else if (v != LT_FALSE)
+			return LT_IF;
+		cp = skipcomment(cp);
+		if (strncmp(cp, "||", 2) != 0)
+			break;
+		cp += 2;
+	}
+	*cpp = cp;
+	return val;
+}
 /*
  *  Skip over comments and stop at the next charaacter
  *  position that is not whitespace.
@@ -534,6 +658,17 @@ inside:
 	}
 }
 /*
+ *  Skip over an identifier.
+ */
+char   *
+skipsym(cp)
+	char   *cp;
+{
+	while (!endsym(*cp))
+		++cp;
+	return cp;
+}
+/*
  *  findsym - look for the symbol in the symbol table.
  *            if found, return symbol table index,
  *            else return -1.
@@ -547,7 +682,7 @@ findsym(str)
 	int     symind;
 	char    chr;
 
-	for (symind = 0; symind < nsyms; ++symind) {
+	for (symind = 1; symind < nsyms; ++symind) {
 		if (insym[symind] == SYM_INACTIVE) {
 			for (symp = symname[symind], cp = str
 			    ; *symp && *cp == *symp
