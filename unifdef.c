@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.130 2002/12/13 15:26:41 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.131 2003/01/17 19:01:59 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -168,7 +168,7 @@ static const char      *filename;		/* input file name */
 static int              linenum;		/* current line number */
 
 static char             tline[MAXLINE+10];	/* input buffer plus space */
-static char            *keyword;       		/* used for editing #elif's */
+static char            *keyword;		/* used for editing #elif's */
 
 static Comment_state    incomment;		/* comment parser state */
 static Line_state       linestate;		/* #if line parser state */
@@ -279,7 +279,7 @@ main(int argc, char *argv[])
 static void
 usage(void)
 {
-	fprintf (stderr, "usage: %s",
+	fprintf(stderr, "usage: %s",
 "unifdef [-cdklst] [[-Dsym[=val]] [-Usym] [-iDsym[=val]] [-iUsym]] ... [file]\n");
 	exit (2);
 }
