@@ -34,7 +34,7 @@
 .\"
 .\"     @(#)unifdef.1	8.2 (Berkeley) 4/1/94
 .\" $FreeBSD: src/usr.bin/unifdef/unifdef.1,v 1.10 2002/04/20 12:17:43 charnier Exp $
-.\" $dotat: unifdef/unifdef.1,v 1.8 2002/04/26 19:51:20 fanf Exp $
+.\" $dotat: unifdef/unifdef.1,v 1.9 2002/04/26 19:54:54 fanf Exp $
 .\"
 .Dd April 26, 2002
 .Dt UNIFDEF 1
@@ -58,9 +58,11 @@ The
 .Nm
 utility selectively processes conditional
 .Xr cpp 1
-directives,
-removing both the directives and any text that they control
-from a file while otherwise leaving the file alone.
+directives.
+It removes from a file
+both the directives
+and any additional text that they specify should be removed,
+while otherwise leaving the file alone.
 .Pp
 The
 .Nm
