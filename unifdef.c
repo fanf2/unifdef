@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.150 2003/01/20 13:48:06 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.151 2003/01/20 14:01:47 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.15 2003/01/20 12:41:41 fanf Exp $");
@@ -587,7 +587,9 @@ getline(void)
 }
 
 /*
- * These are the operators that are supported by the expression evaluator.
+ * These are the binary operators that are supported by the expression
+ * evaluator. Note that if support for division is added then we also
+ * need short-circuiting booleans because of divide-by-zero.
  */
 static int op_lt(int a, int b) { return (a < b); }
 static int op_gt(int a, int b) { return (a > b); }
