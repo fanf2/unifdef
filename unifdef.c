@@ -43,7 +43,7 @@ static const char copyright[] =
 
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.20 2002/04/25 19:59:46 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.21 2002/04/25 20:20:05 fanf Exp $");
 #endif
 
 /*
@@ -196,6 +196,9 @@ usage()
 	exit (2);
 }
 
+#define MAXLINE 256
+char    tline[MAXLINE];
+
 /* types of input lines: */
 typedef int Linetype;
 #define LT_PLAIN       0	/* ordinary line */
@@ -204,7 +207,6 @@ typedef int Linetype;
 #define LT_IF          3	/* an #ifdef of a symbol not known to us */
 #define LT_ELSE        5	/* #else */
 #define LT_ENDIF       6	/* #endif */
-#define LT_LEOF        7	/* end of file */
 Linetype checkline(int *);
 Linetype ifeval(char **);
 
@@ -259,6 +261,23 @@ doif(thissym, inif, prevreject, depth)
 
 	stline = linenum;
 	for (;;) {
+		linenum++;
+		if (getlin(tline, sizeof tline, input, NO) == EOF) {
+			int     code;
+			code = incomment
+			    ? CEOF_ERR
+			    : inquote == QUOTE_SINGLE
+			    ? Q1EOF_ERR
+			    : inquote == QUOTE_DOUBLE
+			    ? Q2EOF_ERR
+			    : NO_ERR;
+			if (code != NO_ERR)
+				code = error(code, stqcline, depth);
+			if (inif)
+				return error(IEOF_ERR, stline, depth);
+			else
+				return code;
+		}
 		switch (lineval = checkline(&cursym)) {
 		case LT_PLAIN:
 			flushline(YES);
@@ -324,31 +343,10 @@ doif(thissym, inif, prevreject, depth)
 			flushline(YES);
 			return NO_ERR;
 
-		case LT_LEOF: {
-				int     code;
-				code = incomment
-				    ? CEOF_ERR
-				    : inquote == QUOTE_SINGLE
-				    ? Q1EOF_ERR
-				    : inquote == QUOTE_DOUBLE
-				    ? Q2EOF_ERR
-				    : NO_ERR;
-				if (inif) {
-					if (code != NO_ERR)
-						(void) error(code, stqcline, depth);
-					return error(IEOF_ERR, stline, depth);
-				} else if (code != NO_ERR)
-					return error(code, stqcline, depth);
-				else
-					return NO_ERR;
-			}
 		}
 	}
 }
 #define endsym(c) (!isalpha ((unsigned char)c) && !isdigit ((unsigned char)c) && c != '_')
-
-#define MAXLINE 256
-char    tline[MAXLINE];
 
 Linetype
 checkline(cursym)
@@ -362,10 +360,6 @@ checkline(cursym)
 	Linetype retval;
 #define KWSIZE 8
 	char    keyword[KWSIZE];
-
-	linenum++;
-	if (getlin(tline, sizeof tline, input, NO) == EOF)
-		return LT_LEOF;
 
 	retval = LT_PLAIN;
 	cp = skipcomment(tline);
