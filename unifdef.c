@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.136 2003/01/20 00:59:36 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.137 2003/01/20 01:32:23 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -111,8 +111,8 @@ typedef enum {
 
 static char const * const ifstate_name[] = {
 	"OUTSIDE", "FALSE_PREFIX", "TRUE_PREFIX",
-	"PASS_MIDDLE", "FALSE_MIDDLE", 	"TRUE_MIDDLE",
- 	"PASS_ELSE", "FALSE_ELSE", "TRUE_ELSE",
+	"PASS_MIDDLE", "FALSE_MIDDLE", "TRUE_MIDDLE",
+	"PASS_ELSE", "FALSE_ELSE", "TRUE_ELSE",
 	"FALSE_TRAILER"
 };
 
@@ -594,7 +594,7 @@ eval_unary(const struct ops *ops, int *valp, const char **cpp)
 	int sym;
 
 	cp = skipcomment(*cpp);
-	if(*cp == '!') {
+	if (*cp == '!') {
 		debug("eval%d !", ops - eval_ops);
 		cp++;
 		if (eval_unary(ops, valp, &cp) == LT_IF)
