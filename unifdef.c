@@ -41,9 +41,14 @@ static const char copyright[] =
 "@(#) Copyright (c) 1985, 1993\n\
 	The Regents of the University of California.  All rights reserved.\n";
 
+#ifdef __RCSID
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.36 2002/04/26 16:47:53 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.37 2002/04/26 16:49:11 fanf Exp $");
+#endif
+#ifdef __FBSDID
+__FBSDID("$FreeBSD$");
+#endif
 #endif
 
 /*
