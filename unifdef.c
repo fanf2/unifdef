@@ -43,7 +43,7 @@ static const char copyright[] =
 
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.19 2002/04/25 18:45:54 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.20 2002/04/25 19:59:46 fanf Exp $");
 #endif
 
 /*
@@ -235,16 +235,12 @@ char   *errs[] = {
 #define Q2EOF_ERR   7
 	"Premature EOF in quoted string"
 };
-/* States for inif arg to doif */
-#define IN_NONE 0
-#define IN_IF   1
-#define IN_ELSE 2
 
 void
 pfile()
 {
 	reject = REJ_NO;
-	(void) doif(-1, IN_NONE, reject, 0);
+	(void) doif(-1, NO, reject, 0);
 	return;
 }
 
@@ -284,20 +280,19 @@ doif(thissym, inif, prevreject, depth)
 				exitstat = 1;
 				flushline(NO);
 			}
-			if ((doret = doif(cursym, IN_IF, thisreject, depth + 1)) != NO_ERR)
+			if ((doret = doif(cursym, YES, thisreject, depth + 1)) != NO_ERR)
 				return error(doret, stline, depth);
 			break;
 
 		case LT_IF:
 			flushline(YES);
-			if ((doret = doif(-1, IN_IF, reject, depth + 1)) != NO_ERR)
+			if ((doret = doif(-1, YES, reject, depth + 1)) != NO_ERR)
 				return error(doret, stline, depth);
 			break;
 
 		case LT_ELSE:
-			if (inif != IN_IF)
+			if (!inif)
 				return error(ELSE_ERR, linenum, depth);
-			inif = IN_ELSE;
 			if (thissym >= 0) {
 				if (insym[thissym] == SYM_TRUE) {
 					reject = ignore[thissym] ? REJ_IGNORE : REJ_YES;
@@ -316,7 +311,7 @@ doif(thissym, inif, prevreject, depth)
 			break;
 
 		case LT_ENDIF:
-			if (inif == IN_NONE)
+			if (!inif)
 				return error(ENDIF_ERR, linenum, depth);
 			if (thissym >= 0) {
 				insym[thissym] = SYM_INACTIVE;
@@ -338,7 +333,7 @@ doif(thissym, inif, prevreject, depth)
 				    : inquote == QUOTE_DOUBLE
 				    ? Q2EOF_ERR
 				    : NO_ERR;
-				if (inif != IN_NONE) {
+				if (inif) {
 					if (code != NO_ERR)
 						(void) error(code, stqcline, depth);
 					return error(IEOF_ERR, stline, depth);
