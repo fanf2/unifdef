@@ -51,7 +51,7 @@ __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
 #endif
 
 #ifndef lint
-__RCSID("$dotat: unifdef/unifdef.c,v 1.4 2002/04/25 14:57:56 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.5 2002/04/25 14:59:59 fanf Exp $");
 #endif
 
 /*
@@ -88,7 +88,7 @@ char lnblank;			/* -l option in effect: blank deleted lines */
 char complement;		/* -c option in effect: complement the
 				 * operation */
 
-#define MAXSYMS 100
+#define MAXSYMS 1000
 char   *symname[MAXSYMS];	/* symbol name */
 char    true[MAXSYMS];		/* -Dsym */
 char    ignore[MAXSYMS];	/* -iDsym or -iUsym */
