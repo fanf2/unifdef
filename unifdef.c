@@ -42,7 +42,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.163 2003/07/31 08:21:00 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.164 2003/08/12 19:23:12 fanf2 Exp $");
 #endif
 #endif /* not lint */
 #ifdef __FBSDID
@@ -275,10 +275,6 @@ main(int argc, char *argv[])
 		}
 	argc -= optind;
 	argv += optind;
-	if (nsyms == 0 && !symlist) {
-		warnx("must -D or -U at least one symbol");
-		usage();
-	}
 	if (argc > 1) {
 		errx(2, "can only do one file");
 	} else if (argc == 1 && strcmp(*argv, "-") != 0) {
@@ -675,7 +671,7 @@ eval_unary(const struct ops *ops, int *valp, const char **cpp)
 			return (LT_IF);
 		cp = skipcomment(cp);
 		sym = findsym(cp);
-		if (sym < 0 && !symlist)
+		if (sym < 0)
 			return (LT_IF);
 		*valp = (value[sym] != NULL);
 		cp = skipsym(cp);
@@ -686,7 +682,7 @@ eval_unary(const struct ops *ops, int *valp, const char **cpp)
 	} else if (!endsym(*cp)) {
 		debug("eval%d symbol", ops - eval_ops);
 		sym = findsym(cp);
-		if (sym < 0 && !symlist)
+		if (sym < 0)
 			return (LT_IF);
 		if (value[sym] == NULL)
 			*valp = 0;
@@ -863,8 +859,11 @@ findsym(const char *str)
 	cp = skipsym(str);
 	if (cp == str)
 		return (-1);
-	if (symlist)
+	if (symlist) {
 		printf("%.*s\n", (int)(cp-str), str);
+		/* we don't care about the value of the symbol */
+		return (0);
+	}
 	for (symind = 0; symind < nsyms; ++symind) {
 		if (strlcmp(symname[symind], str, cp-str) == 0) {
 			debug("findsym %s %s", symname[symind],
