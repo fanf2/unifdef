@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.80 2002/12/10 17:12:58 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.81 2002/12/10 21:11:58 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -100,12 +100,6 @@ typedef enum {
 	CXX_COMMENT
 } Comment_state;
 
-typedef enum {
-	QUOTE_NONE = false,
-	QUOTE_SINGLE,
-	QUOTE_DOUBLE
-} Quote_state;
-
 const char *const errs[] = {
 #define NO_ERR      0
 	"",
@@ -120,11 +114,7 @@ const char *const errs[] = {
 #define IEOF_ERR    5
 	"Premature EOF in ifdef",
 #define CEOF_ERR    6
-	"Premature EOF in comment",
-#define Q1EOF_ERR   7
-	"Premature EOF in quoted character",
-#define Q2EOF_ERR   8
-	"Premature EOF in quoted string"
+	"Premature EOF in comment"
 };
 
 /*
@@ -183,7 +173,7 @@ FILE           *input;
 const char     *filename;
 int             linenum;	/* current line number */
 int             stifline;	/* start of current #if */
-int             stqcline;	/* start of current coment or quote */
+int             stcomline;	/* start of current comment */
 bool            keepthis;	/* treat this const #if as unknown */
 
 #define MAXLINE 1024
@@ -209,7 +199,6 @@ int             nsyms;
 
 Reject_level    reject;		/* what kind of filtering we are doing */
 Comment_state   incomment;	/* inside C comment */
-Quote_state     inquote;	/* inside single or double quotes */
 
 Linetype        checkline(int *);
 void            debug(const char *, ...);
@@ -225,7 +214,6 @@ int             getline(char *, int, FILE *, bool);
 Linetype        ifeval(const char **);
 int             main(int, char **);
 const char     *skipcomment(const char *);
-const char     *skipquote(const char *, Quote_state);
 const char     *skipsym(const char *);
 void            usage(void);
 
@@ -276,7 +264,7 @@ main(int argc, char *argv[])
 		case 's': /* only output list of symbols that control #ifs */
 			symlist = true;
 			break;
-		case 't': /* don't parse C comments or strings */
+		case 't': /* don't parse C comments */
 			text = true;
 			break;
 		default:
@@ -457,10 +445,6 @@ process(int depth)
 		if (getline(tline, MAXLINE, input, false) == EOF) {
 			if (incomment)
 				error(CEOF_ERR, depth);
-			if (inquote == QUOTE_SINGLE)
-				error(Q1EOF_ERR, depth);
-			if (inquote == QUOTE_DOUBLE)
-				error(Q2EOF_ERR, depth);
 			if (depth != 0)
 				error(IEOF_ERR, depth);
 			return LT_EOF;
@@ -507,7 +491,7 @@ checkline(int *cursym)
 	*cursym = -1;
 	retval = LT_PLAIN;
 	cp = skipcomment(tline);
-	if (*cp != '#' || incomment || inquote)
+	if (*cp != '#' || incomment)
 		goto eol;
 
 	cp = skipcomment(++cp);
@@ -562,14 +546,8 @@ eol:
 		for (; *cp;) {
 			if (incomment)
 				cp = skipcomment(cp);
-			else if (inquote)
-				cp = skipquote(cp, inquote);
 			else if (*cp == '/' && (cp[1] == '*' || cp[1] == '/'))
 				cp = skipcomment(cp);
-			else if (*cp == '\'')
-				cp = skipquote(cp, QUOTE_SINGLE);
-			else if (*cp == '"')
-				cp = skipquote(cp, QUOTE_DOUBLE);
 			else
 				cp++;
 		}
@@ -738,12 +716,12 @@ skipcomment(const char *cp)
 		if (cp[1] == '*') {
 			if (!incomment) {
 				incomment = C_COMMENT;
-				stqcline = linenum;
+				stcomline = linenum;
 			}
 		} else if (cp[1] == '/') {
 			if (!incomment) {
 				incomment = CXX_COMMENT;
-				stqcline = linenum;
+				stcomline = linenum;
 			}
 		} else
 			return cp;
@@ -767,36 +745,6 @@ inside:
 					return cp;
 			incomment = NO_COMMENT;
 		}
-	}
-}
-
-/*
- * Skip over a quoted string or character and stop at the next charaacter
- * position that is not whitespace.
- */
-const char *
-skipquote(const char *cp, Quote_state type)
-{
-	char qchar;
-
-	qchar = type == QUOTE_SINGLE ? '\'' : '"';
-
-	if (inquote == type)
-		goto inside;
-	for (;; cp++) {
-		if (*cp != qchar)
-			return cp;
-		cp++;
-		inquote = type;
-		stqcline = linenum;
-inside:
-		for (;; cp++) {
-			if (*cp == qchar)
-				break;
-			if (*cp == '\0' || (*cp == '\\' && *++cp == '\0'))
-				return cp;
-		}
-		inquote = QUOTE_NONE;
 	}
 }
 
@@ -978,9 +926,9 @@ debug(const char *msg, ...)
 void
 error(int code, int depth)
 {
-	if (incomment || inquote)
+	if (incomment)
 		errx(2, "error in %s line %d: %s (#if depth %d)",
-		    filename, stqcline, errs[code], depth);
+		    filename, stcomline, errs[code], depth);
 	else
 		errx(2, "error in %s line %d: %s"
 		    " (#if depth %d start line %d)",
