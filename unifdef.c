@@ -43,7 +43,7 @@ static const char copyright[] =
 
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.17 2002/04/25 18:15:23 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.18 2002/04/25 18:17:09 fanf Exp $");
 #endif
 
 /*
@@ -168,7 +168,7 @@ main(argc, argv)
 			usage();
 		}
 	}
-	if (nsyms == 0)
+	if (nsyms == 1)
 		usage();
 	if (argc > 1) {
 		errx(2, "can only do one file");
