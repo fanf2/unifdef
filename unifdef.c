@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002, 2003 Tony Finch <dot@dotat.at>
+ * Copyright (c) 2002, 2003 Tony Finch <dot@dotat.at>.  All rights reserved.
  * Copyright (c) 1985, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -42,7 +42,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.162 2003/07/31 07:59:15 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.163 2003/07/31 08:21:00 fanf2 Exp $");
 #endif
 #endif /* not lint */
 #ifdef __FBSDID
