@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.61 2002/04/29 00:17:11 fanf Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.62 2002/04/29 00:18:06 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -225,12 +225,12 @@ main(int argc, char *argv[])
 			continue;
 		} else if (strcmp(&cp[1], "") == 0)
 			break;
+		else if (strcmp(&cp[1], "-debug") == 0)
+			debugging = true;
 		else if (strcmp(&cp[1], "c") == 0)
 			complement = true;
 		else if (strcmp(&cp[1], "l") == 0)
 			lnblank = true;
-		else if (strcmp(&cp[1], "d") == 0)
-			debugging = true;
 		else if (strcmp(&cp[1], "s") == 0)
 			symlist = true;
 		else if (strcmp(&cp[1], "t") == 0)
