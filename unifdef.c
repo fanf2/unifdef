@@ -51,7 +51,7 @@ __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
 #endif
 
 #ifndef lint
-__RCSID("$dotat: unifdef/unifdef.c,v 1.6 2002/04/25 15:02:48 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.7 2002/04/25 15:31:28 fanf Exp $");
 #endif
 
 /*
@@ -90,7 +90,7 @@ char complement;		/* -c option in effect: complement the
 
 #define MAXSYMS 1000
 char   *symname[MAXSYMS];	/* symbol name */
-char    true[MAXSYMS];		/* -Dsym */
+char   *value[MAXSYMS];		/* -Dsym=value */
 char    ignore[MAXSYMS];	/* -iDsym or -iUsym */
 char    insym[MAXSYMS];		/* state: false, inactive, true */
 #define SYM_INACTIVE 0		/* symbol is currently inactive */
@@ -154,7 +154,18 @@ main(argc, argv)
 				insym[symind] = SYM_INACTIVE;
 			}
 			ignore[symind] = ignorethis;
-			true[symind] = *cp1 == 'D' ? YES : NO;
+			if (*cp1 == 'D') {
+				char   *val;
+
+				val = strchr(cp1, '=');
+				if (val == NULL)
+					value[symind] = "";
+				else {
+					value[symind] = val+1;
+					*val = '\0';
+				}
+			} else
+				value[symind] = NULL;
 		} else
 			if (ignorethis)
 				goto unrec;
@@ -399,11 +410,11 @@ checkline(cursym)
 	*symp = '\0';
 
 	if (strcmp(keyword, "ifdef") == 0) {
-		retval = YES;
+		retval = LT_TRUE;
 		goto ifdef;
 	} else
 		if (strcmp(keyword, "ifndef") == 0) {
-			retval = NO;
+			retval = LT_FALSE;
 	ifdef:
 			scp = cp = skipcomment(++cp);
 			if (incomment) {
@@ -412,11 +423,12 @@ checkline(cursym)
 			} {
 				int     symind;
 
-				if ((symind = findsym(scp)) >= 0)
-					retval = (retval ^ true[*cursym = symind])
-					    ? LT_FALSE : LT_TRUE;
-				else
+				if ((symind = findsym(scp)) < 0)
 					retval = LT_OTHER;
+				else
+					if (value[*cursym = symind] == NULL)
+						retval = (retval == LT_TRUE)
+						    ? LT_FALSE : LT_TRUE;
 			}
 		} else
 			if (strcmp(keyword, "if") == 0)
