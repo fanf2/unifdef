@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.104 2002/12/12 17:24:26 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.105 2002/12/12 17:30:55 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -290,6 +290,7 @@ void            nest(void);
 void            process(void);
 const char     *skipcomment(const char *);
 const char     *skipsym(const char *);
+void            state(Ifstate);
 int             strlcmp(const char *, const char *, size_t);
 void            unignore(void);
 void            usage(void);
@@ -417,6 +418,9 @@ void nest(void) {
 void unignore(void) {
 	ignore[depth] = ignore[depth-1];
 }
+void state(Ifstate is) {
+	ifstate[depth] = is;
+}
 /* report an error */
 void Eelif (void) { error("Inappropriate #elif"); }
 void Eelse (void) { error("Inappropriate #else"); }
@@ -435,17 +439,17 @@ void Fpass (void) {                   nest();     Pelif(); }
 void Ftrue (void) {                   nest();     Strue(); }
 void Ffalse(void) {                   nest();     Sfalse(); }
 /* output lacks group's start line */
-void Strue (void) { flushline(false); unignore(); ifstate[depth] = IS_TRUE_PREFIX; }
-void Sfalse(void) { flushline(false); unignore(); ifstate[depth] = IS_FALSE_PREFIX; }
-void Selse (void) { flushline(false);             ifstate[depth] = IS_TRUE_ELSE; }
+void Strue (void) { flushline(false); unignore(); state(IS_TRUE_PREFIX); }
+void Sfalse(void) { flushline(false); unignore(); state(IS_FALSE_PREFIX); }
+void Selse (void) { flushline(false);             state(IS_TRUE_ELSE); }
 /* print/pass this block */
-void Pelif (void) { flushline(true);  unignore(); ifstate[depth] = IS_PASS_MIDDLE; }
-void Pelse (void) { flushline(true);              ifstate[depth] = IS_PASS_ELSE; }
+void Pelif (void) { flushline(true);  unignore(); state(IS_PASS_MIDDLE); }
+void Pelse (void) { flushline(true);              state(IS_PASS_ELSE); }
 void Pendif(void) { flushline(true);  --depth; }
 /* discard this block */
-void Dfalse(void) { flushline(false); unignore(); ifstate[depth] = IS_FALSE_TRAILER; }
-void Delif (void) { flushline(false); unignore(); ifstate[depth] = IS_FALSE_MIDDLE; }
-void Delse (void) { flushline(false);             ifstate[depth] = IS_FALSE_ELSE; }
+void Dfalse(void) { flushline(false); unignore(); state(IS_FALSE_TRAILER); }
+void Delif (void) { flushline(false); unignore(); state(IS_FALSE_MIDDLE); }
+void Delse (void) { flushline(false);             state(IS_FALSE_ELSE); }
 void Dendif(void) { flushline(false); --depth; }
 /* modify this line */
 void Mpass(void) {
@@ -455,17 +459,17 @@ void Mpass(void) {
 void Mtrue(void) {
 	strcpy(keyword, "else\n");
 	flushline(true);
-	ifstate[depth] = IS_TRUE_MIDDLE;
+	state(IS_TRUE_MIDDLE);
 }
 void Melif(void) {
 	strcpy(keyword, "endif\n");
 	flushline(true);
-	ifstate[depth] = IS_FALSE_TRAILER;
+	state(IS_FALSE_TRAILER);
 }
 void Melse(void) {
 	strcpy(keyword, "endif\n");
 	flushline(true);
-	ifstate[depth] = IS_FALSE_ELSE;
+	state(IS_FALSE_ELSE);
 }
 
 /*
