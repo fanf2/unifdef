@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.59 2002/04/28 22:15:26 fanf Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.60 2002/04/28 22:32:30 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -215,8 +215,16 @@ main(int argc, char *argv[])
 				}
 			} else
 				value[symind] = NULL;
-		} else if (ignorethis)
+		} else if (ignorethis) {
 			goto unrec;
+		} else if (cp[1] == 'I') {
+			if (cp[2] == '\0') {
+				curarg++;
+				argc--;
+			}
+			continue;
+		} else if (strcmp(&cp[1], "") == 0)
+			break;
 		else if (strcmp(&cp[1], "c") == 0)
 			complement = true;
 		else if (strcmp(&cp[1], "l") == 0)
@@ -227,8 +235,6 @@ main(int argc, char *argv[])
 			symlist = true;
 		else if (strcmp(&cp[1], "t") == 0)
 			text = true;
-		else if (strcmp(&cp[1], "") == 0)
-			break;
 		else {
 		unrec:
 			warnx("unrecognized option: %s", cp);
