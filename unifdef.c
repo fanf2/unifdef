@@ -51,7 +51,7 @@ __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
 #endif
 
 #ifndef lint
-__RCSID("$dotat: unifdef/unifdef.c,v 1.10 2002/04/25 16:03:16 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.11 2002/04/25 16:04:55 fanf Exp $");
 #endif
 
 /*
@@ -67,11 +67,11 @@ __RCSID("$dotat: unifdef/unifdef.c,v 1.10 2002/04/25 16:03:16 fanf Exp $");
  *        corresponding #ifdef or #ifndef
  */
 
+#include <ctype.h>
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 FILE   *input;
 #ifndef YES
@@ -83,9 +83,9 @@ FILE   *input;
 typedef int Bool;
 
 char   *filename;
-char text;			/* -t option in effect: this is a text file */
-char lnblank;			/* -l option in effect: blank deleted lines */
-char complement;		/* -c option in effect: complement the
+char    text;			/* -t option in effect: this is a text file */
+char    lnblank;		/* -l option in effect: blank deleted lines */
+char    complement;		/* -c option in effect: complement the
 				 * operation */
 
 #define MAXSYMS 1000
@@ -97,14 +97,14 @@ char    insym[MAXSYMS];		/* state: false, inactive, true */
 #define SYM_FALSE    1		/* symbol is currently false */
 #define SYM_TRUE     2		/* symbol is currently true  */
 
-char nsyms;
-char incomment;			/* inside C comment */
+char    nsyms;
+char    incomment;		/* inside C comment */
 
 #define QUOTE_NONE   0
 #define QUOTE_SINGLE 1
 #define QUOTE_DOUBLE 2
-char inquote;			/* inside single or double quotes */
-int exitstat;
+char    inquote;		/* inside single or double quotes */
+int     exitstat;
 
 int	error(int, int, int);
 int	findsym(char *);
@@ -223,8 +223,8 @@ Reject_level reject;		/* 0 or 1: pass thru; 1 or 2: ignore comments */
 #define REJ_YES         2
 int doif(int, int, Reject_level, int);
 
-int linenum;			/* current line number */
-int stqcline;			/* start of current coment or quote */
+int     linenum;		/* current line number */
+int     stqcline;		/* start of current coment or quote */
 char   *errs[] = {
 #define NO_ERR      0
 	"",
