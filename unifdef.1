@@ -33,8 +33,8 @@
 .\" SUCH DAMAGE.
 .\"
 .\"     @(#)unifdef.1	8.2 (Berkeley) 4/1/94
-.\"	$dotat: unifdef/unifdef.1,v 1.40 2002/12/13 11:33:34 fanf2 Exp $
-.\" $FreeBSD: src/usr.bin/unifdef/unifdef.1,v 1.16 2002/12/04 14:42:49 ru Exp $
+.\"	$dotat: unifdef/unifdef.1,v 1.41 2003/01/17 19:19:13 fanf2 Exp $
+.\" $FreeBSD: src/usr.bin/unifdef/unifdef.1,v 1.18 2002/12/23 15:14:12 ru Exp $
 .\"
 .Dd September 24, 2002
 .Dt UNIFDEF 1
@@ -270,7 +270,7 @@ Obfuscated preprocessor control line.
 Premature
 .Tn EOF
 (with the line number of the most recent unterminated
-.Ic #if Ns ).
+.Ic #if ) .
 .It
 .Tn EOF
 in comment.
@@ -292,7 +292,7 @@ Trigraphs are not recognized.
 There is no support for symbols with different definitions at
 different points in the source file.
 .Pp
-The text-mode and ignore functionality doesn't correspond to modern
+The text-mode and ignore functionality does not correspond to modern
 .Xr cpp 1
 behaviour.
 .Sh HISTORY
