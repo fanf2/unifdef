@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.72 2002/05/15 19:37:50 fanf Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.73 2002/05/21 17:33:41 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -235,8 +235,8 @@ main(int argc, char *argv[])
 {
 	int opt;
 
-	while((opt = getopt(argc, argv, "i:D:U:I:cdlst")) != -1)
-		switch(opt) {
+	while ((opt = getopt(argc, argv, "i:D:U:I:cdlst")) != -1)
+		switch (opt) {
 		case 'i': /* treat stuff controlled by these symbols as text */
 			/*
 			 * For strict backwards-compatibility the U or D
@@ -508,7 +508,7 @@ checkline(int *cursym)
 		goto eol;
 
 	cp = skipcomment(++cp);
-	keyword = (char*)cp;
+	keyword = (char *)cp;
 	symp = kw;
 	while (!endsym(*cp)) {
 		*symp = *cp++;
@@ -855,7 +855,7 @@ addsym(bool ignorethis, bool definethis, char *sym)
 	}
 	symname[symind] = sym;
 	ignore[symind] = ignorethis;
-	val = (char*)skipsym(sym);
+	val = (char *)skipsym(sym);
 	if (definethis) {
 		if (*val == '=') {
 			value[symind] = val+1;
