@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.92 2002/12/11 20:42:47 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.93 2002/12/11 20:46:06 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -454,7 +454,7 @@ void Pelse (void) { flushline(true);              ifstate[depth] = IS_PASS_ELSE;
 void Pendif(void) { flushline(true);  --depth; }
 /* discard this block */
 void Dfalse(void) { flushline(false); unignore(); ifstate[depth] = IS_FALSE_TRAILER; }
-void Delif (void) { flushline(false);             ifstate[depth] = IS_FALSE_MIDDLE; }
+void Delif (void) { flushline(false); unignore(); ifstate[depth] = IS_FALSE_MIDDLE; }
 void Delse (void) { flushline(false);             ifstate[depth] = IS_FALSE_ELSE; }
 void Dendif(void) { flushline(false); --depth; }
 /* modify this line */
