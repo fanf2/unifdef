@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.143 2003/01/20 11:36:12 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.144 2003/01/20 11:45:32 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.14 2003/01/17 19:12:02 fanf Exp $");
@@ -512,14 +512,12 @@ getline(void)
 	const char *cp;
 	int cursym;
 	int kwlen;
-	bool dodgy;
 	Linetype retval;
 	Comment_state wascomment;
 
 	if (fgets(tline, MAXLINE, input) == NULL)
 		return (LT_EOF);
 	retval = LT_PLAIN;
-	dodgy = false;
 	wascomment = incomment;
 	cp = skipcomment(tline);
 	if (linestate == LS_START) {
@@ -533,8 +531,9 @@ getline(void)
 		keyword = tline + (cp - tline);
 		cp = skipsym(cp);
 		kwlen = cp - keyword;
+		/* no way can we deal with a continuation inside a keyword */
 		if (strncmp(cp, "\\\n", 2) == 0)
-			dodgy = true;
+			Eioccc();
 		if (strlcmp("ifdef", keyword, kwlen) == 0 ||
 		    strlcmp("ifndef", keyword, kwlen) == 0) {
 			cp = skipcomment(cp);
@@ -572,15 +571,14 @@ getline(void)
 			if (retval == LT_ELTRUE || retval == LT_ELFALSE)
 				retval = LT_ELIF;
 		}
-		if (retval != LT_PLAIN && (wascomment || incomment))
-			dodgy = true;
-		if (linestate == LS_HASH) {
-			if (dodgy && incomment)
+		if (retval != LT_PLAIN && (wascomment || incomment)) {
+			retval += LT_DODGY;
+			if (incomment)
 				linestate = LS_DIRTY;
-			else
-				/* skipcomment should have changed the state */
-				abort();
 		}
+		/* skipcomment should have changed the state */
+		if (linestate == LS_HASH)
+			abort(); /* bug */
 	}
 	if (linestate == LS_DIRTY) {
 		while (*cp != '\0')
@@ -588,7 +586,7 @@ getline(void)
 	}
 	debug("parser %s comment %s line",
 	    comment_name[incomment], linestate_name[linestate]);
-	return (dodgy ? retval + LT_DODGY : retval);
+	return (retval);
 }
 
 /*
