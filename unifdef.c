@@ -1,9 +1,10 @@
 /*
+ * Copyright (c) 2002, 2003 Tony Finch <dot@dotat.at>
  * Copyright (c) 1985, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
- * Dave Yost. Support for #if and #elif was added by Tony Finch.
+ * Dave Yost. It was rewritten to support ANSI C by Tony Finch.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,18 +38,19 @@
 #include <sys/cdefs.h>
 
 #ifndef lint
+#if 0
 static const char copyright[] =
 "@(#) Copyright (c) 1985, 1993\n\
 	The Regents of the University of California.  All rights reserved.\n";
-
+#endif
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.152 2003/01/20 14:37:08 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.153 2003/06/30 14:03:56 fanf2 Exp $");
 #endif
+#endif /* not lint */
 #ifdef __FBSDID
-__FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.15 2003/01/20 12:41:41 fanf Exp $");
-#endif
+__FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.16 2003/05/03 19:44:46 obrien Exp $");
 #endif
 
 /*
