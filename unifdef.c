@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __RCSID
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.41 2002/04/26 17:05:23 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.42 2002/04/26 17:23:57 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -72,44 +72,43 @@ __FBSDID("$FreeBSD$");
 #include <stdlib.h>
 #include <string.h>
 
-FILE   *input;
-char   *filename;
+FILE           *input;
+const char     *filename;
 
-bool    debugging;		/* -d option in effect: debugging reports */
-bool    text;			/* -t option in effect: this is a text file */
-bool    lnblank;		/* -l option in effect: blank deleted lines */
-bool    complement;		/* -c option in effect: complement the
-				 * operation */
+bool            debugging;	/* -d option in effect: debugging reports */
+bool            text;		/* -t option in effect: this is a text file */
+bool            lnblank;	/* -l option in effect: blank deleted lines */
+bool            complement;	/* -c option in effect: do the complement */
 
 #define MAXSYMS 1000
-char   *symname[MAXSYMS];	/* symbol name */
-char   *value[MAXSYMS];		/* -Dsym=value */
-bool    ignore[MAXSYMS];	/* -iDsym or -iUsym */
+const char     *symname[MAXSYMS];	/* symbol name */
+const char     *value[MAXSYMS];		/* -Dsym=value */
+bool            ignore[MAXSYMS];	/* -iDsym or -iUsym */
 
-int     nsyms = 1;		/* symbol 0 is used for tracking #ifs */
+int             nsyms = 1;	/* symbol 0 is used for tracking #ifs */
 
 #define NO_COMMENT  0
 #define C_COMMENT   1
 #define CXX_COMMENT 2
-char    incomment;		/* inside C comment */
+int     incomment;		/* inside C comment */
 
 #define QUOTE_NONE   0
 #define QUOTE_SINGLE 1
 #define QUOTE_DOUBLE 2
-char    inquote;		/* inside single or double quotes */
+int     inquote;		/* inside single or double quotes */
 int     exitstat;
 
-void	debug(const char *, ...);
-void	error(int, int);
-int	findsym(char *);
-void	flushline(bool);
-int	getlin(char *, int, FILE *, bool);
-int	main(int, char **);
-void	pfile(void);
-char   *skipcomment(char *);
-char   *skipquote(char *, int);
-char   *skipsym(char *);
-void	usage(void);
+void	        debug(const char *, ...);
+void	        error(int, int);
+int	        findsym(const char *);
+void	        flushline(bool);
+int	        getlin(char *, int, FILE *, bool);
+int	        main(int, char **);
+void        	pfile(void);
+const char     *skipcomment(const char *);
+const char     *skipquote(const char *, int);
+const char     *skipsym(const char *);
+void	        usage(void);
 
 int
 main(int argc, char *argv[])
@@ -214,7 +213,7 @@ typedef int Linetype;
 #define LT_ENDIF       8	/* #endif */
 #define LT_EOF         9	/* end of file */
 Linetype checkline(int *);
-Linetype ifeval(char **);
+Linetype ifeval(const char **);
 
 typedef int Reject_level;
 Reject_level reject;		/* 0 or 1: pass thru; 1 or 2: ignore comments */
@@ -225,10 +224,10 @@ Linetype doif(int);
 void elif2if(void);
 void elif2endif(void);
 
-int     linenum;		/* current line number */
-int     stifline;		/* start of current #if */
-int     stqcline;		/* start of current coment or quote */
-char   *errs[] = {
+int             linenum;	/* current line number */
+int             stifline;	/* start of current #if */
+int             stqcline;	/* start of current coment or quote */
+const char     *errs[] = {
 #define NO_ERR      0
 	"",
 #define END_ERR     1
@@ -424,12 +423,11 @@ doif(int depth)
 Linetype
 checkline(int *cursym)
 {
-	char   *cp;
-	char   *symp;
-	char   *scp;
+	const char *cp;
+	char *symp;
 	Linetype retval;
 #define KWSIZE 8
-	char    kw[KWSIZE];
+	char kw[KWSIZE];
 
 	retval = LT_PLAIN;
 	cp = skipcomment(tline);
@@ -441,7 +439,7 @@ checkline(int *cursym)
 		goto eol;
 
 	cp = skipcomment(++cp);
-	keyword = cp;
+	keyword = tline + (cp - tline);
 	symp = kw;
 	while (!endsym(*cp)) {
 		*symp = *cp++;
@@ -456,12 +454,12 @@ checkline(int *cursym)
 	} else if (strcmp(kw, "ifndef") == 0) {
 		retval = LT_FALSE;
 	ifdef:
-		scp = cp = skipcomment(++cp);
+		cp = skipcomment(++cp);
 		if (incomment) {
 			retval = LT_PLAIN;
 			goto eol;
 		}
-		if ((*cursym = findsym(scp)) == 0)
+		if ((*cursym = findsym(cp)) == 0)
 			retval = LT_IF;
 		else if (value[*cursym] == NULL)
 			retval = (retval == LT_TRUE)
@@ -542,11 +540,11 @@ elif2endif(void)
  *	defined() && || ! ( )
  */
 Linetype
-ifeval_2(char **cpp)
+ifeval_2(const char **cpp)
 {
-	char    *cp;
-	int      sym;
+	const char *cp;
 	Linetype val;
+	int sym;
 
 	cp = *cpp;
 	cp = skipcomment(cp);
@@ -610,9 +608,9 @@ ifeval_2(char **cpp)
 	return val;
 }
 Linetype
-ifeval_1(char **cpp)
+ifeval_1(const char **cpp)
 {
-	char    *cp;
+	const char *cp;
 	Linetype val;
 	Linetype v;
 
@@ -633,9 +631,9 @@ ifeval_1(char **cpp)
 	return val;
 }
 Linetype
-ifeval(char **cpp)
+ifeval(const char **cpp)
 {
-	char    *cp;
+	const char *cp;
 	Linetype val;
 	Linetype v;
 
@@ -659,8 +657,8 @@ ifeval(char **cpp)
  *  Skip over comments and stop at the next charaacter
  *  position that is not whitespace.
  */
-char   *
-skipcomment(char *cp)
+const char *
+skipcomment(const char *cp)
 {
 	if (incomment)
 		goto inside;
@@ -710,8 +708,8 @@ inside:
  *  Skip over a quoted string or character and stop at the next charaacter
  *  position that is not whitespace.
  */
-char   *
-skipquote(char *cp, int type)
+const char *
+skipquote(const char *cp, int type)
 {
 	char    qchar;
 
@@ -738,8 +736,8 @@ inside:
 /*
  *  Skip over an identifier.
  */
-char   *
-skipsym(char *cp)
+const char *
+skipsym(const char *cp)
 {
 	while (!endsym(*cp))
 		++cp;
@@ -751,12 +749,11 @@ skipsym(char *cp)
  *            else return 0.
  */
 int
-findsym(char *str)
+findsym(const char *str)
 {
-	char   *cp;
-	char   *symp;
-	int     symind;
-	char    chr;
+	const char *cp;
+	const char *symp;
+	int         symind;
 
 	for (symind = 1; symind < nsyms; ++symind) {
 		for (symp = symname[symind], cp = str
@@ -764,8 +761,7 @@ findsym(char *str)
 		    ; cp++, symp++
 		    )
 			continue;
-		chr = *cp;
-		if (*symp == '\0' && endsym(chr))
+		if (*symp == '\0' && endsym(*cp))
 			return symind;
 	}
 	return 0;
