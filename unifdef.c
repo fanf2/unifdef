@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.103 2002/12/12 17:21:22 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.104 2002/12/12 17:24:26 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -840,8 +840,11 @@ flushline(bool keep)
 		return;
 	if (keep ^ complement)
 		fputs(tline, stdout);
-	else if (lnblank)
-		putc('\n', stdout);
+	else {
+		if (lnblank)
+			putc('\n', stdout);
+		exitstat = 1;
+	}
 	return;
 }
 
