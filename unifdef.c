@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.66 2002/05/02 12:36:22 fanf Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.67 2002/05/02 12:38:29 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -211,8 +211,8 @@ Quote_state     inquote;	/* inside single or double quotes */
 
 Linetype        checkline(int *);
 void	        debug(const char *, ...);
-Linetype        doif(int);
-void            doif_1(int, Linetype, bool);
+Linetype        process(int);
+void            doif(int, Linetype, bool);
 void            elif2if(void);
 void            elif2endif(void);
 void	        error(int, int);
@@ -301,14 +301,14 @@ main(int argc, char *argv[])
 	} else if (argc == 1 && strcmp(*curarg, "-") != 0) {
 		filename = *curarg;
 		if ((input = fopen(filename, "r")) != NULL) {
-			(void) doif(0);
+			(void) process(0);
 			(void) fclose(input);
 		} else
 			err(2, "can't open %s", *curarg);
 	} else {
 		filename = "[stdin]";
 		input = stdin;
-		(void) doif(0);
+		(void) process(0);
 	}
 
 	exit(exitstat);
@@ -327,10 +327,10 @@ usage(void)
  * state accordingly. All the complicated state transition suff is
  * dealt with in this function, as well as checking that the
  * #if/#elif/#else/#endif lines happen in the correct order. Lines
- * between #if lines are handled by a recursive call to doif().
+ * between #if lines are handled by a recursive call to process().
  */
 void
-doif_1(int depth, Linetype lineval, bool ignoring)
+doif(int depth, Linetype lineval, bool ignoring)
 {
 	Reject_level savereject;
 	bool active;
@@ -366,7 +366,7 @@ doif_1(int depth, Linetype lineval, bool ignoring)
 	}
 	debug("active %d ignore %d", active, ignoring);
 	for (;;) {
-		switch (lineval = doif(depth)) {
+		switch (lineval = process(depth)) {
 		case LT_ELIF:
 			debug("#elif start %d line %d code %d depth %d",
 			    stifline, linenum, lineval, depth);
@@ -450,10 +450,10 @@ doif_1(int depth, Linetype lineval, bool ignoring)
  * The main file processing routine. This function deals with passing
  * through normal non-#if lines, correct nesting of #if sections, and
  * checking that things terminate correctly at the end of file. The
- * complicated stuff is delegated to doif_1().
+ * complicated stuff is delegated to doif().
  */
 Linetype
-doif(int depth)
+process(int depth)
 {
 	Linetype lineval;
 	int cursym;
@@ -478,7 +478,7 @@ doif(int depth)
 		case LT_IF:
 		case LT_TRUE:
 		case LT_FALSE:
-			doif_1(depth + 1, lineval, ignore[cursym]);
+			doif(depth + 1, lineval, ignore[cursym]);
 			break;
 		case LT_ELIF:
 		case LT_ELTRUE:
