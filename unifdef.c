@@ -51,7 +51,7 @@ __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
 #endif
 
 #ifndef lint
-__RCSID("$dotat: unifdef/unifdef.c,v 1.2 2002/04/25 14:52:54 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.3 2002/04/25 14:55:27 fanf Exp $");
 #endif
 
 /*
@@ -107,15 +107,15 @@ char incomment BSS;		/* inside C comment */
 char inquote BSS;		/* inside single or double quotes */
 int exitstat BSS;
 
-int error __P((int, int, int));
-int findsym __P((char *));
-void flushline __P((Bool));
-int getlin __P((char *, int, FILE *, int));
-int main __P((int, char **));
-void pfile __P((void));
-void prname __P((void));
-char   *skipcomment __P((char *));
-char   *skipquote __P((char *, int));
+int	error(int, int, int);
+int	findsym(char *);
+void	flushline(Bool);
+int	getlin(char *, int, FILE *, int);
+int	main(int, char **);
+void	pfile(void);
+void	prname(void);
+char   *skipcomment(char *);
+char   *skipquote(char *, int);
 
 int
 main(argc, argv)
@@ -215,14 +215,14 @@ typedef int Linetype;
 #define LT_ELSE        5	/* #else */
 #define LT_ENDIF       6	/* #endif */
 #define LT_LEOF        7	/* end of file */
-Linetype checkline __P((int *));
+Linetype checkline(int *);
 
 typedef int Reject_level;
 Reject_level reject BSS;	/* 0 or 1: pass thru; 1 or 2: ignore comments */
 #define REJ_NO          0
 #define REJ_IGNORE      1
 #define REJ_YES         2
-int doif __P((int, int, Reject_level, int));
+int doif(int, int, Reject_level, int);
 
 int linenum BSS;		/* current line number */
 int stqcline BSS;		/* start of current coment or quote */
