@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.127 2002/12/13 11:44:25 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.128 2002/12/13 13:58:00 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -312,6 +312,7 @@ static void Eelif (void) { error("Inappropriate #elif"); }
 static void Eelse (void) { error("Inappropriate #else"); }
 static void Eendif(void) { error("Inappropriate #endif"); }
 static void Eeof  (void) { error("Premature EOF"); }
+static void Eioccc(void) { error("Obfuscated preprocessor control line"); }
 /* plain line handling */
 static void print (void) { flushline(true); }
 static void drop  (void) { flushline(false); }
@@ -447,7 +448,7 @@ getline(void)
 		cp = skipsym(cp);
 		kwlen = cp - keyword;
 		if (strncmp(cp, "\\\n", 2) == 0)
-			error("Obfuscated preprocessor control line");
+			Eioccc();
 		if (strlcmp("ifdef", keyword, kwlen) == 0 ||
 		    strlcmp("ifndef", keyword, kwlen) == 0) {
 			cp = skipcomment(cp);
@@ -486,7 +487,7 @@ getline(void)
 				retval = LT_ELIF;
 		}
 		if (retval != LT_PLAIN && (wascomment || incomment))
-			error("Obfuscated preprocessor control line");
+			Eioccc();
 		if (linestate == LS_HASH)
 			abort(); /* bug */
 	}
