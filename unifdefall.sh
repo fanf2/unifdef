@@ -2,7 +2,7 @@
 #
 # remove all the #if's from a source file
 #
-# $dotat: unifdef/unifdefall.sh,v 1.4 2002/04/29 03:07:20 fanf Exp $
+# $dotat: unifdef/unifdefall.sh,v 1.5 2002/04/29 03:08:10 fanf Exp $
 
 set -e
 
@@ -24,3 +24,5 @@ done < $tmp/def |
 	sed -Ee 's/\\/\\\\/g;s/"/\\"/g;s/^/"/;s/$/" \\/' >> $tmp/cmd
 echo '"$@"' >> $tmp/cmd
 sh $tmp/cmd "$@"
+
+rm -r $tmp
