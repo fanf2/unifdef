@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002, 2003 Tony Finch <dot@dotat.at>.  All rights reserved.
+ * Copyright (c) 2002 - 2005 Tony Finch <dot@dotat.at>.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by Dave Yost.
  * It was rewritten to support ANSI C by Tony Finch. The original version of
@@ -35,7 +35,7 @@ static const char * const copyright[] = {
     "@(#) Copyright (c) 1985, 1993\n\
 	The Regents of the University of California.  All rights reserved.\n",
     "@(#)unifdef.c	8.1 (Berkeley) 6/6/93",
-    "$dotat: unifdef/unifdef.c,v 1.170 2005/03/08 12:07:27 fanf2 Exp $",
+    "$dotat: unifdef/unifdef.c,v 1.171 2005/03/08 12:38:48 fanf2 Exp $",
 };
 
 /*
