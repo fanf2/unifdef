@@ -33,7 +33,7 @@
 .\" SUCH DAMAGE.
 .\"
 .\"     @(#)unifdef.1	8.2 (Berkeley) 4/1/94
-.\"	$dotat: unifdef/unifdef.1,v 1.42 2003/01/20 02:58:11 fanf2 Exp $
+.\"	$dotat: unifdef/unifdef.1,v 1.43 2003/01/20 11:36:12 fanf2 Exp $
 .\" $FreeBSD: src/usr.bin/unifdef/unifdef.1,v 1.18 2002/12/23 15:14:12 ru Exp $
 .\"
 .Dd September 24, 2002
@@ -44,7 +44,7 @@
 .Nd remove preprocessor conditionals from code
 .Sh SYNOPSIS
 .Nm
-.Op Fl cklost
+.Op Fl ceklst
 .Oo
 .Fl I Ns Ar path
 .Fl D Ns Ar sym Ns Op = Ns Ar val
@@ -157,6 +157,24 @@ is complemented,
 i.e., the lines that would have been removed or blanked
 are retained and vice versa.
 .Pp
+.It Fl e
+Because
+.Nm
+processes its input one line at a time,
+it cannot remove preprocessor directives that span more than one line.
+The most common example of this is a directive with a multi-line
+comment hanging off its right hand end.
+By default,
+if
+.Nm
+has to process such a directive,
+it will complain that the line is too obfuscated.
+The
+.Fl e
+option changes the behaviour so that,
+where possible,
+such lines are left unprocessed instead of reporting an error.
+.Pp
 .It Fl k
 Process
 .Ic #if
@@ -172,24 +190,6 @@ It would be rude to strip them out, just as it would be for normal comments.
 .It Fl l
 Replace removed lines with blank lines
 instead of deleting them.
-.Pp
-.It Fl o
-Because
-.Nm
-processes its input one line at a time,
-it cannot remove preprocessor directives that span more than one line.
-The most common example of this is a directive with a multi-line
-comment hanging off its right hand end.
-By default,
-if
-.Nm
-has to process such a directive,
-it will complain that the line is too obfuscated.
-The
-.Fl o
-option changes the behaviour so that,
-where possible,
-such lines are left unprocessed instead.
 .Pp
 .It Fl s
 Instead of processing the input file as usual,

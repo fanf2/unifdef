@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.142 2003/01/20 11:22:44 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.143 2003/01/20 11:36:12 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.14 2003/01/17 19:12:02 fanf Exp $");
@@ -225,7 +225,7 @@ main(int argc, char *argv[])
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "i:D:U:I:cdklost")) != -1)
+	while ((opt = getopt(argc, argv, "i:D:U:I:cdeklst")) != -1)
 		switch (opt) {
 		case 'i': /* treat stuff controlled by these symbols as text */
 			/*
@@ -256,14 +256,14 @@ main(int argc, char *argv[])
 		case 'd':
 			debugging = true;
 			break;
+		case 'e': /* permissive handling of obfuscated lines */
+			iocccok = true;
+			break;
 		case 'k': /* process constant #ifs */
 			killconsts = true;
 			break;
 		case 'l': /* blank deleted lines instead of omitting them */
 			lnblank = true;
-			break;
-		case 'o': /* permissive handling of obfuscated lines */
-			iocccok = true;
 			break;
 		case 's': /* only output list of symbols that control #ifs */
 			symlist = true;
@@ -301,7 +301,7 @@ main(int argc, char *argv[])
 static void
 usage(void)
 {
-	fprintf(stderr, "usage: unifdef [-cdklost]"
+	fprintf(stderr, "usage: unifdef [-cdeklst]"
 	    " [[-Dsym[=val]] [-Usym] [-iDsym[=val]] [-iUsym]] ... [file]\n");
 	exit(2);
 }
