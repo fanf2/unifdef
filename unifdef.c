@@ -51,7 +51,7 @@ __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
 #endif
 
 #ifndef lint
-__RCSID("$dotat: unifdef/unifdef.c,v 1.5 2002/04/25 14:59:59 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.6 2002/04/25 15:02:48 fanf Exp $");
 #endif
 
 /*
@@ -76,7 +76,7 @@ FILE   *input;
 #ifndef YES
 #define YES 1
 #define NO  0
-#endif				/* YES */
+#endif /* YES */
 #define C_COMMENT   1
 #define CXX_COMMENT 2
 typedef int Bool;
@@ -581,7 +581,7 @@ getlin(line, maxline, inp, expandtabs)
 #ifdef  FFSPECIAL
 	static char havechar = NO;	/* have leftover char from last time */
 	static char svchar;
-#endif				/* FFSPECIAL */
+#endif	/* FFSPECIAL */
 
 	num = 0;
 #ifdef  FFSPECIAL
@@ -590,13 +590,13 @@ getlin(line, maxline, inp, expandtabs)
 		chr = svchar;
 		goto ent;
 	}
-#endif				/* FFSPECIAL */
+#endif	/* FFSPECIAL */
 	while (num + 8 < maxline) {	/* leave room for tab */
 		chr = getc(inp);
 		if (isprint(chr)) {
 #ifdef  FFSPECIAL
 	ent:
-#endif				/* FFSPECIAL */
+#endif	/* FFSPECIAL */
 			*line++ = chr;
 			num++;
 		} else
@@ -632,7 +632,7 @@ getlin(line, maxline, inp, expandtabs)
 					svchar = chr;
 				}
 				goto end;
-#endif				/* FFSPECIAL */
+#endif	/* FFSPECIAL */
 			}
 	}
 end:
@@ -678,10 +678,10 @@ error(err, line, depth)
 
 #ifndef TESTING
 	fprintf(stderr, "Error in %s line %d: %s.\n", filename, line, errs[err]);
-#else				/* TESTING */
+#else	/* TESTING */
 	fprintf(stderr, "Error in %s line %d: %s. ", filename, line, errs[err]);
 	fprintf(stderr, "ifdef depth: %d\n", depth);
-#endif				/* TESTING */
+#endif	/* TESTING */
 
 	exitstat = 2;
 	return depth > 1 ? IEOF_ERR : END_ERR;
