@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __RCSID
 __RCSID("@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __RCSID("$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__RCSID("$dotat: unifdef/unifdef.c,v 1.47 2002/04/26 18:51:19 fanf Exp $");
+__RCSID("$dotat: unifdef/unifdef.c,v 1.48 2002/04/26 18:56:55 fanf Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD$");
@@ -191,11 +191,7 @@ main(int argc, char *argv[])
 			cp1++;
 		} else
 			ignorethis = false;
-		if ((*cp1 == 'D'
-			|| *cp1 == 'U'
-		    )
-		    && cp1[1] != '\0'
-		    ) {
+		if ((*cp1 == 'D' || *cp1 == 'U') && cp1[1] != '\0') {
 			int     symind;
 
 			if ((symind = findsym(&cp1[1])) == 0) {
