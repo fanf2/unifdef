@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.107 2002/12/12 17:59:51 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.108 2002/12/12 19:04:56 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -89,7 +89,7 @@ typedef enum {
 	LT_COUNT
 } Linetype;
 
-const char *linetype_name[] = {
+static char const * const linetype_name[] = {
 	"PLAIN", "TRUEI", "FALSEI", "IF", "TRUE", "FALSE",
 	"ELIF", "ELTRUE", "ELFALSE", "ELSE", "ENDIF", "EOF"
 };
@@ -109,13 +109,14 @@ typedef enum {
 	IS_COUNT
 } Ifstate;
 
-const char *ifstate_name[] = {
+static char const * const ifstate_name[] = {
 	"OUTSIDE", "FALSE_PREFIX", "TRUE_PREFIX",
 	"PASS_MIDDLE", "FALSE_MIDDLE", 	"TRUE_MIDDLE",
  	"PASS_ELSE", "FALSE_ELSE", "TRUE_ELSE",
 	"FALSE_TRAILER"
 };
 
+/* state of comment parser */
 typedef enum {
 	NO_COMMENT = false,
 	C_COMMENT,
@@ -124,19 +125,71 @@ typedef enum {
 	FINISHING_COMMENT
 } Comment_state;
 
-const char *comment_name[] = {
+static char const * const comment_name[] = {
 	"NO", "C", "CXX", "STARTING", "FINISHING"
 };
 
+/* state of preprocessor line parser */
 typedef enum {
 	LS_START,
 	LS_HASH,
 	LS_DIRTY
 } Line_state;
 
-const char *linestate_name[] = {
+static char const * const linestate_name[] = {
 	"START", "HASH", "DIRTY"
 };
+
+#define	MAXDEPTH        16			/* maximum #if nesting */
+#define	MAXLINE         1024			/* maximum length of line */
+#define	MAXSYMS         1000
+
+static bool             complement;		/* -c: do the complement */
+static bool             debugging;		/* -d: debugging reports */
+static bool             killconsts;		/* -k: eval constant #ifs */
+static bool             lnblank;		/* -l: blank deleted lines */
+static bool             symlist;		/* -s: output symbol list */
+static bool             text;			/* -t: this is a text file */
+
+static const char      *symname[MAXSYMS];	/* symbol name */
+static const char      *value[MAXSYMS];		/* -Dsym=value */
+static bool             ignore[MAXSYMS];	/* -iDsym or -iUsym */
+static int              nsyms;			/* number of symbols */
+
+static FILE            *input;
+static const char      *filename;
+static int              linenum;		/* current line number */
+
+static char             tline[MAXLINE+10];	/* input buffer plus space */
+static char            *keyword;       		/* used for editing #elif's */
+
+static Comment_state    incomment;		/* comment parser state */
+static Line_state       linestate;		/* #if line parser state */
+static Ifstate          ifstate[MAXDEPTH];	/* #if processor state */
+static bool             ignoring[MAXDEPTH];	/* ignore comments state */
+static int              stifline[MAXDEPTH];	/* start of current #if */
+static int              depth;			/* current #if nesting */
+static bool             keepthis;		/* don't delete constant #if */
+
+static int              exitstat;		/* program exit status */
+
+static void             debug(const char *, ...);
+static void             addsym(bool, bool, char *);
+static void             error(const char *);
+static int              findsym(const char *);
+static void             flushline(bool);
+static Linetype         getline(void);
+static Linetype         ifeval(const char **);
+/*static void             nest(void);*/
+static void             process(void);
+static const char      *skipcomment(const char *);
+static const char      *skipsym(const char *);
+/*static void             state(Ifstate);*/
+static int              strlcmp(const char *, const char *, size_t);
+/*static void             unignore(void);*/
+static void             usage(void);
+
+#define endsym(c) (!isalpha((unsigned char)c) && !isdigit((unsigned char)c) && c != '_')
 
 /*
  * These are the operators that are supported by the expression evaluator.
@@ -162,9 +215,9 @@ struct ops;
  * the expression is zero, LT_TRUE if it is non-zero, or LT_IF if the
  * expression could not be evaluated.
  */
-typedef Linetype eval_fn(struct ops *, int *, const char **);
+typedef Linetype eval_fn(const struct ops *, int *, const char **);
 
-eval_fn eval_table, eval_unary;
+static eval_fn eval_table, eval_unary;
 
 /*
  * The precedence table. Expressions involving binary operators are evaluated
@@ -173,7 +226,7 @@ eval_fn eval_table, eval_unary;
  * element of the table. Innermost expressions have special non-table-driven
  * handling.
  */
-struct ops {
+static const struct ops {
 	eval_fn *inner;
 	struct op {
 		const char *str;
@@ -213,16 +266,104 @@ struct ops {
  */
 typedef void state_fn(void);
 
-state_fn print, drop;			/* plain line handling */
-state_fn Idrop, Itrue, Ifalse;		/* ignore comments in this block */
-state_fn Fdrop, Fpass, Ftrue, Ffalse;	/* first line of group */
-state_fn Strue, Sfalse, Selse;		/* output lacks group's start line */
-state_fn Pelif, Pelse, Pendif;		/* print/pass this block */
-state_fn Dfalse, Delif, Delse, Dendif;	/* discard this block */
-state_fn Mpass, Mtrue, Melif, Melse;	/* modify this line as above */
-state_fn Eelif, Eelse, Eendif, Eeof;	/* report an error */
+/* utility functions */
+static void
+nest(void)
+{
+	depth += 1;
+	if (depth >= MAXDEPTH)
+		error("Too many levels of nesting");
+	stifline[depth] = linenum;
+}
+static void
+state(Ifstate is)
+{
+	ifstate[depth] = is;
+}
+static void
+unignore(void)
+{
+	ignore[depth] = ignore[depth-1];
+}
+/* report an error */
+static void
+Eelif (void) { error("Inappropriate #elif"); }
+static void
+Eelse (void) { error("Inappropriate #else"); }
+static void
+Eendif(void) { error("Inappropriate #endif"); }
+static void
+Eeof  (void) { error("Premature EOF"); }
+/* plain line handling */
+static void
+print (void) { flushline(true); }
+static void
+drop  (void) { flushline(false); }
+/* output lacks group's start line */
+static void
+Strue (void) { flushline(false); unignore(); state(IS_TRUE_PREFIX); }
+static void
+Sfalse(void) { flushline(false); unignore(); state(IS_FALSE_PREFIX); }
+static void
+Selse (void) { flushline(false);             state(IS_TRUE_ELSE); }
+/* print/pass this block */
+static void
+Pelif (void) { flushline(true);  unignore(); state(IS_PASS_MIDDLE); }
+static void
+Pelse (void) { flushline(true);              state(IS_PASS_ELSE); }
+static void
+Pendif(void) { flushline(true);  --depth; }
+/* discard this block */
+static void
+Dfalse(void) { flushline(false); unignore(); state(IS_FALSE_TRAILER); }
+static void
+Delif (void) { flushline(false); unignore(); state(IS_FALSE_MIDDLE); }
+static void
+Delse (void) { flushline(false);             state(IS_FALSE_ELSE); }
+static void
+Dendif(void) { flushline(false); --depth; }
+/* first line of group */
+static void
+Fdrop (void) { nest(); Dfalse(); }
+static void
+Fpass (void) { nest(); Pelif(); }
+static void
+Ftrue (void) { nest(); Strue(); }
+static void
+Ffalse(void) { nest(); Sfalse(); }
+/* ignore comments in this block */
+static void
+Idrop (void) { Fdrop();  ignore[depth] = true; }
+static void
+Itrue (void) { Ftrue();  ignore[depth] = true; }
+static void
+Ifalse(void) { Ffalse(); ignore[depth] = true; }
+/* modify this line */
+static void
+Mpass (void) {
+	strncpy(keyword, "if  ", 4);
+	Pelif();
+}
+static void
+Mtrue (void) {
+	strcpy(keyword, "else\n");
+	flushline(true);
+	state(IS_TRUE_MIDDLE);
+}
+static void
+Melif (void) {
+	strcpy(keyword, "endif\n");
+	flushline(true);
+	state(IS_FALSE_TRAILER);
+}
+static void
+Melse (void) {
+	strcpy(keyword, "endif\n");
+	flushline(true);
+	state(IS_FALSE_ELSE);
+}
 
-state_fn *trans_table[IS_COUNT][LT_COUNT] = {
+static state_fn * const trans_table[IS_COUNT][LT_COUNT] = {
 /* IS_OUTSIDE */
 {print,Itrue,Ifalse,Fpass,Ftrue,Ffalse,Eelif, Eelif, Eelif, Eelse,Eendif,NULL},
 /* IS_FALSE_PREFIX */
@@ -245,57 +386,6 @@ state_fn *trans_table[IS_COUNT][LT_COUNT] = {
 {drop, Idrop,Idrop, Fdrop,Fdrop,Fdrop, Dfalse,Dfalse,Dfalse,Delse,Dendif,Eeof}
 /*PLAIN TRUEI FALSEI IF	  TRUE  FALSE  ELIF  ELTRUE ELFALSE ELSE  ENDIF  EOF*/
 };
-
-FILE           *input;
-const char     *filename;
-int             linenum;	/* current line number */
-bool            keepthis;	/* ignore this #if's value 'cause it's const */
-Comment_state   incomment;	/* translation phase 2/3 parser state */
-Line_state      linestate;	/* preprocessor line parser state */
-
-#define MAXDEPTH 16
-int     depth;			/* current #if nesting */
-Ifstate ifstate[MAXDEPTH];	/* #if processor state */
-bool    ignoring[MAXDEPTH];	/* ignore comments state */
-int     stifline[MAXDEPTH];	/* start of current #if */
-
-#define MAXLINE 1024
-char    tline[MAXLINE+10];	/* input buffer plus space for editing */
-char   *keyword;        	/* used for editing #elif's */
-
-bool            complement;	/* -c option in effect: do the complement */
-bool            debugging;	/* -d option in effect: debugging reports */
-bool            killconsts;	/* -k option in effect: eval constant #ifs */
-bool            lnblank;	/* -l option in effect: blank deleted lines */
-bool            symlist;	/* -s option in effect: output symbol list */
-bool            text;		/* -t option in effect: this is a text file */
-
-int             exitstat;	/* program exit status */
-
-#define MAXSYMS 1000
-const char     *symname[MAXSYMS];	/* symbol name */
-const char     *value[MAXSYMS];		/* -Dsym=value */
-bool            ignore[MAXSYMS];	/* -iDsym or -iUsym */
-int             nsyms;
-
-void            debug(const char *, ...);
-void            addsym(bool, bool, char *);
-void            error(const char *);
-int             findsym(const char *);
-void            flushline(bool);
-Linetype        getline(void);
-Linetype        ifeval(const char **);
-int             main(int, char **);
-void            nest(void);
-void            process(void);
-const char     *skipcomment(const char *);
-const char     *skipsym(const char *);
-void            state(Ifstate);
-int             strlcmp(const char *, const char *, size_t);
-void            unignore(void);
-void            usage(void);
-
-#define endsym(c) (!isalpha((unsigned char)c) && !isdigit((unsigned char)c) && c != '_')
 
 int
 main(int argc, char *argv[])
@@ -372,7 +462,7 @@ main(int argc, char *argv[])
 	exit(exitstat);
 }
 
-void
+static void
 usage(void)
 {
 	fprintf (stderr, "usage: %s",
@@ -383,7 +473,7 @@ usage(void)
 /*
  * The driver for the state machine.
  */
-void
+static void
 process(void)
 {
 	Linetype linetype;
@@ -405,80 +495,12 @@ process(void)
 }
 
 /*
- * State transition functions.
- */
-
-/* utilities */
-void nest(void) {
-	depth += 1;
-	if (depth >= MAXDEPTH)
-		error("Too many levels of nesting");
-	stifline[depth] = linenum;
-}
-void unignore(void) {
-	ignore[depth] = ignore[depth-1];
-}
-void state(Ifstate is) {
-	ifstate[depth] = is;
-}
-/* report an error */
-void Eelif (void) { error("Inappropriate #elif"); }
-void Eelse (void) { error("Inappropriate #else"); }
-void Eendif(void) { error("Inappropriate #endif"); }
-void Eeof  (void) { error("Premature EOF"); }
-/* plain line handling */
-void print (void) { flushline(true); }
-void drop  (void) { flushline(false); }
-/* ignore comments in this block */
-void Idrop (void) {         Fdrop();  ignore[depth] = true; }
-void Itrue (void) {         Ftrue();  ignore[depth] = true; }
-void Ifalse(void) {         Ffalse(); ignore[depth] = true; }
-/* first line of group */
-void Fdrop (void) {                   nest();     Dfalse(); }
-void Fpass (void) {                   nest();     Pelif(); }
-void Ftrue (void) {                   nest();     Strue(); }
-void Ffalse(void) {                   nest();     Sfalse(); }
-/* output lacks group's start line */
-void Strue (void) { flushline(false); unignore(); state(IS_TRUE_PREFIX); }
-void Sfalse(void) { flushline(false); unignore(); state(IS_FALSE_PREFIX); }
-void Selse (void) { flushline(false);             state(IS_TRUE_ELSE); }
-/* print/pass this block */
-void Pelif (void) { flushline(true);  unignore(); state(IS_PASS_MIDDLE); }
-void Pelse (void) { flushline(true);              state(IS_PASS_ELSE); }
-void Pendif(void) { flushline(true);  --depth; }
-/* discard this block */
-void Dfalse(void) { flushline(false); unignore(); state(IS_FALSE_TRAILER); }
-void Delif (void) { flushline(false); unignore(); state(IS_FALSE_MIDDLE); }
-void Delse (void) { flushline(false);             state(IS_FALSE_ELSE); }
-void Dendif(void) { flushline(false); --depth; }
-/* modify this line */
-void Mpass(void) {
-	strncpy(keyword, "if  ", 4);
-	Pelif();
-}
-void Mtrue(void) {
-	strcpy(keyword, "else\n");
-	flushline(true);
-	state(IS_TRUE_MIDDLE);
-}
-void Melif(void) {
-	strcpy(keyword, "endif\n");
-	flushline(true);
-	state(IS_FALSE_TRAILER);
-}
-void Melse(void) {
-	strcpy(keyword, "endif\n");
-	flushline(true);
-	state(IS_FALSE_ELSE);
-}
-
-/*
  * Parse a line and determine its type. We keep the preprocessor line
  * parser state between calls in a global variable.
  * XXX: Preprocessor keywords that contain a backslash-newline are not
  * handled correctly.
  */
-Linetype
+static Linetype
 getline(void)
 {
 	const char *cp;
@@ -559,8 +581,8 @@ getline(void)
  * viz. !expr (expr) defined(symbol) symbol number
  * We reset the keepthis flag when we find a non-constant subexpression.
  */
-Linetype
-eval_unary(struct ops *ops, int *valp, const char **cpp)
+static Linetype
+eval_unary(const struct ops *ops, int *valp, const char **cpp)
 {
 	const char *cp;
 	char *ep;
@@ -625,11 +647,11 @@ eval_unary(struct ops *ops, int *valp, const char **cpp)
 /*
  * Table-driven evaluation of binary operators.
  */
-Linetype
-eval_table(struct ops *ops, int *valp, const char **cpp)
+static Linetype
+eval_table(const struct ops *ops, int *valp, const char **cpp)
 {
+	const struct op *op;
 	const char *cp;
-	struct op *op;
 	int val;
 
 	debug("eval%d", ops - eval_ops);
@@ -660,7 +682,7 @@ eval_table(struct ops *ops, int *valp, const char **cpp)
  * the result we return LT_TRUE or LT_FALSE accordingly, otherwise we
  * return just a generic LT_IF.
  */
-Linetype
+static Linetype
 ifeval(const char **cpp)
 {
 	int ret;
@@ -678,7 +700,7 @@ ifeval(const char **cpp)
  * variable, and we also make a note when we get a proper end-of-line.
  * XXX: doesn't cope with the buffer splitting inside a state transition.
  */
-const char *
+static const char *
 skipcomment(const char *cp)
 {
 	if (text || ignoring[depth]) {
@@ -754,7 +776,7 @@ skipcomment(const char *cp)
 /*
  * Skip over an identifier.
  */
-const char *
+static const char *
 skipsym(const char *cp)
 {
 	while (!endsym(*cp))
@@ -766,7 +788,7 @@ skipsym(const char *cp)
  * Look for the symbol in the symbol table. If is is found, we return
  * the symbol table index, else we return -1.
  */
-int
+static int
 findsym(const char *str)
 {
 	const char *cp;
@@ -790,7 +812,7 @@ findsym(const char *str)
 /*
  * Add a symbol to the symbol table.
  */
-void
+static void
 addsym(bool ignorethis, bool definethis, char *sym)
 {
 	int symind;
@@ -823,7 +845,7 @@ addsym(bool ignorethis, bool definethis, char *sym)
 /*
  * Compare s with n characters of t.
  */
-int
+static int
 strlcmp(const char *s, const char *t, size_t n)
 {
 	while (n-- && *t != '\0')
@@ -837,7 +859,7 @@ strlcmp(const char *s, const char *t, size_t n)
 /*
  * Write a line to the output or not, according to command line options.
  */
-void
+static void
 flushline(bool keep)
 {
 	if (symlist)
@@ -852,7 +874,7 @@ flushline(bool keep)
 	return;
 }
 
-void
+static void
 debug(const char *msg, ...)
 {
 	va_list ap;
@@ -864,7 +886,7 @@ debug(const char *msg, ...)
 	}
 }
 
-void
+static void
 error(const char *msg)
 {
 	if (depth == 0)
