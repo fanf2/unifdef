@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.116 2002/12/12 19:45:29 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.117 2002/12/12 19:46:44 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -146,7 +146,7 @@ static char const * const ifstate_name[] = {
 
 #define	MAXDEPTH        16			/* maximum #if nesting */
 #define	MAXLINE         1024			/* maximum length of line */
-#define	MAXSYMS         1000
+#define	MAXSYMS         1000			/* maximum number of symbols */
 
 static bool             complement;		/* -c: do the complement */
 static bool             debugging;		/* -d: debugging reports */
@@ -160,8 +160,8 @@ static const char      *value[MAXSYMS];		/* -Dsym=value */
 static bool             ignore[MAXSYMS];	/* -iDsym or -iUsym */
 static int              nsyms;			/* number of symbols */
 
-static FILE            *input;
-static const char      *filename;
+static FILE            *input;			/* input file pointer */
+static const char      *filename;		/* input file name */
 static int              linenum;		/* current line number */
 
 static char             tline[MAXLINE+10];	/* input buffer plus space */
