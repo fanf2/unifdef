@@ -44,7 +44,7 @@ static const char copyright[] =
 #ifdef __IDSTRING
 __IDSTRING(Berkeley, "@(#)unifdef.c	8.1 (Berkeley) 6/6/93");
 __IDSTRING(NetBSD, "$NetBSD: unifdef.c,v 1.8 2000/07/03 02:51:36 matt Exp $");
-__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.131 2003/01/17 19:01:59 fanf2 Exp $");
+__IDSTRING(dotat, "$dotat: unifdef/unifdef.c,v 1.132 2003/01/17 19:03:02 fanf2 Exp $");
 #endif
 #ifdef __FBSDID
 __FBSDID("$FreeBSD: src/usr.bin/unifdef/unifdef.c,v 1.11 2002/09/24 19:27:44 fanf Exp $");
@@ -791,7 +791,7 @@ findsym(const char *str)
 	if (cp == str)
 		return -1;
 	if (symlist)
-		printf("%.*s\n", cp-str, str);
+		printf("%.*s\n", (int)(cp-str), str);
 	for (symind = 0; symind < nsyms; ++symind) {
 		if (strlcmp(symname[symind], str, cp-str) == 0) {
 			debug("findsym %s %s", symname[symind],
