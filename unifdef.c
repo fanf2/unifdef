@@ -35,7 +35,7 @@ static const char * const copyright[] = {
     "@(#) Copyright (c) 1985, 1993\n\
 	The Regents of the University of California.  All rights reserved.\n",
     "@(#)unifdef.c	8.1 (Berkeley) 6/6/93",
-    "$dotat: unifdef/unifdef.c,v 1.171 2005/03/08 12:38:48 fanf2 Exp $",
+    "$dotat: unifdef/unifdef.c,v 1.172 2005/08/12 10:59:21 fanf2 Exp $",
 };
 
 /*
@@ -653,6 +653,7 @@ eval_unary(const struct ops *ops, int *valp, const char **cpp)
 	const char *cp;
 	char *ep;
 	int sym;
+	bool defparen;
 
 	cp = skipcomment(*cpp);
 	if (*cp == '!') {
@@ -676,16 +677,19 @@ eval_unary(const struct ops *ops, int *valp, const char **cpp)
 	} else if (strncmp(cp, "defined", 7) == 0 && endsym(cp[7])) {
 		cp = skipcomment(cp+7);
 		debug("eval%d defined", ops - eval_ops);
-		if (*cp++ != '(')
-			return (LT_IF);
-		cp = skipcomment(cp);
+		if (*cp == '(') {
+			cp = skipcomment(cp+1);
+			defparen = true;
+		} else {
+			defparen = false;
+		}
 		sym = findsym(cp);
 		if (sym < 0)
 			return (LT_IF);
 		*valp = (value[sym] != NULL);
 		cp = skipsym(cp);
 		cp = skipcomment(cp);
-		if (*cp++ != ')')
+		if (defparen && *cp++ != ')')
 			return (LT_IF);
 		keepthis = false;
 	} else if (!endsym(*cp)) {
