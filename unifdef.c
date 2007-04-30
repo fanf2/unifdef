@@ -1,14 +1,6 @@
 /*
  * Copyright (c) 2002 - 2005 Tony Finch <dot@dotat.at>.  All rights reserved.
  *
- * This code is derived from software contributed to Berkeley by Dave Yost.
- * It was rewritten to support ANSI C by Tony Finch. The original version of
- * unifdef carried the following copyright notice. None of its code remains
- * in this version (though some of the names remain).
- *
- * Copyright (c) 1985, 1993
- *	The Regents of the University of California.  All rights reserved.
- *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -31,11 +23,21 @@
  * SUCH DAMAGE.
  */
 
+/*
+ * This code is derived from software contributed to Berkeley by Dave Yost.
+ * It was rewritten to support ANSI C by Tony Finch. The original version
+ * of unifdef carried the 4-clause BSD copyright licence. None of its code
+ * remains in this version (though some of the names remain) so it now
+ * carries a more liberal licence.
+ */
+
 static const char * const copyright[] = {
     "@(#) Copyright (c) 1985, 1993\n\
 	The Regents of the University of California.  All rights reserved.\n",
     "@(#)unifdef.c	8.1 (Berkeley) 6/6/93",
-    "$dotat: unifdef/unifdef.c,v 1.172 2005/08/12 10:59:21 fanf2 Exp $",
+    "@(#) Copyright (c) 2002 - 2005\n\
+        Tony Finch <dot@dotat.at>.  All rights reserved.\n",
+    "$dotat: unifdef/unifdef.c,v 1.173 2007/04/30 07:37:17 fanf2 Exp $",
 };
 
 /*
