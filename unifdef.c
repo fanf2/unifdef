@@ -37,7 +37,7 @@ static const char * const copyright[] = {
     "@(#)unifdef.c	8.1 (Berkeley) 6/6/93",
     "@(#) Copyright (c) 2002 - 2005\n\
         Tony Finch <dot@dotat.at>.  All rights reserved.\n",
-    "$dotat: unifdef/unifdef.c,v 1.173 2007/04/30 07:37:17 fanf2 Exp $",
+    "$dotat: unifdef/unifdef.c,v 1.174 2008/02/29 12:26:04 fanf2 Exp $",
 };
 
 /*
@@ -577,9 +577,18 @@ getline(void)
 			if (incomment)
 				linestate = LS_DIRTY;
 		}
-		/* skipcomment should have changed the state */
-		if (linestate == LS_HASH)
-			abort(); /* bug */
+		/* skipcomment normally changes the state, except
+		   if the last line of the file lacks a newline */
+		if (linestate == LS_HASH) {
+			size_t len = cp - tline;
+			if (fgets(tline + len, MAXLINE - len, input) != NULL)
+				abort(); /* bug */
+			/* append the missing newline */
+			tline[len+0] = '\n';
+			tline[len+1] = '\0';
+			cp++;
+			linestate = LS_START;
+		}
 	}
 	if (linestate == LS_DIRTY) {
 		while (*cp != '\0')
@@ -760,7 +769,7 @@ static Linetype
 ifeval(const char **cpp)
 {
 	int ret;
-	int val;
+	int val = 0;
 
 	debug("eval %s", *cpp);
 	keepthis = killconsts ? false : true;
