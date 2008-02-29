@@ -1,4 +1,4 @@
-# $dotat: unifdef/Makefile,v 1.2 2003/07/01 14:53:50 fanf2 Exp $
+# $dotat: unifdef/Makefile,v 1.3 2008/02/29 12:29:34 fanf2 Exp $
 
 TARGETS=	unifdef unifdef.log unifdef.man
 
@@ -13,4 +13,4 @@ unifdef.log: unifdef.c unifdef.1 unifdefall.sh
 	cvslog unifdef* > unifdef.log
 
 unifdef.man: unifdef.1
-	nroff -man unifdef.1 | sed -e 's/.//g' > unifdef.man
+	nroff -Tascii -man unifdef.1 | sed -e 's/.//g' > unifdef.man
