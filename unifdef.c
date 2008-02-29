@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002 - 2005 Tony Finch <dot@dotat.at>.  All rights reserved.
+ * Copyright (c) 2002 - 2008 Tony Finch <dot@dotat.at>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,12 +32,8 @@
  */
 
 static const char * const copyright[] = {
-    "@(#) Copyright (c) 1985, 1993\n\
-	The Regents of the University of California.  All rights reserved.\n",
-    "@(#)unifdef.c	8.1 (Berkeley) 6/6/93",
-    "@(#) Copyright (c) 2002 - 2005\n\
-        Tony Finch <dot@dotat.at>.  All rights reserved.\n",
-    "$dotat: unifdef/unifdef.c,v 1.175 2008/02/29 12:30:36 fanf2 Exp $",
+    "@(#) Copyright (c) 2002 - 2008 Tony Finch <dot@dotat.at>\n",
+    "$dotat: unifdef/unifdef.c,v 1.176 2008/02/29 12:44:25 fanf2 Exp $",
 };
 
 /*
