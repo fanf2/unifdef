@@ -37,7 +37,7 @@ static const char * const copyright[] = {
     "@(#)unifdef.c	8.1 (Berkeley) 6/6/93",
     "@(#) Copyright (c) 2002 - 2005\n\
         Tony Finch <dot@dotat.at>.  All rights reserved.\n",
-    "$dotat: unifdef/unifdef.c,v 1.174 2008/02/29 12:26:04 fanf2 Exp $",
+    "$dotat: unifdef/unifdef.c,v 1.175 2008/02/29 12:30:36 fanf2 Exp $",
 };
 
 /*
@@ -291,7 +291,7 @@ main(int argc, char *argv[])
 static void
 usage(void)
 {
-	fprintf(stderr, "usage: unifdef [-cdeklnst]"
+	fprintf(stderr, "usage: unifdef [-cdeklnst] [-Ipath]"
 	    " [-Dsym[=val]] [-Usym] [-iDsym[=val]] [-iUsym] ... [file]\n");
 	exit(2);
 }
