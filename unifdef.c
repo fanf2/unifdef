@@ -33,7 +33,7 @@
 
 static const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2008 Tony Finch <dot@dotat.at>\n",
-    "$dotat: unifdef/unifdef.c,v 1.181 2008/03/10 15:56:15 fanf2 Exp $",
+    "$dotat: unifdef/unifdef.c,v 1.182 2008/03/10 16:08:47 fanf2 Exp $",
 };
 
 /*
@@ -159,6 +159,7 @@ static bool             lnblank;		/* -b: blank deleted lines */
 static bool             complement;		/* -c: do the complement */
 static bool             debugging;		/* -d: debugging reports */
 static bool             iocccok;		/* -e: fewer IOCCC errors */
+static bool             strictlogic;		/* -K: keep ambiguous #ifs */
 static bool             killconsts;		/* -k: eval constant #ifs */
 static bool             lnnum;			/* -n: add #line directives */
 static bool             symlist;		/* -s: output symbol list */
@@ -218,7 +219,7 @@ main(int argc, char *argv[])
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "i:D:U:I:Bbcdeklnst")) != -1)
+	while ((opt = getopt(argc, argv, "i:D:U:I:BbcdeKklnst")) != -1)
 		switch (opt) {
 		case 'i': /* treat stuff controlled by these symbols as text */
 			/*
@@ -259,6 +260,9 @@ main(int argc, char *argv[])
 		case 'e': /* fewer errors from dodgy lines */
 			iocccok = true;
 			break;
+		case 'K': /* keep ambiguous #ifs */
+			strictlogic = true;
+			break;
 		case 'k': /* process constant #ifs */
 			killconsts = true;
 			break;
@@ -296,7 +300,7 @@ main(int argc, char *argv[])
 static void
 usage(void)
 {
-	fprintf(stderr, "usage: unifdef [-Bbcdeknst] [-Ipath]"
+	fprintf(stderr, "usage: unifdef [-BbcdeKknst] [-Ipath]"
 	    " [-Dsym[=val]] [-Usym] [-iDsym[=val]] [-iUsym] ... [file]\n");
 	exit(2);
 }
@@ -641,12 +645,12 @@ static Linetype op_ne(int *p, Linetype at, int a, Linetype bt, int b) {
 	return op_strict(p, a != b, at, bt);
 }
 static Linetype op_or(int *p, Linetype at, int a, Linetype bt, int b) {
-	if (at == LT_TRUE || bt == LT_TRUE)
+	if (!strictlogic && (at == LT_TRUE || bt == LT_TRUE))
 		return (*p = 1, LT_TRUE);
 	return op_strict(p, a || b, at, bt);
 }
 static Linetype op_and(int *p, Linetype at, int a, Linetype bt, int b) {
-	if (at == LT_FALSE || bt == LT_FALSE)
+	if (!strictlogic && (at == LT_FALSE || bt == LT_FALSE))
 		return (*p = 0, LT_FALSE);
 	return op_strict(p, a && b, at, bt);
 }

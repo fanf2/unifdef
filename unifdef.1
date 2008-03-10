@@ -30,7 +30,7 @@
 .\" SUCH DAMAGE.
 .\"
 .\"     @(#)unifdef.1	8.2 (Berkeley) 4/1/94
-.\"	$dotat: unifdef/unifdef.1,v 1.53 2008/03/10 15:24:29 fanf2 Exp $
+.\"	$dotat: unifdef/unifdef.1,v 1.54 2008/03/10 16:08:47 fanf2 Exp $
 .\" $FreeBSD: src/usr.bin/unifdef/unifdef.1,v 1.20 2003/02/24 22:53:24 ru Exp $
 .\"
 .Dd September 24, 2002
@@ -210,6 +210,16 @@ The
 option changes the behaviour so that,
 where possible,
 such lines are left unprocessed instead of reporting an error.
+.Pp
+.It Fl K
+Always treat the result of
+.Ic &&
+and
+.Ic ||
+operators as unknown if either operand is unknown,
+instead of short-circuiting when unknown operands can't affect the result.
+This option is for compatibility with older versions of
+.Nm .
 .Pp
 .It Fl k
 Process
