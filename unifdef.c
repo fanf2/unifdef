@@ -33,7 +33,7 @@
 
 static const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2008 Tony Finch <dot@dotat.at>\n",
-    "$dotat: unifdef/unifdef.c,v 1.180 2008/03/10 15:24:29 fanf2 Exp $",
+    "$dotat: unifdef/unifdef.c,v 1.181 2008/03/10 15:56:15 fanf2 Exp $",
 };
 
 /*
@@ -66,28 +66,27 @@ typedef enum {
 	LT_IF,			/* an unknown #if */
 	LT_TRUE,		/* a true #if */
 	LT_FALSE,		/* a false #if */
-	LT_ERROR,		/* unevaluable #if */
 	LT_ELIF,		/* an unknown #elif */
 	LT_ELTRUE,		/* a true #elif */
 	LT_ELFALSE,		/* a false #elif */
-	LT_ELERROR,		/* unevaluable #elif */
 	LT_ELSE,		/* #else */
 	LT_ENDIF,		/* #endif */
 	LT_DODGY,		/* flag: directive is not on one line */
 	LT_DODGY_LAST = LT_DODGY + LT_ENDIF,
 	LT_PLAIN,		/* ordinary line */
 	LT_EOF,			/* end of file */
+	LT_ERROR,		/* unevaluable #if */
 	LT_COUNT
 } Linetype;
 
 static char const * const linetype_name[] = {
-	"TRUEI", "FALSEI", "IF", "TRUE", "FALSE", "ERROR",
-	"ELIF", "ELTRUE", "ELFALSE", "ELERROR", "ELSE", "ENDIF",
+	"TRUEI", "FALSEI", "IF", "TRUE", "FALSE",
+	"ELIF", "ELTRUE", "ELFALSE", "ELSE", "ENDIF",
 	"DODGY TRUEI", "DODGY FALSEI",
-	"DODGY IF", "DODGY TRUE", "DODGY FALSE", "DODGY ERROR",
-	"DODGY ELIF", "DODGY ELTRUE", "DODGY ELFALSE", "DODGY ELERROR",
+	"DODGY IF", "DODGY TRUE", "DODGY FALSE",
+	"DODGY ELIF", "DODGY ELTRUE", "DODGY ELFALSE",
 	"DODGY ELSE", "DODGY ENDIF",
-	"PLAIN", "EOF"
+	"PLAIN", "EOF", "ERROR"
 };
 
 /* state of #if processing */
@@ -378,46 +377,46 @@ static state_fn * const trans_table[IS_COUNT][LT_COUNT] = {
 /* IS_OUTSIDE */
 { Itrue, Ifalse,Fpass, Ftrue, Ffalse,Eelif, Eelif, Eelif, Eelse, Eendif,
   Oiffy, Oiffy, Fpass, Oif,   Oif,   Eelif, Eelif, Eelif, Eelse, Eendif,
-  print, done },
+  print, done,  abort },
 /* IS_FALSE_PREFIX */
 { Idrop, Idrop, Fdrop, Fdrop, Fdrop, Mpass, Strue, Sfalse,Selse, Dendif,
   Idrop, Idrop, Fdrop, Fdrop, Fdrop, Mpass, Eioccc,Eioccc,Eioccc,Eioccc,
-  drop,  Eeof },
+  drop,  Eeof,  abort },
 /* IS_TRUE_PREFIX */
 { Itrue, Ifalse,Fpass, Ftrue, Ffalse,Dfalse,Dfalse,Dfalse,Delse, Dendif,
   Oiffy, Oiffy, Fpass, Oif,   Oif,   Eioccc,Eioccc,Eioccc,Eioccc,Eioccc,
-  print, Eeof },
+  print, Eeof,  abort },
 /* IS_PASS_MIDDLE */
 { Itrue, Ifalse,Fpass, Ftrue, Ffalse,Pelif, Mtrue, Delif, Pelse, Pendif,
   Oiffy, Oiffy, Fpass, Oif,   Oif,   Pelif, Oelif, Oelif, Pelse, Pendif,
-  print, Eeof },
+  print, Eeof,  abort },
 /* IS_FALSE_MIDDLE */
 { Idrop, Idrop, Fdrop, Fdrop, Fdrop, Pelif, Mtrue, Delif, Pelse, Pendif,
   Idrop, Idrop, Fdrop, Fdrop, Fdrop, Eioccc,Eioccc,Eioccc,Eioccc,Eioccc,
-  drop,  Eeof },
+  drop,  Eeof,  abort },
 /* IS_TRUE_MIDDLE */
 { Itrue, Ifalse,Fpass, Ftrue, Ffalse,Melif, Melif, Melif, Melse, Pendif,
   Oiffy, Oiffy, Fpass, Oif,   Oif,   Eioccc,Eioccc,Eioccc,Eioccc,Pendif,
-  print, Eeof },
+  print, Eeof,  abort },
 /* IS_PASS_ELSE */
 { Itrue, Ifalse,Fpass, Ftrue, Ffalse,Eelif, Eelif, Eelif, Eelse, Pendif,
   Oiffy, Oiffy, Fpass, Oif,   Oif,   Eelif, Eelif, Eelif, Eelse, Pendif,
-  print, Eeof },
+  print, Eeof,  abort },
 /* IS_FALSE_ELSE */
 { Idrop, Idrop, Fdrop, Fdrop, Fdrop, Eelif, Eelif, Eelif, Eelse, Dendif,
   Idrop, Idrop, Fdrop, Fdrop, Fdrop, Eelif, Eelif, Eelif, Eelse, Eioccc,
-  drop,  Eeof },
+  drop,  Eeof,  abort },
 /* IS_TRUE_ELSE */
 { Itrue, Ifalse,Fpass, Ftrue, Ffalse,Eelif, Eelif, Eelif, Eelse, Dendif,
   Oiffy, Oiffy, Fpass, Oif,   Oif,   Eelif, Eelif, Eelif, Eelse, Eioccc,
-  print, Eeof },
+  print, Eeof,  abort },
 /* IS_FALSE_TRAILER */
 { Idrop, Idrop, Fdrop, Fdrop, Fdrop, Dfalse,Dfalse,Dfalse,Delse, Dendif,
   Idrop, Idrop, Fdrop, Fdrop, Fdrop, Dfalse,Dfalse,Dfalse,Delse, Eioccc,
-  drop,  Eeof }
+  drop,  Eeof,  abort }
 /*TRUEI  FALSEI IF     TRUE   FALSE  ELIF   ELTRUE ELFALSE ELSE  ENDIF
   TRUEI  FALSEI IF     TRUE   FALSE  ELIF   ELTRUE ELFALSE ELSE  ENDIF (DODGY)
-  PLAIN  EOF */
+  PLAIN  EOF    ERROR */
 };
 
 /*
