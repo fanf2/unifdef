@@ -33,7 +33,7 @@
 
 static const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2008 Tony Finch <dot@dotat.at>\n",
-    "$dotat: unifdef/unifdef.c,v 1.179 2008/03/10 13:01:40 fanf2 Exp $",
+    "$dotat: unifdef/unifdef.c,v 1.180 2008/03/10 15:24:29 fanf2 Exp $",
 };
 
 /*
@@ -66,9 +66,11 @@ typedef enum {
 	LT_IF,			/* an unknown #if */
 	LT_TRUE,		/* a true #if */
 	LT_FALSE,		/* a false #if */
+	LT_ERROR,		/* unevaluable #if */
 	LT_ELIF,		/* an unknown #elif */
 	LT_ELTRUE,		/* a true #elif */
 	LT_ELFALSE,		/* a false #elif */
+	LT_ELERROR,		/* unevaluable #elif */
 	LT_ELSE,		/* #else */
 	LT_ENDIF,		/* #endif */
 	LT_DODGY,		/* flag: directive is not on one line */
@@ -79,11 +81,11 @@ typedef enum {
 } Linetype;
 
 static char const * const linetype_name[] = {
-	"TRUEI", "FALSEI", "IF", "TRUE", "FALSE",
-	"ELIF", "ELTRUE", "ELFALSE", "ELSE", "ENDIF",
+	"TRUEI", "FALSEI", "IF", "TRUE", "FALSE", "ERROR",
+	"ELIF", "ELTRUE", "ELFALSE", "ELERROR", "ELSE", "ENDIF",
 	"DODGY TRUEI", "DODGY FALSEI",
-	"DODGY IF", "DODGY TRUE", "DODGY FALSE",
-	"DODGY ELIF", "DODGY ELTRUE", "DODGY ELFALSE",
+	"DODGY IF", "DODGY TRUE", "DODGY FALSE", "DODGY ERROR",
+	"DODGY ELIF", "DODGY ELTRUE", "DODGY ELFALSE", "DODGY ELERROR",
 	"DODGY ELSE", "DODGY ENDIF",
 	"PLAIN", "EOF"
 };
@@ -183,7 +185,7 @@ static int              stifline[MAXDEPTH];	/* start of current #if */
 static int              depth;			/* current #if nesting */
 static int              delcount;		/* count of deleted lines */
 static bool             lastblank;		/* last line kept was blank */
-static bool             keepthis;		/* don't delete constant #if */
+static bool             constexpr;		/* constant #if expression */
 
 static int              exitstat;		/* program exit status */
 
@@ -615,17 +617,40 @@ getline(void)
 
 /*
  * These are the binary operators that are supported by the expression
- * evaluator. Note that if support for division is added then we also
- * need short-circuiting booleans because of divide-by-zero.
+ * evaluator.
  */
-static int op_lt(int a, int b) { return (a < b); }
-static int op_gt(int a, int b) { return (a > b); }
-static int op_le(int a, int b) { return (a <= b); }
-static int op_ge(int a, int b) { return (a >= b); }
-static int op_eq(int a, int b) { return (a == b); }
-static int op_ne(int a, int b) { return (a != b); }
-static int op_or(int a, int b) { return (a || b); }
-static int op_and(int a, int b) { return (a && b); }
+static Linetype op_strict(int *p, int v, Linetype at, Linetype bt) {
+	if(at == LT_IF || bt == LT_IF) return (LT_IF);
+	return (*p = v, v ? LT_TRUE : LT_FALSE);
+}
+static Linetype op_lt(int *p, Linetype at, int a, Linetype bt, int b) {
+	return op_strict(p, a < b, at, bt);
+}
+static Linetype op_gt(int *p, Linetype at, int a, Linetype bt, int b) {
+	return op_strict(p, a > b, at, bt);
+}
+static Linetype op_le(int *p, Linetype at, int a, Linetype bt, int b) {
+	return op_strict(p, a <= b, at, bt);
+}
+static Linetype op_ge(int *p, Linetype at, int a, Linetype bt, int b) {
+	return op_strict(p, a >= b, at, bt);
+}
+static Linetype op_eq(int *p, Linetype at, int a, Linetype bt, int b) {
+	return op_strict(p, a == b, at, bt);
+}
+static Linetype op_ne(int *p, Linetype at, int a, Linetype bt, int b) {
+	return op_strict(p, a != b, at, bt);
+}
+static Linetype op_or(int *p, Linetype at, int a, Linetype bt, int b) {
+	if (at == LT_TRUE || bt == LT_TRUE)
+		return (*p = 1, LT_TRUE);
+	return op_strict(p, a || b, at, bt);
+}
+static Linetype op_and(int *p, Linetype at, int a, Linetype bt, int b) {
+	if (at == LT_FALSE || bt == LT_FALSE)
+		return (*p = 0, LT_FALSE);
+	return op_strict(p, a && b, at, bt);
+}
 
 /*
  * An evaluation function takes three arguments, as follows: (1) a pointer to
@@ -634,8 +659,8 @@ static int op_and(int a, int b) { return (a && b); }
  * value of the expression; and (3) a pointer to a char* that points to the
  * expression to be evaluated and that is updated to the end of the expression
  * when evaluation is complete. The function returns LT_FALSE if the value of
- * the expression is zero, LT_TRUE if it is non-zero, or LT_IF if the
- * expression could not be evaluated.
+ * the expression is zero, LT_TRUE if it is non-zero, LT_IF if the expression
+ * depends on an unknown symbol, or LT_ERROR if there is a parse failure.
  */
 struct ops;
 
@@ -654,7 +679,7 @@ static const struct ops {
 	eval_fn *inner;
 	struct op {
 		const char *str;
-		int (*fn)(int, int);
+		Linetype (*fn)(int *, Linetype, int, Linetype, int);
 	} op[5];
 } eval_ops[] = {
 	{ eval_table, { { "||", op_or } } },
@@ -669,8 +694,8 @@ static const struct ops {
 
 /*
  * Function for evaluating the innermost parts of expressions,
- * viz. !expr (expr) defined(symbol) symbol number
- * We reset the keepthis flag when we find a non-constant subexpression.
+ * viz. !expr (expr) number defined(symbol) symbol
+ * We reset the constexpr flag in the last two cases.
  */
 static Linetype
 eval_unary(const struct ops *ops, int *valp, const char **cpp)
@@ -679,25 +704,32 @@ eval_unary(const struct ops *ops, int *valp, const char **cpp)
 	char *ep;
 	int sym;
 	bool defparen;
+	Linetype lt;
 
 	cp = skipcomment(*cpp);
 	if (*cp == '!') {
 		debug("eval%d !", ops - eval_ops);
 		cp++;
-		if (eval_unary(ops, valp, &cp) == LT_IF)
-			return (LT_IF);
-		*valp = !*valp;
+		lt = eval_unary(ops, valp, &cp);
+		if (lt == LT_ERROR)
+			return (LT_ERROR);
+		if (lt != LT_IF)
+			*valp = !*valp;
 	} else if (*cp == '(') {
 		cp++;
 		debug("eval%d (", ops - eval_ops);
-		if (eval_table(eval_ops, valp, &cp) == LT_IF)
-			return (LT_IF);
+		lt = eval_table(eval_ops, valp, &cp);
+		if (lt == LT_ERROR)
+			return (LT_ERROR);
 		cp = skipcomment(cp);
 		if (*cp++ != ')')
-			return (LT_IF);
+			return (LT_ERROR);
 	} else if (isdigit((unsigned char)*cp)) {
 		debug("eval%d number", ops - eval_ops);
 		*valp = strtol(cp, &ep, 0);
+		if (ep == cp)
+			return (LT_ERROR);
+		lt = *valp ? LT_TRUE : LT_FALSE;
 		cp = skipsym(cp);
 	} else if (strncmp(cp, "defined", 7) == 0 && endsym(cp[7])) {
 		cp = skipcomment(cp+7);
@@ -709,36 +741,41 @@ eval_unary(const struct ops *ops, int *valp, const char **cpp)
 			defparen = false;
 		}
 		sym = findsym(cp);
-		if (sym < 0)
-			return (LT_IF);
-		*valp = (value[sym] != NULL);
+		if (sym < 0) {
+			lt = LT_IF;
+		} else {
+			*valp = (value[sym] != NULL);
+			lt = *valp ? LT_TRUE : LT_FALSE;
+		}
 		cp = skipsym(cp);
 		cp = skipcomment(cp);
 		if (defparen && *cp++ != ')')
-			return (LT_IF);
-		keepthis = false;
+			return (LT_ERROR);
+		constexpr = false;
 	} else if (!endsym(*cp)) {
 		debug("eval%d symbol", ops - eval_ops);
 		sym = findsym(cp);
-		if (sym < 0)
-			return (LT_IF);
-		if (value[sym] == NULL)
+		if (sym < 0) {
+			lt = LT_IF;
+		} else if (value[sym] == NULL) {
 			*valp = 0;
-		else {
+			lt = LT_FALSE;
+		} else {
 			*valp = strtol(value[sym], &ep, 0);
 			if (*ep != '\0' || ep == value[sym])
-				return (LT_IF);
+				return (LT_ERROR);
+			lt = *valp ? LT_TRUE : LT_FALSE;
 		}
 		cp = skipsym(cp);
-		keepthis = false;
+		constexpr = false;
 	} else {
 		debug("eval%d bad expr", ops - eval_ops);
-		return (LT_IF);
+		return (LT_ERROR);
 	}
 
 	*cpp = cp;
 	debug("eval%d = %d", ops - eval_ops, *valp);
-	return (*valp ? LT_TRUE : LT_FALSE);
+	return (lt);
 }
 
 /*
@@ -750,11 +787,13 @@ eval_table(const struct ops *ops, int *valp, const char **cpp)
 	const struct op *op;
 	const char *cp;
 	int val;
+	Linetype lt, rt;
 
 	debug("eval%d", ops - eval_ops);
 	cp = *cpp;
-	if (ops->inner(ops+1, valp, &cp) == LT_IF)
-		return (LT_IF);
+	lt = ops->inner(ops+1, valp, &cp);
+	if (lt == LT_ERROR)
+		return (LT_ERROR);
 	for (;;) {
 		cp = skipcomment(cp);
 		for (op = ops->op; op->str != NULL; op++)
@@ -764,14 +803,15 @@ eval_table(const struct ops *ops, int *valp, const char **cpp)
 			break;
 		cp += strlen(op->str);
 		debug("eval%d %s", ops - eval_ops, op->str);
-		if (ops->inner(ops+1, &val, &cp) == LT_IF)
-			return (LT_IF);
-		*valp = op->fn(*valp, val);
+		rt = ops->inner(ops+1, &val, &cp);
+		if (rt == LT_ERROR)
+			return (LT_ERROR);
+		lt = op->fn(valp, lt, *valp, rt, val);
 	}
 
 	*cpp = cp;
 	debug("eval%d = %d", ops - eval_ops, *valp);
-	return (*valp ? LT_TRUE : LT_FALSE);
+	return (lt);
 }
 
 /*
@@ -786,10 +826,10 @@ ifeval(const char **cpp)
 	int val = 0;
 
 	debug("eval %s", *cpp);
-	keepthis = killconsts ? false : true;
+	constexpr = killconsts ? false : true;
 	ret = eval_table(eval_ops, &val, cpp);
 	debug("eval = %d", val);
-	return (keepthis ? LT_IF : ret);
+	return (constexpr ? LT_IF : ret == LT_ERROR ? LT_IF : ret);
 }
 
 /*
