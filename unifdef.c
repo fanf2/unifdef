@@ -33,7 +33,7 @@
 
 static const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2008 Tony Finch <dot@dotat.at>\n",
-    "$dotat: unifdef/unifdef.c,v 1.178 2008/03/02 22:23:32 fanf2 Exp $",
+    "$dotat: unifdef/unifdef.c,v 1.179 2008/03/10 13:01:40 fanf2 Exp $",
 };
 
 /*
@@ -153,11 +153,12 @@ static char const * const linestate_name[] = {
  * Globals.
  */
 
+static bool             compblank;		/* -B: compress blank lines */
+static bool             lnblank;		/* -b: blank deleted lines */
 static bool             complement;		/* -c: do the complement */
 static bool             debugging;		/* -d: debugging reports */
 static bool             iocccok;		/* -e: fewer IOCCC errors */
 static bool             killconsts;		/* -k: eval constant #ifs */
-static bool             lnblank;		/* -l: blank deleted lines */
 static bool             lnnum;			/* -n: add #line directives */
 static bool             symlist;		/* -s: output symbol list */
 static bool             text;			/* -t: this is a text file */
@@ -181,6 +182,7 @@ static bool             ignoring[MAXDEPTH];	/* ignore comments state */
 static int              stifline[MAXDEPTH];	/* start of current #if */
 static int              depth;			/* current #if nesting */
 static int              delcount;		/* count of deleted lines */
+static bool             lastblank;		/* last line kept was blank */
 static bool             keepthis;		/* don't delete constant #if */
 
 static int              exitstat;		/* program exit status */
@@ -215,7 +217,7 @@ main(int argc, char *argv[])
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "i:D:U:I:cdeklnst")) != -1)
+	while ((opt = getopt(argc, argv, "i:D:U:I:Bbcdeklnst")) != -1)
 		switch (opt) {
 		case 'i': /* treat stuff controlled by these symbols as text */
 			/*
@@ -240,6 +242,13 @@ main(int argc, char *argv[])
 		case 'I':
 			/* no-op for compatibility with cpp */
 			break;
+		case 'B': /* compress blank lines around removed section */
+			compblank = true;
+			break;
+		case 'b': /* blank deleted lines instead of omitting them */
+		case 'l': /* backwards compatibility */
+			lnblank = true;
+			break;
 		case 'c': /* treat -D as -U and vice versa */
 			complement = true;
 			break;
@@ -251,9 +260,6 @@ main(int argc, char *argv[])
 			break;
 		case 'k': /* process constant #ifs */
 			killconsts = true;
-			break;
-		case 'l': /* blank deleted lines instead of omitting them */
-			lnblank = true;
 			break;
 		case 'n': /* add #line directive after deleted lines */
 			lnnum = true;
@@ -269,6 +275,8 @@ main(int argc, char *argv[])
 		}
 	argc -= optind;
 	argv += optind;
+	if (compblank && lnblank)
+		errx(2, "-B and -b are mutually exclusive");
 	if (argc > 1) {
 		errx(2, "can only do one file");
 	} else if (argc == 1 && strcmp(*argv, "-") != 0) {
@@ -287,7 +295,7 @@ main(int argc, char *argv[])
 static void
 usage(void)
 {
-	fprintf(stderr, "usage: unifdef [-cdeklnst] [-Ipath]"
+	fprintf(stderr, "usage: unifdef [-Bbcdeknst] [-Ipath]"
 	    " [-Dsym[=val]] [-Usym] [-iDsym[=val]] [-iUsym] ... [file]\n");
 	exit(2);
 }
@@ -468,15 +476,22 @@ flushline(bool keep)
 	if (symlist)
 		return;
 	if (keep ^ complement) {
-		if (lnnum && delcount > 0)
-			printf("#line %d\n", linenum);
-		fputs(tline, stdout);
-		delcount = 0;
+		if (lastblank && compblank &&
+		    tline[strspn(tline, " \t\n")] == '\0') {
+			delcount += 1;
+		} else {
+			if (lnnum && delcount > 0)
+				printf("#line %d\n", linenum);
+			fputs(tline, stdout);
+			delcount = 0;
+			lastblank = false;
+		}
 	} else {
 		if (lnblank)
 			putc('\n', stdout);
 		exitstat = 1;
 		delcount += 1;
+		lastblank = true;
 	}
 }
 

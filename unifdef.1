@@ -30,7 +30,7 @@
 .\" SUCH DAMAGE.
 .\"
 .\"     @(#)unifdef.1	8.2 (Berkeley) 4/1/94
-.\"	$dotat: unifdef/unifdef.1,v 1.51 2005/03/08 12:39:01 fanf2 Exp $
+.\"	$dotat: unifdef/unifdef.1,v 1.52 2008/03/10 13:01:40 fanf2 Exp $
 .\" $FreeBSD: src/usr.bin/unifdef/unifdef.1,v 1.20 2003/02/24 22:53:24 ru Exp $
 .\"
 .Dd September 24, 2002
@@ -41,7 +41,7 @@
 .Nd remove preprocessor conditionals from code
 .Sh SYNOPSIS
 .Nm
-.Op Fl ceklnst
+.Op Fl Bbceknst
 .Op Fl I Ns Ar path
 .Op Fl D Ns Ar sym Ns Op = Ns Ar val
 .Op Fl U Ns Ar sym
@@ -96,8 +96,8 @@ By default, it ignores
 .Ic #if
 and
 .Ic #elif
-lines with constant expressions,
-or they may be processed by specifying the
+lines with constant expressions;
+it can be told to process them by specifying the
 .Fl k
 flag on the command line.
 .Pp
@@ -125,8 +125,7 @@ and their definitions (or lack thereof),
 then invokes
 .Nm
 with appropriate arguments to process the file.
-.Pp
-Available options:
+.Sh OPTIONS
 .Pp
 .Bl -tag -width indent -compact
 .It Fl D Ns Ar sym Ns Op = Ns Ar val
@@ -142,6 +141,19 @@ directives.
 Specify that a symbol is undefined.
 If the same symbol appears in more than one argument,
 the last occurrence dominates.
+.Pp
+.It Fl B
+Compress blank lines following a deleted section.
+Mutually exclusive with the
+.Fl b
+option.
+.Pp
+.It Fl b
+Replace removed lines with blank lines
+instead of deleting them.
+Mutually exclusive with the
+.Fl B
+option.
 .Pp
 .It Fl c
 If the
@@ -182,10 +194,6 @@ because they typically start
 .Dq Li "#if 0"
 and are used as a kind of comment to sketch out future or past development.
 It would be rude to strip them out, just as it would be for normal comments.
-.Pp
-.It Fl l
-Replace removed lines with blank lines
-instead of deleting them.
 .Pp
 .It Fl n
 Add
