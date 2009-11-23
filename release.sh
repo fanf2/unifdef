@@ -2,6 +2,7 @@
 
 DISTFILES="
 	Makefile
+	Release
 	unifdef.c
 	unifdef.1
 	unifdef.man
