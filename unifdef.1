@@ -30,7 +30,7 @@
 .\" SUCH DAMAGE.
 .\"
 .\"     @(#)unifdef.1	8.2 (Berkeley) 4/1/94
-.\"	$dotat: unifdef/unifdef.1,v 1.55 2008/03/10 16:15:52 fanf2 Exp $
+.\"	$dotat: unifdef/unifdef.1,v 1.56 2009/11/23 17:59:33 fanf2 Exp $
 .\" $FreeBSD: src/usr.bin/unifdef/unifdef.1,v 1.20 2003/02/24 22:53:24 ru Exp $
 .\"
 .Dd September 24, 2002
@@ -351,10 +351,16 @@ in comment.
 The
 .Nm
 command appeared in
-.Bx 4.3 .
+.Bx 2.9 .
 .Tn ANSI\~C
 support was added in
 .Fx 4.7 .
+.Sh AUTHORS
+The original implementation was written by
+.An Dave Yost Aq Dave@Yost.com .
+.An Tony Finch Aq dot@dotat.at
+rewrote it to support
+.Tn ANSI\~C .
 .Sh BUGS
 Expression evaluation is very limited.
 .Pp
