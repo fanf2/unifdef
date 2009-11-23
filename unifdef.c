@@ -33,7 +33,7 @@
 
 static const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2008 Tony Finch <dot@dotat.at>\n",
-    "$dotat: unifdef/unifdef.c,v 1.182 2008/03/10 16:08:47 fanf2 Exp $",
+    "$dotat: unifdef/unifdef.c,v 1.183 2009/11/23 18:24:55 fanf2 Exp $",
 };
 
 /*
@@ -716,8 +716,10 @@ eval_unary(const struct ops *ops, int *valp, const char **cpp)
 		lt = eval_unary(ops, valp, &cp);
 		if (lt == LT_ERROR)
 			return (LT_ERROR);
-		if (lt != LT_IF)
+		if (lt != LT_IF) {
 			*valp = !*valp;
+			lt = *valp ? LT_TRUE : LT_FALSE;
+		}
 	} else if (*cp == '(') {
 		cp++;
 		debug("eval%d (", ops - eval_ops);
@@ -814,6 +816,7 @@ eval_table(const struct ops *ops, int *valp, const char **cpp)
 
 	*cpp = cp;
 	debug("eval%d = %d", ops - eval_ops, *valp);
+	debug("eval%d lt = %s", ops - eval_ops, linetype_name[lt]);
 	return (lt);
 }
 
