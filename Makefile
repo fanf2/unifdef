@@ -1,4 +1,4 @@
-# $dotat: unifdef/Makefile,v 1.7 2009/11/23 19:14:02 fanf2 Exp $
+# $dotat: unifdef/Makefile,v 1.8 2009/11/23 19:15:42 fanf2 Exp $
 
 SOURCES=	Makefile README release.sh unifdef.1 unifdef.c unifdefall.sh
 TARGETS=	Changelog unifdef unifdef.txt
@@ -10,6 +10,9 @@ release: ${TARGETS}
 
 clean:
 	rm -f ${TARGETS} unifdef-*.tar.gz
+
+realclean: clean
+	rm -f *~
 
 unifdef: unifdef.c
 
