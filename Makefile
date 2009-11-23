@@ -1,8 +1,18 @@
-# $dotat: unifdef/Makefile,v 1.3 2008/02/29 12:29:34 fanf2 Exp $
+# $dotat: unifdef/Makefile,v 1.4 2009/11/23 17:58:27 fanf2 Exp $
 
 TARGETS=	unifdef unifdef.log unifdef.man
+DISTFILES=	Makefile unifdef.* unifdefall.sh
 
 all: ${TARGETS}
+
+release: unifdef.log unifdef.man
+	rm -f unifdef unifdef.tar.gz
+	mkdir unifdef
+	cp ${DISTFILES} unifdef
+	tar cfz unifdef.tar.gz unifdef
+	rm -r unifdef
+	scp -r ${DISTFILES} \
+		fanf@chiark.greenend.org.uk:public-html/prog/unifdef
 
 clean:
 	rm -f ${TARGETS}
