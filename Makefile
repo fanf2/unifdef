@@ -1,20 +1,20 @@
-# $dotat: unifdef/Makefile,v 1.5 2009/11/23 18:53:35 fanf2 Exp $
+# $dotat: unifdef/Makefile,v 1.6 2009/11/23 19:07:17 fanf2 Exp $
 
-SOURCES=	Makefile Release unifdef.1 unifdef.c unifdefall.sh
-TARGETS=	unifdef unifdef.log unifdef.man
+SOURCES=	Makefile release.sh unifdef.1 unifdef.c unifdefall.sh
+TARGETS=	Changelog unifdef unifdef.txt
 
 all: ${TARGETS}
 
 release: ${TARGETS}
-	./Release
+	./release.sh
 
 clean:
 	rm -f ${TARGETS} unifdef-*.tar.gz
 
 unifdef: unifdef.c
 
-unifdef.log: ${SOURCES}
-	cvslog ${SOURCES} > unifdef.log
+Changelog: ${SOURCES}
+	cvslog ${SOURCES} >Changelog
 
-unifdef.man: unifdef.1
-	nroff -Tascii -man unifdef.1 | sed -e 's/.//g' > unifdef.man
+unifdef.txt: unifdef.1
+	nroff -Tascii -man unifdef.1 | sed -e 's/.//g' >unifdef.txt

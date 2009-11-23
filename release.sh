@@ -1,12 +1,14 @@
 #!/bin/sh -e
+#
+# $dotat: unifdef/release.sh,v 1.3 2009/11/23 19:07:17 fanf2 Exp $
 
 DISTFILES="
+	Changelog
 	Makefile
-	Release
+	release.sh
 	unifdef.c
 	unifdef.1
-	unifdef.man
-	unifdef.log
+	unifdef.txt
 	unifdefall.sh
 "
 
@@ -19,5 +21,9 @@ mkdir $UNIFDEF
 cp $DISTFILES $UNIFDEF
 tar cfz $UNIFDEF.tar.gz $UNIFDEF
 rm -r $UNIFDEF
-scp -r $DISTFILES $UNIFDEF.tar.gz\
-	fanf@chiark.greenend.org.uk:public-html/prog/unifdef
+
+case $USER in
+fanf|fanf2)
+	scp -r $DISTFILES $UNIFDEF.tar.gz\
+		fanf@chiark.greenend.org.uk:public-html/prog/unifdef
+esac
