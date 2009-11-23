@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002 - 2008 Tony Finch <dot@dotat.at>
+ * Copyright (c) 2002 - 2009 Tony Finch <dot@dotat.at>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,8 +32,8 @@
  */
 
 static const char * const copyright[] = {
-    "@(#) Copyright (c) 2002 - 2008 Tony Finch <dot@dotat.at>\n",
-    "$dotat: unifdef/unifdef.c,v 1.183 2009/11/23 18:24:55 fanf2 Exp $",
+    "@(#) Copyright (c) 2002 - 2009 Tony Finch <dot@dotat.at>\n",
+    "$dotat: unifdef/unifdef.c,v 1.184 2009/11/23 18:37:17 fanf2 Exp $",
 };
 
 /*
