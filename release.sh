@@ -1,10 +1,11 @@
 #!/bin/sh -e
 #
-# $dotat: unifdef/release.sh,v 1.3 2009/11/23 19:07:17 fanf2 Exp $
+# $dotat: unifdef/release.sh,v 1.4 2009/11/23 19:14:02 fanf2 Exp $
 
 DISTFILES="
 	Changelog
 	Makefile
+	README
 	release.sh
 	unifdef.c
 	unifdef.1

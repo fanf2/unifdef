@@ -1,6 +1,6 @@
-# $dotat: unifdef/Makefile,v 1.6 2009/11/23 19:07:17 fanf2 Exp $
+# $dotat: unifdef/Makefile,v 1.7 2009/11/23 19:14:02 fanf2 Exp $
 
-SOURCES=	Makefile release.sh unifdef.1 unifdef.c unifdefall.sh
+SOURCES=	Makefile README release.sh unifdef.1 unifdef.c unifdefall.sh
 TARGETS=	Changelog unifdef unifdef.txt
 
 all: ${TARGETS}

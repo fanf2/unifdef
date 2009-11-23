@@ -1,0 +1,21 @@
+unifdef - remove preprocessor conditionals
+
+Written by Tony Finch <dot@dotat.at>
+
+Canonical version available from http://dotat.at/prog/unifdef/
+
+
+To build, type make.
+
+To install, copy unifdef to your bin directory and unifdef.1 to your
+man/man1 directory.
+
+
+Pre-formatted documentation can be found in unifdef.txt
+
+
+Please send bug reports and patches to me. I will assume that any
+contributions are under the two-clause BSD licence, as found at the
+top of unifdef.c
+
+$dotat: unifdef/README,v 1.1 2009/11/23 19:14:02 fanf2 Exp $
