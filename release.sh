@@ -1,6 +1,6 @@
-#!/bin/sh -e
+#!/bin/sh -ex
 #
-# $dotat: unifdef/release.sh,v 1.4 2009/11/23 19:14:02 fanf2 Exp $
+# $dotat: unifdef/release.sh,v 1.5 2009/11/24 12:14:37 fanf2 Exp $
 
 DISTFILES="
 	Changelog
