@@ -33,7 +33,7 @@
 
 static const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2009 Tony Finch <dot@dotat.at>\n",
-    "$dotat: unifdef/unifdef.c,v 1.185 2009/11/24 11:58:41 fanf2 Exp $",
+    "$dotat: unifdef/unifdef.c,v 1.186 2009/11/24 16:51:38 fanf2 Exp $",
 };
 
 /*
@@ -209,7 +209,7 @@ static int              strlcmp(const char *, const char *, size_t);
 static void             unnest(void);
 static void             usage(void);
 
-#define endsym(c) (!isalpha((unsigned char)c) && !isdigit((unsigned char)c) && c != '_')
+#define endsym(c) (!isalnum((unsigned char)c) && c != '_')
 
 /*
  * The main program.
