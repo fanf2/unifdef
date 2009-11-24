@@ -14,8 +14,14 @@ man/man1 directory.
 Pre-formatted documentation can be found in unifdef.txt
 
 
+Non-portable dependencies:
+
+This program requires the BSD strlcpy() and err.h functions.
+
+
 Please send bug reports and patches to me. I will assume that any
 contributions are under the two-clause BSD licence, as found at the
 top of unifdef.c
 
-$dotat: unifdef/README,v 1.1 2009/11/23 19:14:02 fanf2 Exp $
+
+$dotat: unifdef/README,v 1.2 2009/11/24 12:12:31 fanf2 Exp $
