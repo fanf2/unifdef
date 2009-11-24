@@ -1,7 +1,7 @@
 #!/bin/sh
 
 : ${srcdir:=.}
-: ${unifdef:=../../unifdef}
+: ${unifdef:=../unifdef}
 errors=false
 
 for t in if1 if2 if3 if4 if5; do

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 : ${srcdir:=.}
-: ${unifdef:=../../unifdef}
+: ${unifdef:=../unifdef}
 errors=false
 
 for t in small1 small2 spaces1 spaces2 spaces3 spaces4; do
