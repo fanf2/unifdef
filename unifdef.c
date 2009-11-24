@@ -33,7 +33,7 @@
 
 static const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2009 Tony Finch <dot@dotat.at>\n",
-    "$dotat: unifdef/unifdef.c,v 1.184 2009/11/23 18:37:17 fanf2 Exp $",
+    "$dotat: unifdef/unifdef.c,v 1.185 2009/11/24 11:58:41 fanf2 Exp $",
 };
 
 /*
@@ -195,7 +195,7 @@ static void             done(void);
 static void             error(const char *);
 static int              findsym(const char *);
 static void             flushline(bool);
-static Linetype         getline(void);
+static Linetype         parseline(void);
 static Linetype         ifeval(const char **);
 static void             ignoreoff(void);
 static void             ignoreon(void);
@@ -510,7 +510,7 @@ process(void)
 
 	for (;;) {
 		linenum++;
-		lineval = getline();
+		lineval = parseline();
 		trans_table[ifstate[depth]][lineval]();
 		debug("process %s -> %s depth %d",
 		    linetype_name[lineval],
@@ -524,7 +524,7 @@ process(void)
  * help from skipcomment().
  */
 static Linetype
-getline(void)
+parseline(void)
 {
 	const char *cp;
 	int cursym;
