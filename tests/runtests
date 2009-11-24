@@ -8,12 +8,11 @@ uc() {
   echo "$*" | tr a-z A-Z
 }
 
-for t in empty none \
-         small1 small2 \
-         spaces1 spaces2 spaces3 spaces4 \
-         if1 if2 if3 if4 if5
+for c in *.c
 do
   ok=true
+
+  t=${c%.c}
 
   if [ -f ${t}.args ]
   then
