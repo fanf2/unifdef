@@ -1,6 +1,6 @@
 all: check ;
 
-TEST_SCRIPTS = simple1 simple2 simple3
+TEST_SCRIPTS = simple1 simple2
 
 check:
 	set -e; for i in $(TEST_SCRIPTS); \

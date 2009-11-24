@@ -4,11 +4,13 @@
 : ${unifdef:=../unifdef}
 errors=false
 
-for t in small1 small2 spaces1 spaces2 spaces3 spaces4; do
+for t in small1 small2 spaces1 spaces2 spaces3 spaces4 \
+         if1 if2 if3 if4 if5
+do
 
   failed=false
 
-  command="$unifdef -DFOO -UBAR ${srcdir}/${t}.c"
+  command="$unifdef -DFOO=1 -UBAR -DFOOB=42 ${srcdir}/${t}.c"
 
   if [ ! -f ${srcdir}/${t}.c.expout ]; then
     echo FAILED: EXPOUT: $command
