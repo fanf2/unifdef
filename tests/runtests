@@ -29,11 +29,10 @@ do
   do
     exp=exp${file}
     expfile=${srcdir}/${t}.c.${exp}
-    if [ ! -f ${extfile} ]
+    if [ ! -f ${expfile} ]
     then
       echo FAILED: $(uc ${exp}): ${command}
       echo Test Framework Error: Missing ${expfile} 1>&2
-      rm -f ${t}.out ${t}.err ${t}.rc
       exit 1
     fi
     if ! cmp -s ${t}.${file} ${expfile}
