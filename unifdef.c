@@ -33,7 +33,7 @@
 
 static const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2009 Tony Finch <dot@dotat.at>\n",
-    "$dotat: unifdef/unifdef.c,v 1.186 2009/11/24 16:51:38 fanf2 Exp $",
+    "$dotat: unifdef/unifdef.c,v 1.187 2009/11/24 17:49:13 fanf2 Exp $",
 };
 
 /*
@@ -202,6 +202,7 @@ static void             ignoreon(void);
 static void             keywordedit(const char *);
 static void             nest(void);
 static void             process(void);
+static const char      *skipargs(const char *);
 static const char      *skipcomment(const char *);
 static const char      *skipsym(const char *);
 static void             state(Ifstate);
@@ -760,8 +761,10 @@ eval_unary(const struct ops *ops, int *valp, const char **cpp)
 	} else if (!endsym(*cp)) {
 		debug("eval%d symbol", ops - eval_ops);
 		sym = findsym(cp);
+		cp = skipsym(cp);
 		if (sym < 0) {
 			lt = LT_IF;
+			cp = skipargs(cp);
 		} else if (value[sym] == NULL) {
 			*valp = 0;
 			lt = LT_FALSE;
@@ -770,8 +773,8 @@ eval_unary(const struct ops *ops, int *valp, const char **cpp)
 			if (*ep != '\0' || ep == value[sym])
 				return (LT_ERROR);
 			lt = *valp ? LT_TRUE : LT_FALSE;
+			cp = skipargs(cp);
 		}
-		cp = skipsym(cp);
 		constexpr = false;
 	} else {
 		debug("eval%d bad expr", ops - eval_ops);
@@ -944,6 +947,31 @@ skipcomment(const char *cp)
 			abort(); /* bug */
 		}
 	return (cp);
+}
+
+/*
+ * Skip macro arguments.
+ */
+static const char *
+skipargs(const char *cp)
+{
+	const char *ocp = cp;
+	int level = 0;
+	cp = skipcomment(cp);
+	if (*cp != '(')
+		return (cp);
+	do {
+		if (*cp == '(')
+			level++;
+		if (*cp == ')')
+			level--;
+		cp = skipcomment(cp+1);
+	} while (level != 0 && *cp != '\0');
+	if (level == 0)
+		return (cp);
+	else
+	/* Rewind and re-detect the syntax error later. */
+		return (ocp);
 }
 
 /*

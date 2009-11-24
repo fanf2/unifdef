@@ -30,7 +30,7 @@
 .\" SUCH DAMAGE.
 .\"
 .\"     @(#)unifdef.1	8.2 (Berkeley) 4/1/94
-.\"	$dotat: unifdef/unifdef.1,v 1.57 2009/11/23 18:37:17 fanf2 Exp $
+.\"	$dotat: unifdef/unifdef.1,v 1.58 2009/11/24 17:49:13 fanf2 Exp $
 .\" $FreeBSD: src/usr.bin/unifdef/unifdef.1,v 1.25 2008/05/02 16:23:47 hrs Exp $
 .\"
 .Dd September 24, 2002
@@ -128,6 +128,17 @@ Similarly,
 if either operand of
 .Ic ||
 is definitely true then the result is true.
+.Pp
+In most cases, the
+.Nm
+utility does not distinguish between object-like macros
+(without arguments) and function-like arguments (with arguments).
+If a macro is not explicitly defined, or is defined with the
+.Fl D
+flag on the command-line, its arguments are ignored.
+If a macro is explicitly undefined on the command line with the
+.Fl U
+flag, it may not have any arguments since this leads to a syntax error.
 .Pp
 The
 .Nm
