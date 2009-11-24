@@ -1,0 +1,56 @@
+#!/bin/sh
+
+: ${srcdir:=.}
+: ${unifdef:=../../unifdef}
+errors=false
+
+for t in small1 small2 spaces1 spaces2 spaces3 spaces4; do
+
+  failed=false
+
+  if [ ! -f ${srcdir}/${t}.c.expout ]; then
+    echo FAILED: EXPOUT: $unifdef -DFOO -UBAR ${srcdir}/${t}.c
+    echo Test Framework Error: Missing ${srcdir}/${t}.c.expout 1>&2
+    exit 1
+  fi
+  if [ ! -f ${srcdir}/${t}.c.experr ]; then
+    echo FAILED: EXPERR: $unifdef -DFOO -UBAR ${srcdir}/${t}.c
+    echo Test Framework Error: Missing ${srcdir}/${t}.c.experr 1>&2
+    exit 1
+  fi
+
+  $unifdef -DFOO -UBAR ${srcdir}/${t}.c >${t}.out 2>${t}.err
+
+  if [ $? -eq 0 ]; then
+    echo FAILED: RC: $unifdef -DFOO -UBAR ${srcdir}/${t}.c
+    echo Error: exit code zero when changes exist. 1>&2
+    error=true
+    failed=true
+  fi
+
+  if ! cmp -s ${t}.out ${srcdir}/${t}.c.expout; then
+    echo FAILED: OUT: $unifdef -DFOO -UBAR ${srcdir}/${t}.c
+    echo Standard output differences $t
+    diff ${t}.out ${srcdir}/${t}.c.expout
+    errors=true
+    failed=true
+  fi
+  if ! cmp -s ${t}.err ${srcdir}/${t}.c.experr; then
+    echo FAILED: ERR: $unifdef -DFOO -UBAR ${srcdir}/${t}.c
+    echo Standard error differences $t
+    diff ${t}.out ${srcdir}/${t}.c.expout
+    errors=true
+    failed=true
+  fi
+
+  if ! $failed; then
+    rm -f ${t}.out ${t}.err
+  fi
+
+done
+
+if $errors; then
+  exit 1
+fi
+
+exit 0
