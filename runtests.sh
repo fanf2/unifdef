@@ -15,7 +15,12 @@ for t in empty none \
 do
   ok=true
 
-  command="$unifdef -DFOO=1 -DFOOB=42 -UBAR ${srcdir}/${t}.c"
+  if [ -f ${t}.args ]
+  then
+    command="$unifdef $(cat ${t}.args) ${srcdir}/${t}.c"
+  else
+    command="$unifdef -DFOO=1 -DFOOB=42 -UBAR ${srcdir}/${t}.c"
+  fi
 
   ${command} >${t}.out 2>${t}.err
   echo $? >${t}.rc
