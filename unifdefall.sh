@@ -25,12 +25,12 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-#	$dotat: unifdef/unifdefall.sh,v 1.18 2009/11/25 19:23:12 fanf2 Exp $
+#	$dotat: unifdef/unifdefall.sh,v 1.19 2009/11/25 19:24:59 fanf2 Exp $
 
 set -e
 
 basename=$(basename $0)
-tmp=$(mktemp -d -t "${TMPDIR:-/tmp}/$basename.XXXXXXXXXX") || exit 2
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/$basename.XXXXXXXXXX") || exit 2
 trap 'rm -r "$tmp" || exit 1' EXIT
 
 export LC_ALL=C
