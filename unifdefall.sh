@@ -25,12 +25,12 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-#	$dotat: unifdef/unifdefall.sh,v 1.12 2003/08/12 20:32:39 fanf2 Exp $
+#	$dotat: unifdef/unifdefall.sh,v 1.13 2009/11/25 17:54:13 fanf2 Exp $
 
 set -e
 
-basename=`basename $0`
-tmp=`mktemp -d -t $basename` || exit 2
+basename=$(basename $0)
+tmp=$(mktemp -d -t $basename) || exit 2
 
 unifdef -s "$@" | sort | uniq > $tmp/ctrl
 cpp -dM "$@" | sort |
