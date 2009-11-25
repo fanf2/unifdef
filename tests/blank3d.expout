@@ -6,6 +6,9 @@ four
 
 
 three
+
+
+
 #ifdef FOO2
 two
 #endif

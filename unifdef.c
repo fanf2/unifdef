@@ -33,7 +33,7 @@
 
 static const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2009 Tony Finch <dot@dotat.at>\n",
-    "$dotat: unifdef/unifdef.c,v 1.187 2009/11/24 17:49:13 fanf2 Exp $",
+    "$dotat: unifdef/unifdef.c,v 1.188 2009/11/25 00:11:02 fanf2 Exp $",
 };
 
 /*
@@ -184,7 +184,8 @@ static bool             ignoring[MAXDEPTH];	/* ignore comments state */
 static int              stifline[MAXDEPTH];	/* start of current #if */
 static int              depth;			/* current #if nesting */
 static int              delcount;		/* count of deleted lines */
-static bool             lastblank;		/* last line kept was blank */
+static unsigned         blankcount;		/* count of blank lines */
+static unsigned         blankmax;		/* maximum recent blankcount */
 static bool             constexpr;		/* constant #if expression */
 
 static int              exitstat;		/* program exit status */
@@ -482,22 +483,23 @@ flushline(bool keep)
 	if (symlist)
 		return;
 	if (keep ^ complement) {
-		if (lastblank && compblank &&
-		    tline[strspn(tline, " \t\n")] == '\0') {
+		bool blankline = tline[strspn(tline, " \t\n")] == '\0';
+		if (blankline && compblank && blankcount != blankmax) {
 			delcount += 1;
+			blankcount += 1;
 		} else {
 			if (lnnum && delcount > 0)
 				printf("#line %d\n", linenum);
 			fputs(tline, stdout);
 			delcount = 0;
-			lastblank = false;
+			blankmax = blankcount = blankline ? blankcount + 1 : 0;
 		}
 	} else {
 		if (lnblank)
 			putc('\n', stdout);
 		exitstat = 1;
 		delcount += 1;
-		lastblank = true;
+		blankcount = 0;
 	}
 }
 
@@ -509,6 +511,9 @@ process(void)
 {
 	Linetype lineval;
 
+	/* When compressing blank lines, act as if the file
+	   is preceded by a large number of blank lines. */
+	blankmax = blankcount = 1000;
 	for (;;) {
 		linenum++;
 		lineval = parseline();

@@ -1,4 +1,8 @@
 four
+
+
+
+
 #ifdef FOO3
 three
 #endif
