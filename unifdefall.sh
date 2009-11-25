@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-#	$dotat: unifdef/unifdefall.sh,v 1.19 2009/11/25 19:24:59 fanf2 Exp $
+#	$dotat: unifdef/unifdefall.sh,v 1.20 2009/11/25 19:32:40 fanf2 Exp $
 
 set -e
 
@@ -35,19 +35,18 @@ trap 'rm -r "$tmp" || exit 1' EXIT
 
 export LC_ALL=C
 
-unifdef -s "$@" | sort | uniq >"$tmp/ctrl"
-cpp -dM "$@" | sort |
-	sed -Ee 's/^#define[ 	]+(.*[^	 ])[ 	]*$/\1/' >"$tmp/hashdefs"
-sed -Ee 's/^([A-Za-z0-9_]+).*$/\1/' "$tmp/hashdefs" >"$tmp/alldef"
+./unifdef -s "$@" | sort | uniq >"$tmp/ctrl"
+cpp -dM "$@" | sort | sed 's/^#define //' >"$tmp/hashdefs"
+sed 's/[^A-Za-z0-9_].*$//' "$tmp/hashdefs" >"$tmp/alldef"
 comm -23 "$tmp/ctrl" "$tmp/alldef" >"$tmp/undef"
 comm -12 "$tmp/ctrl" "$tmp/alldef" >"$tmp/def"
 (
-	echo unifdef -k \\
-	sed -Ee 's/^(.*)$/-U\1 \\/' "$tmp/undef"
+	echo ./unifdef -k \\
+	sed 's/.*/-U& \\/' "$tmp/undef"
 	while read sym
-	do	sed -Ee '/^('"$sym"')([(][^)]*[)])?([ 	]+(.*))?$/!d;s//-D\1=\4/' "$tmp/hashdefs"
+	do sed -n 's/^'$sym'\(([^)]*)\)\{0,1\} /-D'$sym'=/p' "$tmp/hashdefs"
 	done <"$tmp/def" |
-		sed -Ee 's/\\/\\\\/g;s/"/\\"/g;s/^/"/;s/$/" \\/'
+		sed "s/'/'\\\\''/g;s/.*/'&' \\\\/"
 	echo '"$@"'
 ) >"$tmp/cmd"
 sh "$tmp/cmd" "$@"
