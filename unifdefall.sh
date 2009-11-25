@@ -2,7 +2,7 @@
 #
 # unifdefall: remove all the #if's from a source file
 #
-# Copyright (c) 2002,2003 Tony Finch <dot@dotat.at>.  All rights reserved.
+# Copyright (c) 2002 - 2009 Tony Finch <dot@dotat.at>.  All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-#	$dotat: unifdef/unifdefall.sh,v 1.20 2009/11/25 19:32:40 fanf2 Exp $
+#	$dotat: unifdef/unifdefall.sh,v 1.21 2009/11/25 19:54:34 fanf2 Exp $
 
 set -e
 
