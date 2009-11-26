@@ -12,7 +12,7 @@
  otherwise leaving the file alone.</p>
 
 <ul>
- <li>Download <tt><a href="unifdef-1.289.tar.gz">unifdef-1.289.tar.gz</a></tt></li>
+ <li>Download <tt><a href="unifdef-NNN.tar.gz">unifdef-NNN.tar.gz</a></tt></li>
  <li><a href="unifdef.txt">Read the manual.</a></li>
  <li>View source:
   <ul>
@@ -37,7 +37,7 @@ as found at the top of <tt><a href="unifdef.c">unifdef.c</a></tt>.
  <tt>unifdef</tt> was written by
  <a name="me"><a href="http://dotat.at/">Tony Finch</a>
  &lt;<a href="mailto:dot@dotat.at">dot@dotat.at</a>&gt;</a>
- <br><tt>$dotat: unifdef/index.html.in,v 1.1 2009/11/26 13:48:46 fanf2 Exp $</tt>
+ <br><tt>$dotat: unifdef/index.html.in,v 1.2 2009/11/26 13:56:22 fanf2 Exp $</tt>
 </address>
 
 <hr>

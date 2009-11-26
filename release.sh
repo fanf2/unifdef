@@ -1,6 +1,6 @@
 #!/bin/sh -ex
 #
-# $dotat: unifdef/release.sh,v 1.8 2009/11/26 13:54:10 fanf2 Exp $
+# $dotat: unifdef/release.sh,v 1.9 2009/11/26 13:56:22 fanf2 Exp $
 
 DISTFILES="
 	Changelog
@@ -17,7 +17,7 @@ VERSION=$(perl -ne '$sum += $_ if s/.*\$(dotat): \S+ 1[.](\d+) .*/$2/; END { pri
 
 UNIFDEF=unifdef-1.$VERSION
 
-sed -i~ "s/unifdef-NNN/$UNIFDEF/g" index.html
+sed "s/unifdef-NNN/$UNIFDEF/g" <index.html.in >index.html
 
 rm -rf unifdef-* unifdef-*.tar.gz
 mkdir $UNIFDEF
