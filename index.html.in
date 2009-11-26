@@ -1,8 +1,11 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
    "http://www.w3.org/TR/html4/strict.dtd">
 <html>
-<head><title>unifdef - selectively remove preprocessor conditionals</title></head>
-<body>   <h1>unifdef - selectively remove preprocessor conditionals</h1>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+   <title>unifdef - selectively remove preprocessor conditionals</title></head>
+<body><h1>unifdef - selectively remove preprocessor conditionals</h1>
 
 <hr>
 
@@ -34,10 +37,9 @@ as found at the top of <tt><a href="unifdef.c">unifdef.c</a></tt>.
 <hr>
 
 <address>
- <tt>unifdef</tt> was written by
- <a name="me"><a href="http://dotat.at/">Tony Finch</a>
- &lt;<a href="mailto:dot@dotat.at">dot@dotat.at</a>&gt;</a>
- <br><tt>$dotat: unifdef/index.html.in,v 1.2 2009/11/26 13:56:22 fanf2 Exp $</tt>
+ <tt>unifdef</tt> was written by <a href="http://dotat.at/">Tony Finch</a>
+ &lt;<a href="mailto:dot@dotat.at">dot@dotat.at</a>&gt;
+ <br><tt>$dotat: unifdef/index.html.in,v 1.3 2009/11/26 14:12:30 fanf2 Exp $</tt>
 </address>
 
 <hr>
