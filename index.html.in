@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head><title>unifdef - selectively remove preprocessor conditionals</title></head>
+<body>   <h1>unifdef - selectively remove preprocessor conditionals</h1>
+
+<hr>
+
+<p>The <tt>unifdef</tt> utility selectively processes conditional C
+ preprocessor directives. It removes from a file both the directives
+ and any additional text that they specify should be removed, while
+ otherwise leaving the file alone.</p>
+
+<ul>
+ <li>Download <tt><a href="unifdef-1.289.tar.gz">unifdef-1.289.tar.gz</a></tt></li>
+ <li><a href="unifdef.txt">Read the manual.</a></li>
+ <li>View source:
+  <ul>
+   <li><a href="Changelog">Changelog</a></li>
+   <li><a href="Makefile">Makefile</a></li>
+   <li><a href="README">README</a></li>
+   <li><a href="release.sh">release.sh</a></li>
+   <li><a href="unifdef.1">unifdef.1</a></li>
+   <li><a href="unifdef.c">unifdef.c</a></li>
+   <li><a href="unifdefall.sh">unifdefall.sh</a></li>
+  </ul>
+</ul>
+
+<p>Please send bug reports and patches to me. I will assume that any
+contributions are under
+<a href="http://www.freebsd.org/copyright/freebsd-license.html">the two-clause BSD licence</a>,
+as found at the top of <tt><a href="unifdef.c">unifdef.c</a></tt>.
+
+<hr>
+
+<address>
+ <tt>unifdef</tt> was written by
+ <a name="me"><a href="http://dotat.at/">Tony Finch</a>
+ &lt;<a href="mailto:dot@dotat.at">dot@dotat.at</a>&gt;</a>
+ <br><tt>$dotat: unifdef/index.html.in,v 1.1 2009/11/26 13:48:46 fanf2 Exp $</tt>
+</address>
+
+<hr>
+
+</body>
+</html>
