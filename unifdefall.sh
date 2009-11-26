@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-#	$dotat: unifdef/unifdefall.sh,v 1.21 2009/11/25 19:54:34 fanf2 Exp $
+#	$dotat: unifdef/unifdefall.sh,v 1.22 2009/11/26 02:14:47 fanf2 Exp $
 
 set -e
 
@@ -35,13 +35,13 @@ trap 'rm -r "$tmp" || exit 1' EXIT
 
 export LC_ALL=C
 
-./unifdef -s "$@" | sort | uniq >"$tmp/ctrl"
+unifdef -s "$@" | sort | uniq >"$tmp/ctrl"
 cpp -dM "$@" | sort | sed 's/^#define //' >"$tmp/hashdefs"
 sed 's/[^A-Za-z0-9_].*$//' "$tmp/hashdefs" >"$tmp/alldef"
 comm -23 "$tmp/ctrl" "$tmp/alldef" >"$tmp/undef"
 comm -12 "$tmp/ctrl" "$tmp/alldef" >"$tmp/def"
 (
-	echo ./unifdef -k \\
+	echo unifdef -k \\
 	sed 's/.*/-U& \\/' "$tmp/undef"
 	while read sym
 	do sed -n 's/^'$sym'\(([^)]*)\)\{0,1\} /-D'$sym'=/p' "$tmp/hashdefs"
