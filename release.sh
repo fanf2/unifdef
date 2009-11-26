@@ -1,6 +1,6 @@
 #!/bin/sh -ex
 #
-# $dotat: unifdef/release.sh,v 1.7 2009/11/26 13:52:09 fanf2 Exp $
+# $dotat: unifdef/release.sh,v 1.8 2009/11/26 13:54:10 fanf2 Exp $
 
 DISTFILES="
 	Changelog
@@ -13,7 +13,7 @@ DISTFILES="
 	unifdefall.sh
 "
 
-VERSION=$(perl -ne '$sum += $_ if s/.*\$dotat: unifdef/release.sh,v 1.7 2009/11/26 13:52:09 fanf2 Exp $sum\n" }' $DISTFILES)
+VERSION=$(perl -ne '$sum += $_ if s/.*\$(dotat): \S+ 1[.](\d+) .*/$2/; END { print "$sum\n" }' $DISTFILES)
 
 UNIFDEF=unifdef-1.$VERSION
 
