@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-#	$dotat: unifdef/unifdefall.sh,v 1.22 2009/11/26 02:14:47 fanf2 Exp $
+#	$dotat: unifdef/unifdefall.sh,v 1.23 2009/11/26 02:22:24 fanf2 Exp $
 
 set -e
 
@@ -40,7 +40,7 @@ cpp -dM "$@" | sort | sed 's/^#define //' >"$tmp/hashdefs"
 sed 's/[^A-Za-z0-9_].*$//' "$tmp/hashdefs" >"$tmp/alldef"
 comm -23 "$tmp/ctrl" "$tmp/alldef" >"$tmp/undef"
 comm -12 "$tmp/ctrl" "$tmp/alldef" >"$tmp/def"
-(
+{
 	echo unifdef -k \\
 	sed 's/.*/-U& \\/' "$tmp/undef"
 	while read sym
@@ -48,5 +48,5 @@ comm -12 "$tmp/ctrl" "$tmp/alldef" >"$tmp/def"
 	done <"$tmp/def" |
 		sed "s/'/'\\\\''/g;s/.*/'&' \\\\/"
 	echo '"$@"'
-) >"$tmp/cmd"
+} >"$tmp/cmd"
 sh "$tmp/cmd" "$@"
