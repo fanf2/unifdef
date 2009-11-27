@@ -1,8 +1,6 @@
-unifdef - selectively remove preprocessor conditionals
+unifdef - selectively remove C preprocessor conditionals
 
-Written by Tony Finch <dot@dotat.at>
-
-Canonical version available from http://dotat.at/prog/unifdef/
+Written by Tony Finch <dot@dotat.at> - http://dotat.at/prog/unifdef/
 
 
 To build, type make.
@@ -10,18 +8,34 @@ To build, type make.
 To install, copy unifdef to your bin directory and unifdef.1 to your
 man/man1 directory.
 
-
 Pre-formatted documentation can be found in unifdef.txt
 
 
 Non-portable dependencies:
 
-This program requires the BSD strlcpy() and err.h functions.
+This program requires the BSD strlcpy() and err.h functions, and
+C99 stdbool.h.
 
 
 Please send bug reports and patches to me. I will assume that any
 contributions are under the two-clause BSD licence, as found at the
 top of unifdef.c
 
+Thanks to the following people for their contributions:
 
-$dotat: unifdef/README,v 1.3 2009/11/26 13:48:45 fanf2 Exp $
+Bob Proulx <bob@proulx.com>
+ - test suite
+
+Jonathan Nieder <jrnieder@gmail.com>
+ - bug fixes, improved unifdefall
+
+Anders H Kaseorg <andersk@mit.edu>
+ - bug fixes and other improvements
+
+Ben Hutchings at Solarflare Communications
+ - lenient evaluation of && and ||
+
+Other contributions are listed in the Changelog.
+
+
+$dotat: unifdef/README,v 1.4 2009/11/27 12:48:13 fanf2 Exp $
