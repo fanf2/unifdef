@@ -4,7 +4,7 @@
 # You may do anything with it, at your own risk.
 # http://creativecommons.org/publicdomain/zero/1.0/
 #
-# $dotat: unifdef/runtests.sh,v 1.8 2009/11/27 14:08:08 fanf2 Exp $
+# $dotat: unifdef/runtests.sh,v 1.9 2009/11/27 14:20:59 fanf2 Exp $
 
 for cmd in *.sh
 do
@@ -13,6 +13,7 @@ do
 	. ${cmd} >${t}.out 2>${t}.err
 	echo $? >${t}.rc
 
+	ok=true
 	for e in out err rc
 	do
 		got=${t}.${e}
