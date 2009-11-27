@@ -1,6 +1,10 @@
 #!/bin/sh
 #
-# $dotat: unifdef/tests/runtests,v 1.5 2009/11/24 23:46:36 fanf2 Exp $
+# Copyright 2004-2008 Bob Proulx <bob@proulx.com>
+# Copyright 2009 Tony Finch <dot@dotat.at>
+# You may freely use, modify and/or distribute this file.
+#
+# $dotat: unifdef/tests/runtests,v 1.6 2009/11/27 13:08:58 fanf2 Exp $
 
 : ${srcdir:=.}
 : ${unifdef:=../unifdef}
