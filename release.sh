@@ -1,6 +1,6 @@
 #!/bin/sh -ex
 #
-# $dotat: unifdef/release.sh,v 1.11 2009/11/27 14:34:09 fanf2 Exp $
+# $dotat: unifdef/release.sh,v 1.12 2009/11/27 17:24:25 fanf2 Exp $
 
 DISTFILES="
 	Changelog
@@ -24,10 +24,11 @@ sed "s/unifdef-NNN/$UNIFDEF/g" <index.html.in >index.html
 rm -rf unifdef-* unifdef-*.tar.gz
 mkdir $UNIFDEF
 cp -R $DISTFILES $UNIFDEF
+rm -rf $UNIFDEF/tests/CVS
 tar cfz $UNIFDEF.tar.gz $UNIFDEF
 
 case $USER in
 fanf|fanf2)
-	scp -r $DISTFILES $UNIFDEF.tar.gz index.html \
+	rsync -r $DISTFILES $UNIFDEF.tar.gz index.html \
 		fanf@chiark.greenend.org.uk:public-html/prog/unifdef
 esac
