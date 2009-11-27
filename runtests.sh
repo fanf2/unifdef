@@ -4,7 +4,7 @@
 # You may do anything with it, at your own risk.
 # http://creativecommons.org/publicdomain/zero/1.0/
 #
-# $dotat: unifdef/runtests.sh,v 1.10 2009/11/27 14:30:02 fanf2 Exp $
+# $dotat: unifdef/runtests.sh,v 1.11 2009/11/27 14:35:51 fanf2 Exp $
 
 ${1:+cd} ${1:-:}
 for cmd in *.sh
@@ -17,9 +17,9 @@ do
 	ok=true
 	for e in out err rc
 	do
-		got=${t}.${e}
 		exp=${t}.exp${e}
-		if ! cmp -s ${got} ${exp}
+		got=${t}.${e}
+		if ! cmp -s ${exp} ${got}
 		then
 			echo FAILED: ${got}: $(cat ${cmd})
 			diff -u ${exp} ${got}
