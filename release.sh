@@ -1,6 +1,6 @@
 #!/bin/sh -ex
 #
-# $dotat: unifdef/release.sh,v 1.10 2009/11/27 13:36:39 fanf2 Exp $
+# $dotat: unifdef/release.sh,v 1.11 2009/11/27 14:34:09 fanf2 Exp $
 
 DISTFILES="
 	Changelog
@@ -28,6 +28,6 @@ tar cfz $UNIFDEF.tar.gz $UNIFDEF
 
 case $USER in
 fanf|fanf2)
-	scp $DISTFILES $UNIFDEF.tar.gz index.html \
+	scp -r $DISTFILES $UNIFDEF.tar.gz index.html \
 		fanf@chiark.greenend.org.uk:public-html/prog/unifdef
 esac
