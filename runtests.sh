@@ -4,8 +4,9 @@
 # You may do anything with it, at your own risk.
 # http://creativecommons.org/publicdomain/zero/1.0/
 #
-# $dotat: unifdef/runtests.sh,v 1.9 2009/11/27 14:20:59 fanf2 Exp $
+# $dotat: unifdef/runtests.sh,v 1.10 2009/11/27 14:30:02 fanf2 Exp $
 
+${1:+cd} ${1:-:}
 for cmd in *.sh
 do
 	t=${cmd%.sh}
