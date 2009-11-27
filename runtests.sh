@@ -4,14 +4,14 @@
 # You may do anything with it, at your own risk.
 # http://creativecommons.org/publicdomain/zero/1.0/
 #
-# $dotat: unifdef/runtests.sh,v 1.11 2009/11/27 14:35:51 fanf2 Exp $
+# $dotat: unifdef/runtests.sh,v 1.12 2009/11/27 17:14:32 fanf2 Exp $
 
 ${1:+cd} ${1:-:}
 for cmd in *.sh
 do
 	t=${cmd%.sh}
 
-	. ${cmd} >${t}.out 2>${t}.err
+	. ./${cmd} >${t}.out 2>${t}.err
 	echo $? >${t}.rc
 
 	ok=true
