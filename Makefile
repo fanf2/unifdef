@@ -1,4 +1,4 @@
-# $dotat: unifdef/Makefile,v 1.14 2009/11/27 14:30:02 fanf2 Exp $
+# $dotat: unifdef/Makefile,v 1.15 2009/11/27 17:30:39 fanf2 Exp $
 
 SOURCES=	Makefile README release.sh unifdef.1 unifdef.c unifdefall.sh
 TARGETS=	Changelog unifdef unifdef.txt
@@ -22,7 +22,7 @@ realclean: clean
 unifdef: unifdef.c
 
 Changelog: ${SOURCES}
-	cvslog ${SOURCES} >Changelog
+	cvslog >Changelog
 
 unifdef.txt: unifdef.1
 	nroff -Tascii -man unifdef.1 | sed -e 's/.//g' >unifdef.txt
