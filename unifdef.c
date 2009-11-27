@@ -35,7 +35,7 @@
 
 static const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2009 Tony Finch <dot@dotat.at>\n",
-    "$dotat: unifdef/unifdef.c,v 1.189 2009/11/27 15:40:10 fanf2 Exp $",
+    "$dotat: unifdef/unifdef.c,v 1.190 2009/11/27 17:21:26 fanf2 Exp $",
 };
 
 /*
@@ -458,9 +458,11 @@ keywordedit(const char *replacement)
 static void
 nest(void)
 {
-	depth += 1;
-	if (depth >= MAXDEPTH)
+	if (depth > MAXDEPTH-1)
+		abort(); /* bug */
+	if (depth == MAXDEPTH-1)
 		error("Too many levels of nesting");
+	depth += 1;
 	stifline[depth] = linenum;
 }
 static void
