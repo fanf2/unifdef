@@ -10,9 +10,17 @@
 <hr>
 
 <p>The <tt>unifdef</tt> utility selectively processes conditional C
- preprocessor directives. It removes from a file both the directives
- and any additional text that they specify should be removed, while
- otherwise leaving the file alone.</p>
+ preprocessor <tt>#if</tt> and <tt>#ifdef</tt> directives. It removes
+ from a file both the directives and the additional text that they
+ delimit, while otherwise leaving the file alone.</p>
+
+<p>It is useful for avoiding distractions when studying code that uses
+ <tt>#ifdef</tt> heavily for portability (the original motivation
+ was <tt>xterm</tt>'s <tt>pty</tt> handling code), or as a lightweight
+ preprocessor to strip out internal routines from a public header (the
+ Linux kernel uses <tt>unifdef</tt> to strip out
+ <tt>#ifdef __KERNEL__</tt> sections from headers that are exported to
+ userland).</p>
 
 <ul>
  <li>Download <tt><a href="unifdef-NNN.tar.gz">unifdef-NNN.tar.gz</a></tt></li>
@@ -39,7 +47,7 @@ as found at the top of <tt><a href="unifdef.c">unifdef.c</a></tt>.
 <address>
  <tt>unifdef</tt> was written by <a href="http://dotat.at/">Tony Finch</a>
  &lt;<a href="mailto:dot@dotat.at">dot@dotat.at</a>&gt;
- <br><tt>$dotat: unifdef/index.html.in,v 1.3 2009/11/26 14:12:30 fanf2 Exp $</tt>
+ <br><tt>$dotat: unifdef/index.html.in,v 1.4 2009/11/27 12:36:54 fanf2 Exp $</tt>
 </address>
 
 <hr>
