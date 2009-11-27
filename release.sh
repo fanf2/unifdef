@@ -1,12 +1,14 @@
 #!/bin/sh -ex
 #
-# $dotat: unifdef/release.sh,v 1.9 2009/11/26 13:56:22 fanf2 Exp $
+# $dotat: unifdef/release.sh,v 1.10 2009/11/27 13:36:39 fanf2 Exp $
 
 DISTFILES="
 	Changelog
 	Makefile
 	README
 	release.sh
+	runtests.sh
+	tests
 	unifdef.c
 	unifdef.1
 	unifdef.txt
@@ -21,9 +23,8 @@ sed "s/unifdef-NNN/$UNIFDEF/g" <index.html.in >index.html
 
 rm -rf unifdef-* unifdef-*.tar.gz
 mkdir $UNIFDEF
-cp $DISTFILES $UNIFDEF
+cp -R $DISTFILES $UNIFDEF
 tar cfz $UNIFDEF.tar.gz $UNIFDEF
-rm -r $UNIFDEF
 
 case $USER in
 fanf|fanf2)

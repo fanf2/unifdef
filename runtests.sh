@@ -4,23 +4,24 @@
 # Copyright 2009 Tony Finch <dot@dotat.at>
 # You may freely use, modify and/or distribute this file.
 #
-# $dotat: unifdef/runtests.sh,v 1.6 2009/11/27 13:08:58 fanf2 Exp $
+# $dotat: unifdef/runtests.sh,v 1.7 2009/11/27 13:36:39 fanf2 Exp $
 
-: ${srcdir:=.}
+: ${tests:=.}
 : ${unifdef:=../unifdef}
 
 uc() {
   echo "$*" | tr a-z A-Z
 }
 
-for c in *.c
+for c in ${tests}/*.c
 do
   ok=true
-  t=${c%.c}
+  cb=${c##*/}
+  t=${cb%.c}
 
-  if [ -f ${t}.args ]
-  then command="$unifdef $(cat ${t}.args) ${srcdir}/${t}.c"
-  else command="$unifdef -DFOO=1 -DFOOB=42 -UBAR ${srcdir}/${t}.c"
+  if [ -f ${tests}/${t}.args ]
+  then command="$unifdef $(cat ${tests}/${t}.args) ${c}"
+  else command="$unifdef -DFOO=1 -DFOOB=42 -UBAR ${c}"
   fi
 
   ${command} >${t}.out 2>${t}.err
@@ -29,7 +30,7 @@ do
   for file in out err rc
   do
     exp=exp${file}
-    expfile=${srcdir}/${c}.${exp}
+    expfile=${tests}/${t}.${exp}
     if [ ! -f ${expfile} ]
     then
       echo FAILED: $(uc ${exp}): ${command}
