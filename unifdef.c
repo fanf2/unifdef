@@ -24,16 +24,18 @@
  */
 
 /*
- * This code is derived from software contributed to Berkeley by Dave Yost.
+ * This code was derived from software contributed to Berkeley by Dave Yost.
  * It was rewritten to support ANSI C by Tony Finch. The original version
  * of unifdef carried the 4-clause BSD copyright licence. None of its code
  * remains in this version (though some of the names remain) so it now
  * carries a more liberal licence.
+ *
+ * The latest version is available from http://dotat.at/prog/unifdef
  */
 
 static const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2009 Tony Finch <dot@dotat.at>\n",
-    "$dotat: unifdef/unifdef.c,v 1.188 2009/11/25 00:11:02 fanf2 Exp $",
+    "$dotat: unifdef/unifdef.c,v 1.189 2009/11/27 15:40:10 fanf2 Exp $",
 };
 
 /*
