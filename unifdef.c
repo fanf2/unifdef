@@ -29,13 +29,12 @@
  * of unifdef carried the 4-clause BSD copyright licence. None of its code
  * remains in this version (though some of the names remain) so it now
  * carries a more liberal licence.
- *
- * The latest version is available from http://dotat.at/prog/unifdef
  */
 
-static const char * const copyright[] = {
-    "@(#) Copyright (c) 2002 - 2009 Tony Finch <dot@dotat.at>\n",
-    "$dotat: unifdef/unifdef.c,v 1.190 2009/11/27 17:21:26 fanf2 Exp $",
+const char * const copyright[] = {
+    "@(#) Copyright (c) 2002 - 2009 Tony Finch (dot@dotat.at)\n",
+    "@(#) Latest version available from http://dotat.at/prog/unifdef\n",
+    "$dotat: unifdef/unifdef.c,v 1.191 2009/12/02 15:21:22 fanf2 Exp $",
 };
 
 /*
