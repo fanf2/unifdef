@@ -1,4 +1,12 @@
-# $dotat: unifdef/Makefile,v 1.16 2010/01/15 17:43:17 fanf2 Exp $
+# $dotat: unifdef/Makefile,v 1.17 2010/01/15 18:33:05 fanf2 Exp $
+
+prefix =	${HOME}
+bindir =	${prefix}/bin
+mandir =	${prefix}/share/man
+man1dir=	${mandir}/man1
+
+bindest=	${DESTDIR}${bindir}
+man1dest=	${DESTDIR}${man1dir}
 
 SOURCES=	Makefile README release.sh unifdef.1 unifdef.c unifdefall.sh
 TARGETS=	unifdef unifdef.txt
@@ -10,6 +18,16 @@ test: unifdef
 
 release: ${TARGETS} Changelog
 	./release.sh
+
+install: unifdef unifdefall.sh unifdef.1
+	: commands
+	install -m 755 -d  ${bindest}
+	install -m 755 unifdef  ${bindest}/
+	install -m 755 unifdefall.sh  ${bindest}/unifdefall
+	: manual
+	install -m 755 -d  ${man1dest}
+	install -m 644 unifdef.1  ${man1dest}/
+	ln -s unifdef.1  ${man1dest}/unifdefall.1
 
 clean:
 	rm -rf unifdef-*
