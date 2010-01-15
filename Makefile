@@ -1,14 +1,14 @@
-# $dotat: unifdef/Makefile,v 1.15 2009/11/27 17:30:39 fanf2 Exp $
+# $dotat: unifdef/Makefile,v 1.16 2010/01/15 17:43:17 fanf2 Exp $
 
 SOURCES=	Makefile README release.sh unifdef.1 unifdef.c unifdefall.sh
-TARGETS=	Changelog unifdef unifdef.txt
+TARGETS=	unifdef unifdef.txt
 
 all: ${TARGETS}
 
 test: unifdef
 	./runtests.sh tests
 
-release: ${TARGETS}
+release: ${TARGETS} Changelog
 	./release.sh
 
 clean:
