@@ -25,18 +25,26 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-#	$dotat: unifdef/unifdefall.sh,v 1.24 2009/11/26 12:54:39 fanf2 Exp $
+#	$dotat: unifdef/unifdefall.sh,v 1.25 2010/01/15 17:41:21 fanf2 Exp $
 
 set -e
 
-basename=$(basename $0)
+unifdef="$(dirname "$0")/unifdef"
+if [ ! -e "$unifdef" ]
+then
+	unifdef=unifdef
+fi
+# export to the final shell command
+export unifdef
+
+basename=$(basename "$0")
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/$basename.XXXXXXXXXX") || exit 2
 trap 'rm -r "$tmp" || exit 1' EXIT
 
 export LC_ALL=C
 
 # list of all controlling macros
-unifdef -s "$@" | sort | uniq >"$tmp/ctrl"
+"$unifdef" -s "$@" | sort | uniq >"$tmp/ctrl"
 # list of all macro definitions
 cpp -dM "$@" | sort | sed 's/^#define //' >"$tmp/hashdefs"
 # list of defined macro names
@@ -48,7 +56,7 @@ comm -12 "$tmp/ctrl" "$tmp/alldef" >"$tmp/def"
 # and converts them to unifdef command-line arguments
 sed 's|.*|s/^&\\(([^)]*)\\)\\{0,1\\} /-D&=/p|' <"$tmp/def" >"$tmp/script"
 # create the final unifdef command
-{	echo unifdef -k \\
+{	echo '"$unifdef" -k \'
 	# convert the controlling undefined macros to -U arguments
 	sed 's/.*/-U& \\/' <"$tmp/undef"
 	# convert the controlling defined macros to quoted -D arguments
