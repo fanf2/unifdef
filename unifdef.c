@@ -24,21 +24,13 @@
  */
 
 /*
+ * unifdef - remove ifdef'ed lines
+ *
  * This code was derived from software contributed to Berkeley by Dave Yost.
  * It was rewritten to support ANSI C by Tony Finch. The original version
  * of unifdef carried the 4-clause BSD copyright licence. None of its code
  * remains in this version (though some of the names remain) so it now
  * carries a more liberal licence.
- */
-
-const char * const copyright[] = {
-    "@(#) Copyright (c) 2002 - 2009 Tony Finch (dot@dotat.at)\n",
-    "@(#) Latest version available from http://dotat.at/prog/unifdef\n",
-    "$dotat: unifdef/unifdef.c,v 1.192 2010/01/19 16:23:35 fanf2 Exp $",
-};
-
-/*
- * unifdef - remove ifdef'ed lines
  *
  *  Wishlist:
  *      provide an option which will append the name of the
@@ -63,6 +55,12 @@ const char * const copyright[] = {
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+const char * const copyright[] = {
+    "@(#) Copyright (c) 2002 - 2010 Tony Finch (dot@dotat.at)\n",
+    "@(#) Latest version available from http://dotat.at/prog/unifdef\n",
+    "@(#) $dotat: unifdef/unifdef.c,v 1.193 2010/01/19 18:03:02 fanf2 Exp $",
+};
 
 /* types of input lines: */
 typedef enum {
