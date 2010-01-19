@@ -59,7 +59,7 @@
 const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2010 Tony Finch (dot@dotat.at)\n",
     "@(#) Latest version available from http://dotat.at/prog/unifdef\n",
-    "@(#) $dotat: unifdef/unifdef.c,v 1.194 2010/01/19 18:22:53 fanf2 Exp $",
+    "@(#) $dotat: unifdef/unifdef.c,v 1.195 2010/01/19 20:33:00 fanf2 Exp $",
 };
 
 /* types of input lines: */
@@ -333,7 +333,7 @@ main(int argc, char *argv[])
 			if (dirsep != NULL)
 				snprintf(tempname, sizeof(tempname),
 				    "%.*s/" TEMPLATE,
-				    dirsep - ofilename, ofilename);
+				    (int)(dirsep - ofilename), ofilename);
 			else
 				strlcpy(tempname, TEMPLATE, sizeof(tempname));
 			ofd = mkstemp(tempname);
