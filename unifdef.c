@@ -39,8 +39,8 @@
  *        #else's and #endif's to see that they match their
  *        corresponding #ifdef or #ifndef
  *
- *   The first two items above require better buffer handling, which would
- *     also make it possible to handle all "dodgy" directives correctly.
+ *   These require better buffer handling, which would also make
+ *   it possible to handle all "dodgy" directives correctly.
  */
 
 #include <sys/types.h>
@@ -59,7 +59,7 @@
 const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2010 Tony Finch (dot@dotat.at)\n",
     "@(#) Latest version available from http://dotat.at/prog/unifdef\n",
-    "@(#) $dotat: unifdef/unifdef.c,v 1.193 2010/01/19 18:03:02 fanf2 Exp $",
+    "@(#) $dotat: unifdef/unifdef.c,v 1.194 2010/01/19 18:22:53 fanf2 Exp $",
 };
 
 /* types of input lines: */
