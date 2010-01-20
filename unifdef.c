@@ -59,7 +59,7 @@
 const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2010 Tony Finch (dot@dotat.at)\n",
     "@(#) Latest version available from http://dotat.at/prog/unifdef\n",
-    "@(#) $dotat: unifdef/unifdef.c,v 1.195 2010/01/19 20:33:00 fanf2 Exp $",
+    "@(#) $dotat: unifdef/unifdef.c,v 1.196 2010/01/20 00:48:26 fanf2 Exp $",
 };
 
 /* types of input lines: */
@@ -312,6 +312,7 @@ main(int argc, char *argv[])
 		input = stdin;
 	}
 	if (ofilename == NULL) {
+		ofilename = "[stdout]";
 		output = stdout;
 	} else {
 		struct stat ist, ost;
@@ -579,7 +580,7 @@ static void
 closeout(void)
 {
 	if (fclose(output) == EOF) {
-		warn("couldn't write to output");
+		warn("couldn't write to %s", ofilename);
 		if (overwriting) {
 			unlink(tempname);
 			errx(2, "%s unchanged", filename);
