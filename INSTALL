@@ -11,8 +11,7 @@ variables.
 
 Non-portable dependencies:
 
-This program requires the BSD strlcpy() and err.h functions,
-and C99 stdbool.h.
+This program requires the BSD err.h functions, and C99 stdbool.h.
 
 
-$dotat: unifdef/INSTALL,v 1.1 2010/01/15 18:33:05 fanf2 Exp $
+$dotat: unifdef/INSTALL,v 1.2 2010/02/19 16:31:08 fanf2 Exp $

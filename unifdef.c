@@ -59,7 +59,7 @@
 const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2010 Tony Finch (dot@dotat.at)\n",
     "@(#) Latest version available from http://dotat.at/prog/unifdef\n",
-    "@(#) $dotat: unifdef/unifdef.c,v 1.196 2010/01/20 00:48:26 fanf2 Exp $",
+    "@(#) $dotat: unifdef/unifdef.c,v 1.197 2010/02/19 16:31:08 fanf2 Exp $",
 };
 
 /* types of input lines: */
@@ -188,6 +188,10 @@ static char             tempname[FILENAME_MAX];	/* used when overwriting */
 
 static char             tline[MAXLINE+EDITSLOP];/* input buffer plus space */
 static char            *keyword;		/* used for editing #elif's */
+
+static const char      *newline;		/* input file format */
+static const char       newline_unix[] = "\n";
+static const char       newline_crlf[] = "\r\n";
 
 static Comment_state    incomment;		/* comment parser state */
 static Line_state       linestate;		/* #if line parser state */
@@ -336,7 +340,8 @@ main(int argc, char *argv[])
 				    "%.*s/" TEMPLATE,
 				    (int)(dirsep - ofilename), ofilename);
 			else
-				strlcpy(tempname, TEMPLATE, sizeof(tempname));
+				snprintf(tempname, sizeof(tempname),
+				    TEMPLATE);
 			ofd = mkstemp(tempname);
 			if (ofd != -1)
 				output = fdopen(ofd, "w+");
@@ -429,9 +434,9 @@ static void Itrue (void) { Ftrue();  ignoreon(); }
 static void Ifalse(void) { Ffalse(); ignoreon(); }
 /* edit this line */
 static void Mpass (void) { strncpy(keyword, "if  ", 4); Pelif(); }
-static void Mtrue (void) { keywordedit("else\n");  state(IS_TRUE_MIDDLE); }
-static void Melif (void) { keywordedit("endif\n"); state(IS_FALSE_TRAILER); }
-static void Melse (void) { keywordedit("endif\n"); state(IS_FALSE_ELSE); }
+static void Mtrue (void) { keywordedit("else");  state(IS_TRUE_MIDDLE); }
+static void Melif (void) { keywordedit("endif"); state(IS_FALSE_TRAILER); }
+static void Melse (void) { keywordedit("endif"); state(IS_FALSE_ELSE); }
 
 static state_fn * const trans_table[IS_COUNT][LT_COUNT] = {
 /* IS_OUTSIDE */
@@ -497,7 +502,8 @@ ignoreon(void)
 static void
 keywordedit(const char *replacement)
 {
-	strlcpy(keyword, replacement, tline + sizeof(tline) - keyword);
+	snprintf(keyword, tline + sizeof(tline) - keyword,
+	    "%s%s", replacement, newline);
 	print();
 }
 static void
@@ -532,20 +538,20 @@ flushline(bool keep)
 	if (symlist)
 		return;
 	if (keep ^ complement) {
-		bool blankline = tline[strspn(tline, " \t\n")] == '\0';
+		bool blankline = tline[strspn(tline, " \t\r\n")] == '\0';
 		if (blankline && compblank && blankcount != blankmax) {
 			delcount += 1;
 			blankcount += 1;
 		} else {
 			if (lnnum && delcount > 0)
-				printf("#line %d\n", linenum);
+				printf("#line %d%s", linenum, newline);
 			fputs(tline, output);
 			delcount = 0;
 			blankmax = blankcount = blankline ? blankcount + 1 : 0;
 		}
 	} else {
 		if (lnblank)
-			putc('\n', output);
+			fputs(newline, output);
 		exitstat = 1;
 		delcount += 1;
 		blankcount = 0;
@@ -623,6 +629,12 @@ parseline(void)
 
 	if (fgets(tline, MAXLINE, input) == NULL)
 		return (LT_EOF);
+	if (newline == NULL) {
+		if (strrchr(tline, '\n') == strrchr(tline, '\r') + 1)
+			newline = newline_crlf;
+		else
+			newline = newline_unix;
+	}
 	retval = LT_PLAIN;
 	wascomment = incomment;
 	cp = skipcomment(tline);
@@ -638,7 +650,8 @@ parseline(void)
 		cp = skipsym(cp);
 		kwlen = cp - keyword;
 		/* no way can we deal with a continuation inside a keyword */
-		if (strncmp(cp, "\\\n", 2) == 0)
+		if (strncmp(cp, "\\\r\n", 3) == 0 ||
+		    strncmp(cp, "\\\n", 2) == 0)
 			Eioccc();
 		if (strlcmp("ifdef", keyword, kwlen) == 0 ||
 		    strlcmp("ifndef", keyword, kwlen) == 0) {
@@ -689,9 +702,8 @@ parseline(void)
 			size_t len = cp - tline;
 			if (fgets(tline + len, MAXLINE - len, input) == NULL) {
 				/* append the missing newline */
-				tline[len+0] = '\n';
-				tline[len+1] = '\0';
-				cp++;
+				strcpy(tline + len, newline);
+				cp += strlen(newline);
 				linestate = LS_START;
 			} else {
 				linestate = LS_DIRTY;
@@ -947,11 +959,16 @@ skipcomment(const char *cp)
 	}
 	while (*cp != '\0')
 		/* don't reset to LS_START after a line continuation */
-		if (strncmp(cp, "\\\n", 2) == 0)
+		if (strncmp(cp, "\\\r\n", 3) == 0)
+			cp += 3;
+		else if (strncmp(cp, "\\\n", 2) == 0)
 			cp += 2;
 		else switch (incomment) {
 		case NO_COMMENT:
-			if (strncmp(cp, "/\\\n", 3) == 0) {
+			if (strncmp(cp, "/\\\r\n", 4) == 0) {
+				incomment = STARTING_COMMENT;
+				cp += 4;
+			} else if (strncmp(cp, "/\\\n", 3) == 0) {
 				incomment = STARTING_COMMENT;
 				cp += 3;
 			} else if (strncmp(cp, "/*", 2) == 0) {
@@ -971,7 +988,7 @@ skipcomment(const char *cp)
 			} else if (strncmp(cp, "\n", 1) == 0) {
 				linestate = LS_START;
 				cp += 1;
-			} else if (strchr(" \t", *cp) != NULL) {
+			} else if (strchr(" \r\t", *cp) != NULL) {
 				cp += 1;
 			} else
 				return (cp);
@@ -1003,7 +1020,10 @@ skipcomment(const char *cp)
 				cp += 1;
 			continue;
 		case C_COMMENT:
-			if (strncmp(cp, "*\\\n", 3) == 0) {
+			if (strncmp(cp, "*\\\r\n", 4) == 0) {
+				incomment = FINISHING_COMMENT;
+				cp += 4;
+			} else if (strncmp(cp, "*\\\n", 3) == 0) {
 				incomment = FINISHING_COMMENT;
 				cp += 3;
 			} else if (strncmp(cp, "*/", 2) == 0) {
