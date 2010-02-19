@@ -40,8 +40,11 @@
   </ul>
 </ul>
 
-<p>Please send bug reports and patches to me. I will assume that any
-contributions are under
+<p>You can subscribe to release announcements via
+<a href="http://freshmeat.net/projects/unifdef">unifdef's freshmeat.net page</a>.</p>
+
+<p>Please send bug reports and patches <a href="mailto:dot@dotat.at">to me</a>.
+I will assume that any contributions are under
 <a href="http://www.freebsd.org/copyright/freebsd-license.html">the two-clause BSD licence</a>,
 as found at the top of <tt><a href="unifdef.c">unifdef.c</a></tt>.
 
@@ -50,7 +53,7 @@ as found at the top of <tt><a href="unifdef.c">unifdef.c</a></tt>.
 <address>
  <tt>unifdef</tt> was written by <a href="http://dotat.at/">Tony Finch</a>
  &lt;<a href="mailto:dot@dotat.at">dot@dotat.at</a>&gt;
- <br><tt>$dotat: unifdef/index.html.in,v 1.7 2010/02/19 16:44:02 fanf2 Exp $</tt>
+ <br><tt>$dotat: unifdef/index.html.in,v 1.8 2010/02/19 17:30:50 fanf2 Exp $</tt>
 </address>
 
 <hr>
