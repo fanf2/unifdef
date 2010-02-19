@@ -59,7 +59,7 @@
 const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2010 Tony Finch (dot@dotat.at)\n",
     "@(#) Latest version available from http://dotat.at/prog/unifdef\n",
-    "@(#) $dotat: unifdef/unifdef.c,v 1.198 2010/02/19 16:37:05 fanf2 Exp $",
+    "@(#) $dotat: unifdef/unifdef.c,v 1.199 2010/02/19 17:15:44 fanf2 Exp $",
 };
 
 /* types of input lines: */
@@ -308,7 +308,7 @@ main(int argc, char *argv[])
 		errx(2, "can only do one file");
 	} else if (argc == 1 && strcmp(*argv, "-") != 0) {
 		filename = *argv;
-		input = fopen(filename, "r");
+		input = fopen(filename, "rb");
 		if (input == NULL)
 			err(2, "can't open %s", filename);
 	} else {
@@ -344,12 +344,12 @@ main(int argc, char *argv[])
 				    TEMPLATE);
 			ofd = mkstemp(tempname);
 			if (ofd != -1)
-				output = fdopen(ofd, "w+");
+				output = fdopen(ofd, "wb+");
 			if (output == NULL)
 				err(2, "can't create temporary file");
 			fchmod(ofd, ist.st_mode & ACCESSPERMS);
 		} else {
-			output = fopen(ofilename, "w");
+			output = fopen(ofilename, "wb");
 			if (output == NULL)
 				err(2, "can't open %s", ofilename);
 		}
