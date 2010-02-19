@@ -59,7 +59,7 @@
 const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2010 Tony Finch (dot@dotat.at)\n",
     "@(#) Latest version available from http://dotat.at/prog/unifdef\n",
-    "@(#) $dotat: unifdef/unifdef.c,v 1.201 2010/02/19 19:46:41 fanf2 Exp $",
+    "@(#) $dotat: unifdef/unifdef.c,v 1.202 2010/02/19 20:08:37 fanf2 Exp $",
 };
 
 /* types of input lines: */
@@ -564,14 +564,11 @@ flushline(bool keep)
 static void
 process(void)
 {
-	Linetype lineval;
-
 	/* When compressing blank lines, act as if the file
 	   is preceded by a large number of blank lines. */
 	blankmax = blankcount = 1000;
 	for (;;) {
-		linenum++;
-		lineval = parseline();
+		Linetype lineval = parseline();
 		trans_table[ifstate[depth]][lineval]();
 		debug("process %s -> %s depth %d",
 		    linetype_name[lineval],
@@ -627,6 +624,7 @@ parseline(void)
 	Linetype retval;
 	Comment_state wascomment;
 
+	linenum++;
 	if (fgets(tline, MAXLINE, input) == NULL)
 		return (LT_EOF);
 	if (newline == NULL) {
