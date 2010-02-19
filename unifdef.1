@@ -30,7 +30,7 @@
 .\" SUCH DAMAGE.
 .\"
 .\"     @(#)unifdef.1	8.2 (Berkeley) 4/1/94
-.\"	$dotat: unifdef/unifdef.1,v 1.64 2010/02/19 17:11:39 fanf2 Exp $
+.\"	$dotat: unifdef/unifdef.1,v 1.65 2010/02/19 20:25:50 fanf2 Exp $
 .\" $FreeBSD: head/usr.bin/unifdef/unifdef.1 204092 2010-02-19 16:54:51Z fanf $
 .\"
 .Dd February 19, 2010
@@ -41,7 +41,7 @@
 .Nd remove preprocessor conditionals from code
 .Sh SYNOPSIS
 .Nm
-.Op Fl BbcdeKknst
+.Op Fl bBcdeKknsSt
 .Op Fl I Ns Ar path
 .Op Fl D Ns Ar sym Ns Op = Ns Ar val
 .Op Fl U Ns Ar sym
@@ -184,17 +184,17 @@ Specify that a symbol is undefined.
 If the same symbol appears in more than one argument,
 the last occurrence dominates.
 .Pp
-.It Fl B
-Compress blank lines around a deleted section.
-Mutually exclusive with the
-.Fl b
-option.
-.Pp
 .It Fl b
 Replace removed lines with blank lines
 instead of deleting them.
 Mutually exclusive with the
 .Fl B
+option.
+.Pp
+.It Fl B
+Compress blank lines around a deleted section.
+Mutually exclusive with the
+.Fl b
 option.
 .Pp
 .It Fl c
@@ -284,6 +284,13 @@ option of
 for creating
 .Nm
 command lines.
+.Pp
+.It Fl S
+Like the
+.Fl s
+option, but the nesting depth of each symbol is also printed.
+This is useful for working out the number of possible combinations
+of interdependent defined/undefined symbols.
 .Pp
 .It Fl t
 Disables parsing for C comments

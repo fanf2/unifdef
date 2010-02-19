@@ -59,7 +59,7 @@
 const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2010 Tony Finch (dot@dotat.at)\n",
     "@(#) Latest version available from http://dotat.at/prog/unifdef\n",
-    "@(#) $dotat: unifdef/unifdef.c,v 1.202 2010/02/19 20:08:37 fanf2 Exp $",
+    "@(#) $dotat: unifdef/unifdef.c,v 1.203 2010/02/19 20:25:50 fanf2 Exp $",
 };
 
 /* types of input lines: */
@@ -171,6 +171,7 @@ static bool             strictlogic;		/* -K: keep ambiguous #ifs */
 static bool             killconsts;		/* -k: eval constant #ifs */
 static bool             lnnum;			/* -n: add #line directives */
 static bool             symlist;		/* -s: output symbol list */
+static bool             symdepth;		/* -S: output symbol depth */
 static bool             text;			/* -t: this is a text file */
 
 static const char      *symname[MAXSYMS];	/* symbol name */
@@ -238,7 +239,7 @@ main(int argc, char *argv[])
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "i:D:U:I:o:BbcdeKklnst")) != -1)
+	while ((opt = getopt(argc, argv, "i:D:U:I:o:bBcdeKklnsSt")) != -1)
 		switch (opt) {
 		case 'i': /* treat stuff controlled by these symbols as text */
 			/*
@@ -260,15 +261,14 @@ main(int argc, char *argv[])
 		case 'U': /* undef a symbol */
 			addsym(false, false, optarg);
 			break;
-		case 'I':
-			/* no-op for compatibility with cpp */
-			break;
-		case 'B': /* compress blank lines around removed section */
-			compblank = true;
+		case 'I': /* no-op for compatibility with cpp */
 			break;
 		case 'b': /* blank deleted lines instead of omitting them */
 		case 'l': /* backwards compatibility */
 			lnblank = true;
+			break;
+		case 'B': /* compress blank lines around removed section */
+			compblank = true;
 			break;
 		case 'c': /* treat -D as -U and vice versa */
 			complement = true;
@@ -293,6 +293,9 @@ main(int argc, char *argv[])
 			break;
 		case 's': /* only output list of symbols that control #ifs */
 			symlist = true;
+			break;
+		case 'S': /* list symbols with their nesting depth */
+			symlist = symdepth = true;
 			break;
 		case 't': /* don't parse C comments */
 			text = true;
@@ -1105,6 +1108,8 @@ findsym(const char *str)
 	if (cp == str)
 		return (-1);
 	if (symlist) {
+		if (symdepth)
+			printf("%3d ", depth);
 		printf("%.*s\n", (int)(cp-str), str);
 		/* we don't care about the value of the symbol */
 		return (0);
