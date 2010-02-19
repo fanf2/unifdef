@@ -28,6 +28,7 @@
  <li>View source:
   <ul>
    <li><a href="Changelog">Changelog</a></li>
+   <li><a href="INSTALL">INSTALL</a></li>
    <li><a href="Makefile">Makefile</a></li>
    <li><a href="README">README</a></li>
    <li><a href="release.sh">release.sh</a></li>
@@ -49,7 +50,7 @@ as found at the top of <tt><a href="unifdef.c">unifdef.c</a></tt>.
 <address>
  <tt>unifdef</tt> was written by <a href="http://dotat.at/">Tony Finch</a>
  &lt;<a href="mailto:dot@dotat.at">dot@dotat.at</a>&gt;
- <br><tt>$dotat: unifdef/index.html.in,v 1.6 2009/11/27 14:34:09 fanf2 Exp $</tt>
+ <br><tt>$dotat: unifdef/index.html.in,v 1.7 2010/02/19 16:44:02 fanf2 Exp $</tt>
 </address>
 
 <hr>
