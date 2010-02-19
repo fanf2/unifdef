@@ -59,7 +59,7 @@
 const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2010 Tony Finch (dot@dotat.at)\n",
     "@(#) Latest version available from http://dotat.at/prog/unifdef\n",
-    "@(#) $dotat: unifdef/unifdef.c,v 1.199 2010/02/19 17:15:44 fanf2 Exp $",
+    "@(#) $dotat: unifdef/unifdef.c,v 1.200 2010/02/19 18:35:26 fanf2 Exp $",
 };
 
 /* types of input lines: */
@@ -157,6 +157,10 @@ static char const * const linestate_name[] = {
  * For temporary filenames
  */
 #define TEMPLATE        "unifdef.XXXXXX"
+
+#ifndef ACCESSPERMS
+#define ACCESSPERMS (S_IRWXU|S_IRWXG|S_IRWXO)
+#endif
 
 /*
  * Globals.
