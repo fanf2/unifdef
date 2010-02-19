@@ -1,1 +1,1 @@
-../unifdef -DF3=1 crlf.c
+../unifdef -DF3 crlf.c

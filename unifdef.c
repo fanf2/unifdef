@@ -59,7 +59,7 @@
 const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2010 Tony Finch (dot@dotat.at)\n",
     "@(#) Latest version available from http://dotat.at/prog/unifdef\n",
-    "@(#) $dotat: unifdef/unifdef.c,v 1.197 2010/02/19 16:31:08 fanf2 Exp $",
+    "@(#) $dotat: unifdef/unifdef.c,v 1.198 2010/02/19 16:37:05 fanf2 Exp $",
 };
 
 /* types of input lines: */
@@ -1144,7 +1144,7 @@ addsym(bool ignorethis, bool definethis, char *sym)
 			value[symind] = val+1;
 			*val = '\0';
 		} else if (*val == '\0')
-			value[symind] = "";
+			value[symind] = "1";
 		else
 			usage();
 	} else {
