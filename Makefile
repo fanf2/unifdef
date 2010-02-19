@@ -1,4 +1,4 @@
-# $dotat: unifdef/Makefile,v 1.18 2010/01/15 18:37:39 fanf2 Exp $
+# $dotat: unifdef/Makefile,v 1.19 2010/02/19 20:43:13 fanf2 Exp $
 
 prefix =	${HOME}
 bindir =	${prefix}/bin
@@ -14,7 +14,7 @@ all: unifdef unifdef.txt
 unifdef: unifdef.c
 
 unifdef.txt: unifdef.1
-	nroff -Tascii -man unifdef.1 | sed -e 's/.//g' >unifdef.txt
+	nroff -Tascii -mdoc unifdef.1 | sed -e 's/.//g' >unifdef.txt
 
 test: unifdef
 	./runtests.sh tests
