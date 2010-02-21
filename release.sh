@@ -1,6 +1,6 @@
 #!/bin/sh -ex
 #
-# $dotat: unifdef/release.sh,v 1.14 2010/02/21 16:53:20 fanf2 Exp $
+# $dotat: unifdef/release.sh,v 1.15 2010/02/21 16:55:04 fanf2 Exp $
 
 DISTFILES="
 	Changelog
@@ -21,7 +21,7 @@ VERSION=$(perl -ne '$sum += $_ if s/.*\$(dotat): \S+ 1[.](\d+) .*/$2/; END { pri
 UNIFDEF=unifdef-1.$VERSION
 
 make realclean
-make all
+make unifdef.txt
 
 sed "s/unifdef-NNN/$UNIFDEF/g" <index.html.in >index.html
 cvslog >Changelog
