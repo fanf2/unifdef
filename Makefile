@@ -1,4 +1,4 @@
-# $dotat: unifdef/Makefile,v 1.19 2010/02/19 20:43:13 fanf2 Exp $
+# $dotat: unifdef/Makefile,v 1.20 2010/02/21 16:53:20 fanf2 Exp $
 
 prefix =	${HOME}
 bindir =	${prefix}/bin
@@ -19,10 +19,7 @@ unifdef.txt: unifdef.1
 test: unifdef
 	./runtests.sh tests
 
-Changelog: CVS/Entries
-	cvslog >Changelog
-
-release: unifdef unifdef.txt Changelog index.html.in
+release:
 	./release.sh
 
 install: unifdef unifdefall.sh unifdef.1
@@ -36,12 +33,15 @@ install: unifdef unifdefall.sh unifdef.1
 	ln -s unifdef.1  ${man1dest}/unifdefall.1
 
 clean:
-	rm -rf unifdef-*
 	rm -f unifdef unifdef.txt
 	rm -f tests/*.out tests/*.err tests/*.rc
 
 realclean: clean
+	rm -rf unifdef-* unifdef-*.tar.gz
 	rm -f Changelog index.html
-	rm -f *~ .#* *.orig *.core
+	find . -name CVS -prune -o \( \
+		-name '*~' -o -name '.#*' -o \
+		-name '*.orig' -o -name '*.core' \
+		\) -delete                     
 
 # eof
