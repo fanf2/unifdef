@@ -1,6 +1,6 @@
 #!/bin/sh -ex
 #
-# $dotat: unifdef/release.sh,v 1.15 2010/02/21 16:55:04 fanf2 Exp $
+# $dotat: unifdef/release.sh,v 1.16 2010/02/22 18:58:50 fanf2 Exp $
 
 DISTFILES="
 	Changelog
@@ -18,7 +18,7 @@ DISTFILES="
 
 VERSION=$(perl -ne '$sum += $_ if s/.*\$(dotat): \S+ 1[.](\d+) .*/$2/; END { print "$sum\n" }' $DISTFILES)
 
-UNIFDEF=unifdef-1.$VERSION
+UNIFDEF=unifdef-$VERSION
 
 make realclean
 make unifdef.txt
