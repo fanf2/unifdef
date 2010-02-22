@@ -59,7 +59,7 @@
 const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2010 Tony Finch (dot@dotat.at)\n",
     "@(#) Latest version available from http://dotat.at/prog/unifdef\n",
-    "@(#) $dotat: unifdef/unifdef.c,v 1.203 2010/02/19 20:25:50 fanf2 Exp $",
+    "@(#) $dotat: unifdef/unifdef.c,v 1.204 2010/02/22 18:58:30 fanf2 Exp $",
 };
 
 /* types of input lines: */
@@ -204,6 +204,8 @@ static int              delcount;		/* count of deleted lines */
 static unsigned         blankcount;		/* count of blank lines */
 static unsigned         blankmax;		/* maximum recent blankcount */
 static bool             constexpr;		/* constant #if expression */
+static bool             zerosyms = true;	/* to format symdepth output */
+static bool             firstsym;		/* ditto */
 
 static int              exitstat;		/* program exit status */
 
@@ -585,6 +587,8 @@ process(void)
 static void
 closeout(void)
 {
+	if (symdepth && !zerosyms)
+		printf("\n");
 	if (fclose(output) == EOF) {
 		warn("couldn't write to %s", ofilename);
 		if (overwriting) {
@@ -642,6 +646,7 @@ parseline(void)
 	if (linestate == LS_START) {
 		if (*cp == '#') {
 			linestate = LS_HASH;
+			firstsym = true;
 			cp = skipcomment(cp + 1);
 		} else if (*cp != '\0')
 			linestate = LS_DIRTY;
@@ -1108,9 +1113,13 @@ findsym(const char *str)
 	if (cp == str)
 		return (-1);
 	if (symlist) {
-		if (symdepth)
-			printf("%3d ", depth);
-		printf("%.*s\n", (int)(cp-str), str);
+		if (symdepth && firstsym)
+			printf("%s%3d", zerosyms ? "" : "\n", depth);
+		firstsym = zerosyms = false;
+		printf("%s%.*s%s",
+		    symdepth ? " " : "",
+		    (int)(cp-str), str,
+		    symdepth ? "" : "\n");
 		/* we don't care about the value of the symbol */
 		return (0);
 	}
