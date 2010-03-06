@@ -1,5 +1,6 @@
 /* Copyright 2004 Bob Proulx <bob@proulx.com>
-   You may freely use, modify and/or distribute this file. */
+Distributed under the two-clause BSD licence;
+see the COPYING file for details. */
 
 #include <stdio.h>
 #include <stdlib.h>
