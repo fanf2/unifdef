@@ -1,10 +1,6 @@
 #!/bin/sh
 #
-# This was written by Tony Finch <dot@dotat.at>
-# You may do anything with it, at your own risk.
-# http://creativecommons.org/publicdomain/zero/1.0/
-#
-# $dotat: unifdef/runtests.sh,v 1.12 2009/11/27 17:14:32 fanf2 Exp $
+# $dotat: unifdef/runtests.sh,v 1.13 2010/03/06 14:30:26 fanf2 Exp $
 
 ${1:+cd} ${1:-:}
 for cmd in *.sh

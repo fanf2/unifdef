@@ -11,9 +11,9 @@ You can subscribe to release announcements at
 http://freshmeat.net/projects/unifdef
 
 
-Please send bug reports and patches to me. I will assume that any
-contributions are under the two-clause BSD licence, as found at the
-top of unifdef.c
+Please send bug reports and patches to me. Unless you state otherwise,
+I will assume that any contributions are under the two-clause BSD
+licence. See the COPYING file for details.
 
 Thanks to the following people for their contributions:
 
@@ -32,4 +32,4 @@ Ben Hutchings at Solarflare Communications
 Other contributions are listed in the Changelog.
 
 
-$dotat: unifdef/README,v 1.6 2010/02/19 17:30:50 fanf2 Exp $
+$dotat: unifdef/README,v 1.7 2010/03/06 14:30:26 fanf2 Exp $

@@ -28,6 +28,7 @@
  <li>View source:
   <ul>
    <li><a href="Changelog">Changelog</a></li>
+   <li><a href="COPYING">COPYING</a></li>
    <li><a href="INSTALL">INSTALL</a></li>
    <li><a href="Makefile">Makefile</a></li>
    <li><a href="README">README</a></li>
@@ -44,16 +45,16 @@
 <a href="http://freshmeat.net/projects/unifdef">unifdef's freshmeat.net page</a>.</p>
 
 <p>Please send bug reports and patches <a href="mailto:dot@dotat.at">to me</a>.
-I will assume that any contributions are under
-<a href="http://www.freebsd.org/copyright/freebsd-license.html">the two-clause BSD licence</a>,
-as found at the top of <tt><a href="unifdef.c">unifdef.c</a></tt>.
+Unless you state otherwise, I will assume that any contributions
+are under the two-clause BSD licence.
+See the <tt><a href="COPYING">COPYING</a> file for details.</tt>.
 
 <hr>
 
 <address>
  <tt>unifdef</tt> was written by <a href="http://dotat.at/">Tony Finch</a>
  &lt;<a href="mailto:dot@dotat.at">dot@dotat.at</a>&gt;
- <br><tt>$dotat: unifdef/index.html.in,v 1.8 2010/02/19 17:30:50 fanf2 Exp $</tt>
+ <br><tt>$dotat: unifdef/index.html.in,v 1.9 2010/03/06 14:30:26 fanf2 Exp $</tt>
 </address>
 
 <hr>
