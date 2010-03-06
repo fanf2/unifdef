@@ -1,9 +1,10 @@
 #!/bin/sh -ex
 #
-# $dotat: unifdef/release.sh,v 1.17 2010/02/23 12:27:11 fanf2 Exp $
+# $dotat: unifdef/release.sh,v 1.18 2010/03/06 14:40:15 fanf2 Exp $
 
 DISTFILES="
 	Changelog
+	COPYING
 	INSTALL
 	Makefile
 	README
