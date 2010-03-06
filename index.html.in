@@ -47,14 +47,14 @@
 <p>Please send bug reports and patches <a href="mailto:dot@dotat.at">to me</a>.
 Unless you state otherwise, I will assume that any contributions
 are under the two-clause BSD licence.
-See the <tt><a href="COPYING">COPYING</a> file for details.</tt>.
+See the <tt><a href="COPYING">COPYING</a></tt> file for details.</p>
 
 <hr>
 
 <address>
  <tt>unifdef</tt> was written by <a href="http://dotat.at/">Tony Finch</a>
  &lt;<a href="mailto:dot@dotat.at">dot@dotat.at</a>&gt;
- <br><tt>$dotat: unifdef/index.html.in,v 1.9 2010/03/06 14:30:26 fanf2 Exp $</tt>
+ <br><tt>$dotat: unifdef/index.html.in,v 1.10 2010/03/06 14:38:50 fanf2 Exp $</tt>
 </address>
 
 <hr>
