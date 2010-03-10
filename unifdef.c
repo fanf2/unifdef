@@ -59,7 +59,7 @@
 const char * const copyright[] = {
     "@(#) Copyright (c) 2002 - 2010 Tony Finch (dot@dotat.at)\n",
     "@(#) Latest version available from http://dotat.at/prog/unifdef\n",
-    "@(#) $dotat: unifdef/unifdef.c,v 1.204 2010/02/22 18:58:30 fanf2 Exp $",
+    "@(#) $dotat: unifdef/unifdef.c,v 1.205 2010/03/10 17:42:54 fanf2 Exp $",
 };
 
 /* types of input lines: */
@@ -561,6 +561,8 @@ flushline(bool keep)
 		delcount += 1;
 		blankcount = 0;
 	}
+	if (debugging)
+		fflush(output);
 }
 
 /*
@@ -575,8 +577,8 @@ process(void)
 	for (;;) {
 		Linetype lineval = parseline();
 		trans_table[ifstate[depth]][lineval]();
-		debug("process %s -> %s depth %d",
-		    linetype_name[lineval],
+		debug("process line %d %s -> %s depth %d",
+		    linenum, linetype_name[lineval],
 		    ifstate_name[ifstate[depth]], depth);
 	}
 }
@@ -720,7 +722,7 @@ parseline(void)
 		while (*cp != '\0')
 			cp = skipcomment(cp + 1);
 	}
-	debug("parser %s comment %s line",
+	debug("parser line %d state %s comment %s line", linenum,
 	    comment_name[incomment], linestate_name[linestate]);
 	return (retval);
 }
@@ -1164,6 +1166,8 @@ addsym(bool ignorethis, bool definethis, char *sym)
 			usage();
 		value[symind] = NULL;
 	}
+	debug("addsym %s=%s", symname[symind],
+	    value[symind] ? value[symind] : "undef");
 }
 
 /*
