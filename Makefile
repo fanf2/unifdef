@@ -34,7 +34,6 @@ clean:
 	rm -f tests/*.out tests/*.err tests/*.rc
 
 realclean: clean
-	rm -rf unifdef-* unifdef-*.tar.gz
 	rm -f Changelog index.html version.sh
 	find . -name .git -prune -o \( \
 		-name '*~' -o -name '.#*' -o \
@@ -59,12 +58,12 @@ DISTFILES=             \
 
 release: version.sh unifdef.txt Changelog
 	. version.sh; \
-	mkdir $$V; \
-	cp -R ${DISTFILES} $$V; \
-	tar cfz $$V.tar.gz $$V
+	mkdir web/$$V; cp -R ${DISTFILES} web/$$V; \
+	cd web; tar cfz $$V.tar.gz $$V; rm -R $$V
 
 unifdef.txt: unifdef.1
 	nroff -Tascii -mdoc unifdef.1 | sed -e 's/.//g' >unifdef.txt
+	cp unifdef.txt web
 
 Changelog:
 	line="---------------------------------------------------"; \
@@ -73,5 +72,13 @@ Changelog:
 	     /./ && !n { print } \
 	     /./ && n  { print ""; print; n=0 } \
 	     END { print "'$$line'" }' >Changelog
+
+upload:
+	git gc
+	git update-server-info
+	touch .git/git-daemon-export-ok
+	echo "selectively remove #if and #ifdef directives" >.git/description
+	rsync --delete --recursive --links .git/ chiark:public-git/unifdef.git/
+	rsync --delete --recursive --links  web/ chiark:public-html/prog/unifdef/
 
 # eof
