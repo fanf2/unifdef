@@ -42,7 +42,7 @@ clean:
 realclean: clean
 	rm -rf unifdef-* unifdef-*.tar.gz
 	rm -f Changelog index.html version.sh
-	find . -name CVS -prune -o \( \
+	find . -name .git -prune -o \( \
 		-name '*~' -o -name '.#*' -o \
 		-name '*.orig' -o -name '*.core' \
 		\) -delete
