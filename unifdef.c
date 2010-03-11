@@ -56,10 +56,11 @@
 #include <string.h>
 #include <unistd.h>
 
-const char * const copyright[] = {
-    "@(#) $Author: Tony Finch (dot@dotat.at) $\n",
-    "@(#) $URL: http://dotat.at/prog/unifdef $\n",
-};
+const char copyright[] =
+    #include "version.h"
+    "@(#) $Author: Tony Finch (dot@dotat.at) $\n"
+    "@(#) $URL: http://dotat.at/prog/unifdef $\n"
+;
 
 /* types of input lines: */
 typedef enum {

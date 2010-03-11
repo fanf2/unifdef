@@ -11,7 +11,10 @@ man1dest=	${DESTDIR}${man1dir}
 
 all: unifdef unifdef.txt
 
-unifdef: unifdef.c
+unifdef: unifdef.c version.h
+
+version.h version.sh::
+	./get-version.sh
 
 unifdef.txt: unifdef.1
 	nroff -Tascii -mdoc unifdef.1 | sed -e 's/.//g' >unifdef.txt
@@ -33,12 +36,12 @@ install: unifdef unifdefall.sh unifdef.1
 	ln -s unifdef.1  ${man1dest}/unifdefall.1
 
 clean:
-	rm -f unifdef unifdef.txt
+	rm -f unifdef unifdef.txt version.h
 	rm -f tests/*.out tests/*.err tests/*.rc
 
 realclean: clean
 	rm -rf unifdef-* unifdef-*.tar.gz
-	rm -f Changelog index.html
+	rm -f Changelog index.html version.sh
 	find . -name CVS -prune -o \( \
 		-name '*~' -o -name '.#*' -o \
 		-name '*.orig' -o -name '*.core' \
