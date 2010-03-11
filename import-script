@@ -48,6 +48,8 @@ cd combined
 
 git branch -m master FreeBSD
 
+git fetch -v ../admin master:admin
+
 git fetch -v ../dotat-cvs dotat-cvs:remotes/dotat-cvs
 git checkout -b master dotat-cvs
 
