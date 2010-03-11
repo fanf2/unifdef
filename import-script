@@ -1,0 +1,72 @@
+#!/bin/sh
+
+cd ..
+
+echo
+echo importing dotat CVS history
+echo
+
+mkdir dotat-cvs
+cd dotat-cvs
+
+git cvsimport -v -A../admin/authors.cvs -d ~/cvs -o dotat-cvs unifdef
+
+cd ..
+
+# git-cvsimport seems not to require any special metadata...
+
+
+echo
+echo importing FreeBSD svn history
+echo
+
+mkdir FreeBSD-svn
+cd FreeBSD-svn
+
+git svn init --svn-remote=FreeBSD \
+  --rewrite-root=svn://svn.FreeBSD.org/base/head/usr.bin/unifdef \
+        svn+ssh://fanf@svn.FreeBSD.org/base/head/usr.bin/unifdef
+
+git config svn-remote.FreeBSD.fetch :refs/remotes/FreeBSD-svn
+
+git svn fetch -A../admin/authors.svn FreeBSD
+
+git gc
+
+cd ..
+
+# git-svn maintains various specuial settings in .git/config
+# and metadata in .git/svn
+
+
+echo
+echo combining the repositories
+echo
+
+cp -Rp FreeBSD-svn combined
+cd combined
+
+git branch -m master FreeBSD
+
+git fetch -v ../dotat-cvs dotat-cvs:remotes/dotat-cvs
+git checkout -b master dotat-cvs
+
+
+# tag final CVS revision
+
+git tag -F- -a unifdef-2.0 dotat-cvs <<EOM
+The final revision of unifdef from my CVS repository.
+
+This is equivalent to version 1.360
+
+Until a few months ago unifdef didn't have a formal version number,
+other than a collection of CVS revision numbers. The current version
+scheme is only a thin veneer on top of CVS revision numbers, so
+isn't entirely satisfactory.
+
+With the switch to git, I declare that Dave Yost's version was
+unifdef-1 and my version is unifdef-2, though it laboured for
+nearly eight years without realising that.
+EOM
+
+exit 0
