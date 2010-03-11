@@ -230,6 +230,7 @@ static void             state(Ifstate);
 static int              strlcmp(const char *, const char *, size_t);
 static void             unnest(void);
 static void             usage(void);
+static void             version(void);
 
 #define endsym(c) (!isalnum((unsigned char)c) && c != '_')
 
@@ -241,7 +242,7 @@ main(int argc, char *argv[])
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "i:D:U:I:o:bBcdeKklnsSt")) != -1)
+	while ((opt = getopt(argc, argv, "i:D:U:I:o:bBcdeKklnsStV")) != -1)
 		switch (opt) {
 		case 'i': /* treat stuff controlled by these symbols as text */
 			/*
@@ -302,6 +303,8 @@ main(int argc, char *argv[])
 		case 't': /* don't parse C comments */
 			text = true;
 			break;
+		case 'V': /* print version */
+			version();
 		default:
 			usage();
 		}
@@ -361,6 +364,20 @@ main(int argc, char *argv[])
 	}
 	process();
 	abort(); /* bug */
+}
+
+static void
+version(void)
+{
+	const char *c = copyright;
+	for (;;) {
+		while (*++c != '$')
+			if (*c == '\0')
+				exit(0);
+		while (*++c != '$')
+			putc(*c, stderr);
+		putc('\n', stderr);
+	}
 }
 
 static void
