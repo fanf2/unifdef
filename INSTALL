@@ -1,7 +1,8 @@
 unifdef installation instructions
 
 
-To build, type `make`.
+To build, type `make`. You can adjust the compilation options
+using the POSIX standard CFLAGS and LDFLAGS make variables.
 
 To install in your home directory, type `make install`
 or to install in /usr type `make prefix=/usr install`.
