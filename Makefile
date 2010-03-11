@@ -47,7 +47,6 @@ DISTFILES=             \
 	Makefile       \
 	README         \
 	get-version.sh \
-	release.sh     \
 	runtests.sh    \
 	tests          \
 	unifdef.c      \
