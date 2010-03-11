@@ -42,6 +42,6 @@ realclean: clean
 	find . -name CVS -prune -o \( \
 		-name '*~' -o -name '.#*' -o \
 		-name '*.orig' -o -name '*.core' \
-		\) -delete                     
+		\) -delete
 
 # eof
