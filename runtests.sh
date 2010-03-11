@@ -1,6 +1,4 @@
 #!/bin/sh
-#
-# $dotat: unifdef/runtests.sh,v 1.14 2010/03/07 18:11:07 fanf2 Exp $
 
 ${1:+cd} ${1:-:}
 for cmd in *.sh

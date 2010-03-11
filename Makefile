@@ -1,4 +1,4 @@
-# $dotat: unifdef/Makefile,v 1.20 2010/02/21 16:53:20 fanf2 Exp $
+# Makefile for unifdef
 
 prefix =	${HOME}
 bindir =	${prefix}/bin

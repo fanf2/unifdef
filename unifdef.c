@@ -57,9 +57,8 @@
 #include <unistd.h>
 
 const char * const copyright[] = {
-    "@(#) Copyright (c) 2002 - 2010 Tony Finch (dot@dotat.at)\n",
-    "@(#) Latest version available from http://dotat.at/prog/unifdef\n",
-    "@(#) $dotat: unifdef/unifdef.c,v 1.205 2010/03/10 17:42:54 fanf2 Exp $",
+    "@(#) $Author: Tony Finch (dot@dotat.at) $\n",
+    "@(#) $URL: http://dotat.at/prog/unifdef $\n",
 };
 
 /* types of input lines: */

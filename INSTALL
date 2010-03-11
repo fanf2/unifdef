@@ -14,4 +14,4 @@ Non-portable dependencies:
 This program requires the BSD err.h functions, and C99 stdbool.h.
 
 
-$dotat: unifdef/INSTALL,v 1.2 2010/02/19 16:31:08 fanf2 Exp $
+- end -
