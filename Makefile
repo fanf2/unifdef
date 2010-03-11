@@ -75,6 +75,7 @@ Changelog:
 
 upload:
 	git gc
+	git prune
 	git update-server-info
 	touch .git/git-daemon-export-ok
 	echo "selectively remove #if and #ifdef directives" >.git/description
