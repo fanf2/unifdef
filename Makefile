@@ -11,19 +11,13 @@ man1dest=	${DESTDIR}${man1dir}
 
 all: unifdef unifdef.txt
 
+test: unifdef
+	./runtests.sh tests
+
 unifdef: unifdef.c version.h
 
 version.h version.sh::
 	./get-version.sh
-
-unifdef.txt: unifdef.1
-	nroff -Tascii -mdoc unifdef.1 | sed -e 's/.//g' >unifdef.txt
-
-test: unifdef
-	./runtests.sh tests
-
-release:
-	./release.sh
 
 install: unifdef unifdefall.sh unifdef.1
 	: commands
@@ -46,5 +40,38 @@ realclean: clean
 		-name '*~' -o -name '.#*' -o \
 		-name '*.orig' -o -name '*.core' \
 		\) -delete
+
+DISTFILES=             \
+	Changelog      \
+	COPYING        \
+	INSTALL        \
+	Makefile       \
+	README         \
+	get-version.sh \
+	release.sh     \
+	runtests.sh    \
+	tests          \
+	unifdef.c      \
+	unifdef.1      \
+	unifdef.txt    \
+	unifdefall.sh  \
+	version.sh
+
+release: version.sh unifdef.txt Changelog
+	. version.sh; \
+	mkdir $$V; \
+	cp -R ${DISTFILES} $$V; \
+	tar cfz $$V.tar.gz $$V
+
+unifdef.txt: unifdef.1
+	nroff -Tascii -mdoc unifdef.1 | sed -e 's/.//g' >unifdef.txt
+
+Changelog:
+	line="---------------------------------------------------"; \
+	git log --stat --pretty=format:"$$line%n%ai %an <%ae>%n%n%s%n%n%b" |\
+	awk '/^$$/ { n++ } \
+	     /./ && !n { print } \
+	     /./ && n  { print ""; print; n=0 } \
+	     END { print "'$$line'" }' >Changelog
 
 # eof
