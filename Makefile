@@ -34,7 +34,7 @@ clean:
 	rm -f tests/*.out tests/*.err tests/*.rc
 
 realclean: clean
-	rm -f Changelog index.html version.sh
+	[ ! -d .git ] || rm -f Changelog version.sh
 	find . -name .git -prune -o \( \
 		-name '*~' -o -name '.#*' -o \
 		-name '*.orig' -o -name '*.core' \
