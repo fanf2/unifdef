@@ -2,7 +2,7 @@
 
 [ -f version.sh ] || [ -d .git ]
 
-[ -f version.h ] && . version.sh
+[ -f version.sh ] && . version.sh
 
 if [ -d .git ]
 then
@@ -21,12 +21,14 @@ then
 		D="$GD"
 		echo "V=\"$V\""  >version.sh
 		echo "D=\"$D\"" >>version.sh
+		cat version.sh
 		rm -f version.h
 	fi
 fi
 
 if [ ! -f version.h ]
 then
-	echo '"@(#) $Version: '$V' $\n"' >version.h
-	echo '"@(#) $Date: '$D' $\n"'   >>version.h
+	printf '"@(#) $Version: %s $\\n"\n' "$V" >version.h
+	printf '"@(#) $Date: %s $\\n"\n'   "$D" >>version.h
+	cat version.h
 fi
