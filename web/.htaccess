@@ -1,0 +1,11 @@
+RedirectPermanent /prog/unifdef/Changelog     http://dotat.at/cgi/git/unifdef.git?a=log
+RedirectPermanent /prog/unifdef/tests         http://dotat.at/cgi/git/unifdef.git?a=tree;f=tests
+
+RedirectPermanent /prog/unifdef/COPYING       http://dotat.at/cgi/git/unifdef.git?a=blob;f=COPYING
+RedirectPermanent /prog/unifdef/INSTALL       http://dotat.at/cgi/git/unifdef.git?a=blob;f=INSTALL
+RedirectPermanent /prog/unifdef/Makefile      http://dotat.at/cgi/git/unifdef.git?a=blob;f=Makefile
+RedirectPermanent /prog/unifdef/README        http://dotat.at/cgi/git/unifdef.git?a=blob;f=README
+RedirectPermanent /prog/unifdef/runtests.sh   http://dotat.at/cgi/git/unifdef.git?a=blob;f=runtests.sh
+RedirectPermanent /prog/unifdef/unifdef.1     http://dotat.at/cgi/git/unifdef.git?a=blob;f=unifdef.1
+RedirectPermanent /prog/unifdef/unifdef.c     http://dotat.at/cgi/git/unifdef.git?a=blob;f=unifdef.c
+RedirectPermanent /prog/unifdef/unifdefall.sh http://dotat.at/cgi/git/unifdef.git?a=blob;f=unifdefall.sh
