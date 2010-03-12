@@ -1,6 +1,6 @@
-#!/bin/sh -e
+#!/bin/sh
 
-[ -f version.sh ] || [ -d .git ]
+[ ! -f version.sh ] && [ ! -d .git ] && exit 1
 
 [ -f version.sh ] && . version.sh
 
