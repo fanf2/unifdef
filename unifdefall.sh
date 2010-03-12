@@ -42,7 +42,7 @@ esac
 
 basename=$(basename "$0")
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/$basename.XXXXXXXXXX") || exit 2
-trap 'rm -r "$tmp" || exit 1' EXIT
+trap 'rm -r "$tmp" || exit 2' EXIT
 
 export LC_ALL=C
 
