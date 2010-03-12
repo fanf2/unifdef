@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# assuming we are in a directory called "admin"...
+
 cd ..
 
 echo
@@ -23,13 +25,10 @@ echo
 mkdir FreeBSD-svn
 cd FreeBSD-svn
 
-git svn init --svn-remote=FreeBSD \
-  --rewrite-root=svn://svn.FreeBSD.org/base/head/usr.bin/unifdef \
-        svn+ssh://fanf@svn.FreeBSD.org/base/head/usr.bin/unifdef
+git svn init --rewrite-root=svn://svn.FreeBSD.org/base/head/usr.bin/unifdef \
+                   svn+ssh://fanf@svn.FreeBSD.org/base/head/usr.bin/unifdef
 
-git config svn-remote.FreeBSD.fetch :refs/remotes/FreeBSD-svn
-
-git svn fetch -A../admin/authors.svn FreeBSD
+git svn fetch -A../admin/authors.svn
 
 git gc
 
