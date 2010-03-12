@@ -72,13 +72,4 @@ Changelog:
 	     /./ && n  { print ""; print; n=0 } \
 	     END { print "'$$line'" }' >Changelog
 
-upload:
-	git gc
-	git update-server-info
-	git push --all github
-	touch .git/git-daemon-export-ok
-	echo "selectively remove C preprocessor conditionals" >.git/description
-	rsync --delete --recursive --links .git/ chiark:public-git/unifdef.git/
-	rsync --delete --recursive --links  web/ chiark:public-html/prog/unifdef/
-
 # eof
