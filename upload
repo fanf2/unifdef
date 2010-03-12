@@ -1,5 +1,6 @@
 #!/bin/sh -e
 
+make unifdef.txt
 git gc
 git update-server-info
 git push --all github
