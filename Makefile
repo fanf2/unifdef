@@ -9,7 +9,7 @@ bindest=	${DESTDIR}${bindir}
 man1dest=	${DESTDIR}${man1dir}
 
 
-all: unifdef unifdef.txt
+all: unifdef
 
 unifdef: unifdef.c
 unifdef.c: version.h
