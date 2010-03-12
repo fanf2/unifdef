@@ -6,14 +6,14 @@
 
 if [ -d .git ]
 then
-	GV=$(git describe --abbrev=4)
+	GV=$(git describe --abbrev=4 | sed s/-/./g)
 	git update-index -q --refresh
 	if git diff-index --quiet HEAD
 	then
 		GD="$(git show --pretty=format:%ai --quiet HEAD)"
 	else
 		GD="$(date +'%Y-%m-%d %H:%M:%S %z')"
-		GV=$GV-dirty
+		GV=$GV.X
 	fi
 	if [ "$GV $GD" != "$V $D" ]
 	then
