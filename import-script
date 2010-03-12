@@ -1,5 +1,8 @@
 #!/bin/sh
 
+echo this is now obsolete
+exit 1
+
 # assuming we are in a directory called "admin"...
 
 cd ..
