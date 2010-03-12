@@ -11,13 +11,13 @@ man1dest=	${DESTDIR}${man1dir}
 
 all: unifdef unifdef.txt
 
-test: unifdef
-	./runtests.sh tests
-
-unifdef: unifdef.c version.h
-
+unifdef: unifdef.c
+unifdef.c: version.h
 version.h version.sh::
 	./get-version.sh
+
+test: unifdef
+	./runtests.sh tests
 
 install: unifdef unifdefall.sh unifdef.1
 	: commands
