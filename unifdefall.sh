@@ -35,8 +35,8 @@ then
 fi
 
 case "$@" in
-"-d "*)	echo DEBUGGING
-	export debug=-d
+"-d "*)	echo DEBUGGING 1>&2
+	debug=-d
 	shift
 esac
 
@@ -71,7 +71,7 @@ case $debug in
 -d)	for i in ctrl hashdefs alldef undef def script cmd
 	do	echo ==== $i
 		cat "$tmp/$i"
-	done
+	done 1>&2
 esac
 # run the command we just created
 sh "$tmp/cmd" "$@"
