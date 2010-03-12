@@ -74,11 +74,11 @@ Changelog:
 
 upload:
 	git gc
-	git prune
 	git update-server-info
 	touch .git/git-daemon-export-ok
 	echo "selectively remove #if and #ifdef directives" >.git/description
 	rsync --delete --recursive --links .git/ chiark:public-git/unifdef.git/
 	rsync --delete --recursive --links  web/ chiark:public-html/prog/unifdef/
+	git push --all github
 
 # eof
