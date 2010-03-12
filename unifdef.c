@@ -383,7 +383,7 @@ version(void)
 static void
 usage(void)
 {
-	fprintf(stderr, "usage: unifdef [-BbcdeKknst] [-Ipath]"
+	fprintf(stderr, "usage: unifdef [-bBcdeKknsStV] [-Ipath]"
 	    " [-Dsym[=val]] [-Usym] [-iDsym[=val]] [-iUsym] ... [file]\n");
 	exit(2);
 }
