@@ -2,6 +2,11 @@ unifdef - selectively remove C preprocessor conditionals
 
 Written by Tony Finch <dot@dotat.at> - http://dotat.at/prog/unifdef/
 
+The unifdef utility selectively processes conditional C preprocessor
+#if and #ifdef directives. It removes from a file both the directives
+and the additional text that they delimit, while otherwise leaving the
+file alone.
+
 Please see the INSTALL file for installation instructions.
 
 Pre-formatted documentation can be found in unifdef.txt
