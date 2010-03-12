@@ -14,7 +14,7 @@ all: unifdef
 unifdef: unifdef.c
 unifdef.c: version.h
 version.h version.sh::
-	./get-version.sh
+	./reversion.sh
 
 test: unifdef
 	./runtests.sh tests
@@ -46,7 +46,7 @@ DISTFILES=             \
 	INSTALL        \
 	Makefile       \
 	README         \
-	get-version.sh \
+	reversion.sh   \
 	runtests.sh    \
 	tests          \
 	unifdef.c      \
