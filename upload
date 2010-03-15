@@ -1,8 +1,7 @@
 #!/bin/sh -e
 
-# for web site
-make unifdef.txt Changelog
-cp unifdef.txt Changelog web
+make unifdef.txt
+cp unifdef.txt web
 
 git gc
 git update-server-info
