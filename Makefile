@@ -70,6 +70,6 @@ Changelog:
 	awk '/^$$/ { n++ } \
 	     /./ && !n { print } \
 	     /./ && n  { print ""; print; n=0 } \
-	     END { print "'$$line'" }' >Changelog
+	     END { print ""; print "'$$line'" }' >Changelog
 
 # eof
