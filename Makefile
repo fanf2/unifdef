@@ -30,10 +30,11 @@ install: unifdef unifdefall.sh unifdef.1
 	ln -s unifdef.1  ${man1dest}/unifdefall.1
 
 clean:
-	rm -f unifdef unifdef.txt version.h
+	rm -f unifdef version.h
 	rm -f tests/*.out tests/*.err tests/*.rc
 
 realclean: clean
+	rm -f unifdef.txt
 	[ ! -d .git ] || rm -f Changelog version.sh
 	find . -name .git -prune -o \( \
 		-name '*~' -o -name '.#*' -o \
@@ -62,7 +63,6 @@ release: version.sh unifdef.txt Changelog
 
 unifdef.txt: unifdef.1
 	nroff -Tascii -mdoc unifdef.1 | sed -e 's/.//g' >unifdef.txt
-	cp unifdef.txt web
 
 Changelog:
 	line="---------------------------------------------------"; \
