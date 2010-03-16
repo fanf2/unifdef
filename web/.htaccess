@@ -1,5 +1,7 @@
-RedirectPermanent /prog/unifdef/Changelog     http://dotat.at/cgi/git/unifdef.git?a=log
-RedirectPermanent /prog/unifdef/tests         http://dotat.at/cgi/git/unifdef.git?a=tree;f=tests
+RedirectMatch permanent /prog/unifdef/tests/(.+)  http://dotat.at/prog/unifdef/testhack/$1
+Redirect      permanent /prog/unifdef/testhack    http://dotat.at/cgi/git/unifdef.git?a=blob;f=tests
+Redirect      permanent /prog/unifdef/tests       http://dotat.at/cgi/git/unifdef.git?a=tree;f=tests
+Redirect      permanent /prog/unifdef/Changelog   http://dotat.at/cgi/git/unifdef.git?a=log
 
 RedirectPermanent /prog/unifdef/COPYING       http://dotat.at/cgi/git/unifdef.git?a=blob;f=COPYING
 RedirectPermanent /prog/unifdef/INSTALL       http://dotat.at/cgi/git/unifdef.git?a=blob;f=INSTALL
