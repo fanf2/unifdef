@@ -35,7 +35,7 @@ clean:
 
 realclean: clean
 	rm -f unifdef.txt
-	[ -d .git ] && rm -f Changelog version.sh
+	[ ! -d .git ] || rm -f Changelog version.sh
 	find . -name .git -prune -o \( \
 		-name '*~' -o -name '.#*' -o \
 		-name '*.orig' -o -name '*.core' \
