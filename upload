@@ -3,7 +3,7 @@
 make unifdef.txt
 cp unifdef.txt web
 
-git gc
+git gc --aggressive
 git update-server-info
 git push --all github
 
