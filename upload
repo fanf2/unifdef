@@ -5,7 +5,7 @@ cp unifdef.txt web
 
 git gc --aggressive
 git update-server-info
-git push --all github
+git push --all --tags github
 
 # for gitweb
 echo "selectively remove C preprocessor conditionals" >.git/description
