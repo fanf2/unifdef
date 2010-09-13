@@ -1,5 +1,7 @@
 #!/bin/sh -e
 
+git checkout admin
+
 git svn fetch -A authors.svn
 
 git checkout FreeBSD
