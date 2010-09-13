@@ -2,7 +2,7 @@
 
 [ ! -f version.sh ] && [ ! -d .git ] && exit 1
 
-[ -f version.sh ] && . version.sh
+[ -f version.sh ] && . ./version.sh
 
 if [ -d .git ]
 then
