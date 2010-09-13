@@ -66,7 +66,7 @@ unifdef.txt: unifdef.1
 
 Changelog:
 	line="---------------------------------------------------"; \
-	git log --stat --pretty=format:"$$line%n%ai %an <%ae>%n%n%s%n%n%b" |\
+	git log --no-merges --stat --pretty=format:"$$line%n%ai %an <%ae>%n%n%s%n%n%b" |\
 	awk '/^$$/ { n++ } \
 	     /./ && !n { print } \
 	     /./ && n  { print ""; print; n=0 } \
