@@ -328,16 +328,10 @@ main(int argc, char *argv[])
 		output = stdout;
 	} else {
 		struct stat ist, ost;
-		memset(&ist, 0, sizeof(ist));
-		memset(&ost, 0, sizeof(ost));
-
-		if (fstat(fileno(input), &ist) != 0)
-			err(2, "can't fstat %s", filename);
-		if (stat(ofilename, &ost) != 0 && errno != ENOENT)
-			warn("can't stat %s", ofilename);
-
-		overwriting = (ist.st_dev == ost.st_dev
-		            && ist.st_ino == ost.st_ino);
+		if (stat(ofilename, &ost) == 0 &&
+		    fstat(fileno(input), &ist) == 0)
+			overwriting = (ist.st_dev == ost.st_dev
+				    && ist.st_ino == ost.st_ino);
 		if (overwriting) {
 			const char *dirsep;
 			int ofd;
