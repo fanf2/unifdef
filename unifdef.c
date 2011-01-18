@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002 - 2010 Tony Finch <dot@dotat.at>
+ * Copyright (c) 2002 - 2011 Tony Finch <dot@dotat.at>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
