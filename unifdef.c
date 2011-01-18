@@ -623,10 +623,10 @@ done(void)
 	if (incomment)
 		error("EOF in comment");
 	closeout();
-	if (overwriting && rename(tempname, filename) == -1) {
+	if (overwriting && rename(tempname, ofilename) == -1) {
 		warn("couldn't rename temporary file");
 		unlink(tempname);
-		errx(2, "%s unchanged", filename);
+		errx(2, "%s unchanged", ofilename);
 	}
 	exit(exitstat);
 }
