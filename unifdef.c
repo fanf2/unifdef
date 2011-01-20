@@ -561,7 +561,7 @@ flushline(bool keep)
 			blankcount += 1;
 		} else {
 			if (lnnum && delcount > 0)
-				printf("#line %d%s", linenum, newline);
+				fprintf(output, "#line %d%s", linenum, newline);
 			fputs(tline, output);
 			delcount = 0;
 			blankmax = blankcount = blankline ? blankcount + 1 : 0;
