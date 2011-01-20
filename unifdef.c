@@ -604,12 +604,12 @@ closeout(void)
 	if (symdepth && !zerosyms)
 		printf("\n");
 	if (fclose(output) == EOF) {
-		warn("couldn't write to %s", ofilename);
 		if (overwriting) {
+			warn("couldn't write to temporary file");
 			unlink(tempname);
 			errx(2, "%s unchanged", ofilename);
 		} else {
-			exit(2);
+			err(2, "couldn't write to %s", ofilename);
 		}
 	}
 }
