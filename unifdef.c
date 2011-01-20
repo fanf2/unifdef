@@ -607,7 +607,7 @@ closeout(void)
 		warn("couldn't write to %s", ofilename);
 		if (overwriting) {
 			unlink(tempname);
-			errx(2, "%s unchanged", filename);
+			errx(2, "%s unchanged", ofilename);
 		} else {
 			exit(2);
 		}
