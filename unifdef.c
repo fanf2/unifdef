@@ -603,7 +603,7 @@ closeout(void)
 {
 	if (symdepth && !zerosyms)
 		printf("\n");
-	if (fclose(output) == EOF) {
+	if (ferror(output) || fclose(output) == EOF) {
 		if (overwriting) {
 			warn("couldn't write to temporary file");
 			unlink(tempname);
@@ -646,8 +646,12 @@ parseline(void)
 	Comment_state wascomment;
 
 	linenum++;
-	if (fgets(tline, MAXLINE, input) == NULL)
-		return (LT_EOF);
+	if (fgets(tline, MAXLINE, input) == NULL) {
+		if (ferror(input))
+			error(strerror(errno));
+		else
+			return (LT_EOF);
+	}
 	if (newline == NULL) {
 		if (strrchr(tline, '\n') == strrchr(tline, '\r') + 1)
 			newline = newline_crlf;
@@ -721,7 +725,9 @@ parseline(void)
 		if (linestate == LS_HASH) {
 			size_t len = cp - tline;
 			if (fgets(tline + len, MAXLINE - len, input) == NULL) {
-				/* append the missing newline */
+				if (ferror(input))
+					error(strerror(errno));
+				/* append the missing newline at eof */
 				strcpy(tline + len, newline);
 				cp += strlen(newline);
 				linestate = LS_START;
