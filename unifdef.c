@@ -548,6 +548,7 @@ state(Ifstate is)
 
 /*
  * Write a line to the output or not, according to command line options.
+ * If writing fails, closeout() will print the error and exit.
  */
 static void
 flushline(bool keep)
@@ -560,21 +561,23 @@ flushline(bool keep)
 			delcount += 1;
 			blankcount += 1;
 		} else {
-			if (lnnum && delcount > 0)
-				fprintf(output, "#line %d%s", linenum, newline);
-			fputs(tline, output);
+			if (lnnum && delcount > 0 &&
+			    fprintf(output, "#line %d%s", linenum, newline) < 0)
+				closeout();
+			if (fputs(tline, output) == EOF)
+				closeout();
 			delcount = 0;
 			blankmax = blankcount = blankline ? blankcount + 1 : 0;
 		}
 	} else {
-		if (lnblank)
-			fputs(newline, output);
+		if (lnblank && fputs(newline, output) == EOF)
+			closeout();
 		exitstat = 1;
 		delcount += 1;
 		blankcount = 0;
 	}
-	if (debugging)
-		fflush(output);
+	if (debugging && fflush(output) == EOF)
+		closeout();
 }
 
 /*
