@@ -312,6 +312,8 @@ main(int argc, char *argv[])
 	argv += optind;
 	if (compblank && lnblank)
 		errx(2, "-B and -b are mutually exclusive");
+	if (symlist && ofilename != NULL)
+		errx(2, "-s and -o are mutually exclusive");
 	if (argc > 1) {
 		errx(2, "can only do one file");
 	} else if (argc == 1 && strcmp(*argv, "-") != 0) {
