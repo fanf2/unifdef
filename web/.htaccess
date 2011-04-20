@@ -11,3 +11,5 @@ RedirectPermanent /prog/unifdef/runtests.sh   http://dotat.at/cgi/git/unifdef.gi
 RedirectPermanent /prog/unifdef/unifdef.1     http://dotat.at/cgi/git/unifdef.git?a=blob;f=unifdef.1
 RedirectPermanent /prog/unifdef/unifdef.c     http://dotat.at/cgi/git/unifdef.git?a=blob;f=unifdef.c
 RedirectPermanent /prog/unifdef/unifdefall.sh http://dotat.at/cgi/git/unifdef.git?a=blob;f=unifdefall.sh
+
+RemoveEncoding .gz
