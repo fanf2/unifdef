@@ -1,1 +1,1 @@
-../unifdef -UBAR if1.c
+unifdef -UBAR if1.c

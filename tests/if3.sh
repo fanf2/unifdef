@@ -1,1 +1,1 @@
-../unifdef -DFOO=1 -DFOOB=42 -UBAR if3.c
+unifdef -DFOO=1 -DFOOB=42 -UBAR if3.c

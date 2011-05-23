@@ -1,1 +1,1 @@
-../unifdef -B -DFOO3 blank3d.c
+unifdef -B -DFOO3 blank3d.c

@@ -1,1 +1,1 @@
-../unifdef -B -UFOO2 blank2u.c
+unifdef -B -UFOO2 blank2u.c

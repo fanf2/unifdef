@@ -1,1 +1,1 @@
-../unifdef -DF4 if6.c
+unifdef -DF4 if6.c

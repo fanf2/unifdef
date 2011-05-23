@@ -1,1 +1,1 @@
-../unifdef -k if2-k.c
+unifdef -k if2-k.c
