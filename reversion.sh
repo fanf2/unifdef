@@ -1,6 +1,10 @@
 #!/bin/sh
 
-[ ! -f version.sh ] && [ ! -d .git ] && exit 1
+if [ ! -f version.sh ] && [ ! -d .git ]
+then
+	echo Your copy of unifdef is incomplete 1>&2
+	exit 1
+fi
 
 [ -f version.sh ] && . ./version.sh
 
@@ -17,11 +21,11 @@ then
 	fi
 	if [ "$GV $GD" != "$V $D" ]
 	then
+		echo "version $V" 1>&2
 		V="$GV"
 		D="$GD"
 		echo "V=\"$V\""  >version.sh
 		echo "D=\"$D\"" >>version.sh
-		cat version.sh
 		rm -f version.h
 	fi
 fi
@@ -30,5 +34,4 @@ if [ ! -f version.h ]
 then
 	printf '"@(#) $Version: %s $\\n"\n' "$V" >version.h
 	printf '"@(#) $Date: %s $\\n"\n'   "$D" >>version.h
-	cat version.h
 fi
