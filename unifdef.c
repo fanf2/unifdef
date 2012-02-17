@@ -154,11 +154,6 @@ static char const * const linestate_name[] = {
 #define	EDITSLOP        10
 
 /*
- * For temporary filenames
- */
-#define TEMPLATE        "unifdef.XXXXXX"
-
-/*
  * Globals.
  */
 
@@ -166,6 +161,7 @@ static bool             compblank;		/* -B: compress blank lines */
 static bool             lnblank;		/* -b: blank deleted lines */
 static bool             complement;		/* -c: do the complement */
 static bool             debugging;		/* -d: debugging reports */
+static bool             inplace;		/* -m: modify in place */
 static bool             iocccok;		/* -e: fewer IOCCC errors */
 static bool             strictlogic;		/* -K: keep ambiguous #ifs */
 static bool             killconsts;		/* -k: eval constant #ifs */
@@ -184,8 +180,8 @@ static const char      *filename;		/* input file name */
 static int              linenum;		/* current line number */
 static FILE            *output;			/* output file pointer */
 static const char      *ofilename;		/* output file name */
-static bool             overwriting;		/* output overwrites input */
-static char             tempname[FILENAME_MAX];	/* used when overwriting */
+static const char      *backext;		/* backup extension */
+static char            *tempname;		/* avoid splatting input */
 
 static char             tline[MAXLINE+EDITSLOP];/* input buffer plus space */
 static char            *keyword;		/* used for editing #elif's */
@@ -204,12 +200,14 @@ static int              delcount;		/* count of deleted lines */
 static unsigned         blankcount;		/* count of blank lines */
 static unsigned         blankmax;		/* maximum recent blankcount */
 static bool             constexpr;		/* constant #if expression */
-static bool             zerosyms = true;	/* to format symdepth output */
+static bool             zerosyms;		/* to format symdepth output */
 static bool             firstsym;		/* ditto */
 
 static int              exitstat;		/* program exit status */
 
 static void             addsym(bool, bool, char *);
+static char            *astrcat(const char *, const char *);
+static void             cleantemp(void);
 static void             closeout(void);
 static void             debug(const char *, ...);
 static void             done(void);
@@ -223,6 +221,7 @@ static void             ignoreon(void);
 static void             keywordedit(const char *);
 static void             nest(void);
 static void             process(void);
+static void             processinout(const char *, const char *);
 static const char      *skipargs(const char *);
 static const char      *skipcomment(const char *);
 static const char      *skipsym(const char *);
@@ -242,7 +241,7 @@ main(int argc, char *argv[])
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "i:D:U:I:o:bBcdeKklnsStV")) != -1)
+	while ((opt = getopt(argc, argv, "i:D:U:I:M:o:bBcdeKklmnsStV")) != -1)
 		switch (opt) {
 		case 'i': /* treat stuff controlled by these symbols as text */
 			/*
@@ -288,6 +287,13 @@ main(int argc, char *argv[])
 		case 'k': /* process constant #ifs */
 			killconsts = true;
 			break;
+		case 'm': /* modify in place */
+			inplace = true;
+			break;
+		case 'M': /* modify in place and keep backup */
+			inplace = true;
+			backext = optarg;
+			break;
 		case 'n': /* add #line directive after deleted lines */
 			lnnum = true;
 			break;
@@ -312,55 +318,80 @@ main(int argc, char *argv[])
 	argv += optind;
 	if (compblank && lnblank)
 		errx(2, "-B and -b are mutually exclusive");
-	if (symlist && ofilename != NULL)
-		errx(2, "-s and -o are mutually exclusive");
-	if (argc > 1) {
-		errx(2, "can only do one file");
-	} else if (argc == 1 && strcmp(*argv, "-") != 0) {
-		filename = *argv;
-		input = fopen(filename, "rb");
-		if (input == NULL)
-			err(2, "can't open %s", filename);
-	} else {
+	if (symlist && (ofilename != NULL || inplace || argc > 1))
+		errx(2, "-s only works with one input file");
+	if (argc > 1 && ofilename != NULL)
+		errx(2, "-o cannot be used with multiple input files");
+	if (argc > 1 && !inplace)
+		errx(2, "multiple input files require -m or -M");
+	if (argc == 0)
+		argc = 1;
+	if (argc == 1 && !inplace && ofilename == NULL)
+		ofilename = "-";
+
+	atexit(cleantemp);
+	if (ofilename != NULL) {
+		processinout(*argv, ofilename);
+		exit(exitstat);
+	}
+	while (argc-- > 0) {
+		processinout(*argv, *argv);
+		argv++;
+	}
+	exit(exitstat);
+}
+
+/*
+ * File logistics.
+ */
+static void
+processinout(const char *ifn, const char *ofn)
+{
+	int ofd;
+
+	if (ifn == NULL || strcmp(ifn, "-") == 0) {
 		filename = "[stdin]";
 		input = stdin;
-	}
-	if (ofilename == NULL) {
-		ofilename = "[stdout]";
-		output = stdout;
 	} else {
-		struct stat ist, ost;
-		if (stat(ofilename, &ost) == 0 &&
-		    fstat(fileno(input), &ist) == 0)
-			overwriting = (ist.st_dev == ost.st_dev
-				    && ist.st_ino == ost.st_ino);
-		if (overwriting) {
-			const char *dirsep;
-			int ofd;
-
-			dirsep = strrchr(ofilename, '/');
-			if (dirsep != NULL)
-				snprintf(tempname, sizeof(tempname),
-				    "%.*s/" TEMPLATE,
-				    (int)(dirsep - ofilename), ofilename);
-			else
-				snprintf(tempname, sizeof(tempname),
-				    TEMPLATE);
-			ofd = mkstemp(tempname);
-			if (ofd != -1)
-				output = fdopen(ofd, "wb+");
-			if (output == NULL)
-				err(2, "can't create temporary file");
-			fchmod(ofd, ist.st_mode & (S_IRWXU|S_IRWXG|S_IRWXO));
-		} else {
-			output = fopen(ofilename, "wb");
-			if (output == NULL)
-				err(2, "can't open %s", ofilename);
-		}
+		filename = ifn;
+		input = fopen(ifn, "rb");
+		if (input == NULL)
+			err(2, "can't open %s", ifn);
 	}
+	if (strcmp(ofn, "-") == 0) {
+		output = stdout;
+		process();
+		return;
+	}
+
+	tempname = astrcat(ofn, ".XXXXXX");
+	ofd = mkstemp(tempname);
+	output = ofd < 0 ? NULL : fdopen(ofd, "wb");
+	if (output == NULL)
+		err(2, "can't create %s", tempname);
+
 	process();
-	abort(); /* bug */
+
+	if (backext != NULL && rename(ofn, astrcat(ofn, backext)) < 0)
+		err(2, "can't rename \"%s\" to \"%s%s\"", ofn, ofn, backext);
+	if (rename(tempname, ofn) < 0)
+		err(2, "can't rename \"%s\" to \"%s\"", tempname, ofn);
+	tempname = NULL;
 }
+
+/*
+ * For cleaning up if there is an error.
+ */
+static void
+cleantemp(void)
+{
+	if (tempname != NULL)
+		unlink(tempname);
+}
+
+/*
+ * Self-identification functions.
+ */
 
 static void
 version(void)
@@ -379,8 +410,8 @@ version(void)
 static void
 usage(void)
 {
-	fprintf(stderr, "usage: unifdef [-bBcdeKknsStV] [-Ipath]"
-	    " [-Dsym[=val]] [-Usym] [-iDsym[=val]] [-iUsym] ... [file]\n");
+	fprintf(stderr, "usage: unifdef [-bBcdeKkmnsStV] [-Mext] [-opath]"
+	    " [-[i]Dsym[=val]] [-[i]Usym] ... [file] ...\n");
 	exit(2);
 }
 
@@ -549,6 +580,18 @@ state(Ifstate is)
 }
 
 /*
+ * The last state transition function. When this is called,
+ * lineval == LT_EOF, so the process() loop will terminate.
+ */
+static void
+done(void)
+{
+	if (incomment)
+		error("EOF in comment");
+	closeout();
+}
+
+/*
  * Write a line to the output or not, according to command line options.
  * If writing fails, closeout() will print the error and exit.
  */
@@ -583,6 +626,19 @@ flushline(bool keep)
 }
 
 /*
+ * Flush the output and handle errors.
+ */
+static void
+closeout(void)
+{
+	/* Tidy up after findsym(). */
+	if (symdepth && !zerosyms)
+		printf("\n");
+	if (ferror(output) || fclose(output) == EOF)
+		err(2, "%s: can't write to output", filename);
+}
+
+/*
  * The driver for the state machine.
  */
 static void
@@ -591,49 +647,15 @@ process(void)
 	/* When compressing blank lines, act as if the file
 	   is preceded by a large number of blank lines. */
 	blankmax = blankcount = 1000;
-	for (;;) {
-		Linetype lineval = parseline();
+	zerosyms = true;
+	Linetype lineval = LT_PLAIN;
+	while (lineval != LT_EOF) {
+		lineval = parseline();
 		trans_table[ifstate[depth]][lineval]();
 		debug("process line %d %s -> %s depth %d",
 		    linenum, linetype_name[lineval],
 		    ifstate_name[ifstate[depth]], depth);
 	}
-}
-
-/*
- * Flush the output and handle errors.
- */
-static void
-closeout(void)
-{
-	if (symdepth && !zerosyms)
-		printf("\n");
-	if (ferror(output) || fclose(output) == EOF) {
-		if (overwriting) {
-			warn("couldn't write to temporary file");
-			unlink(tempname);
-			errx(2, "%s unchanged", ofilename);
-		} else {
-			err(2, "couldn't write to %s", ofilename);
-		}
-	}
-}
-
-/*
- * Clean up and exit.
- */
-static void
-done(void)
-{
-	if (incomment)
-		error("EOF in comment");
-	closeout();
-	if (overwriting && rename(tempname, ofilename) == -1) {
-		warn("couldn't rename temporary file");
-		unlink(tempname);
-		errx(2, "%s unchanged", ofilename);
-	}
-	exit(exitstat);
 }
 
 /*
@@ -1206,6 +1228,23 @@ strlcmp(const char *s, const char *t, size_t n)
 		else
 			++s, ++t;
 	return ((unsigned char)*s);
+}
+
+/*
+ * Concatenate two strings into new memory, checking for failure.
+ */
+static char *
+astrcat(const char *s1, const char *s2)
+{
+	char *s;
+	int len;
+
+	len = 1 + snprintf(NULL, 0, "%s%s", s1, s2);
+	s = malloc(len);
+	if (s == NULL)
+		err(2, "malloc");
+	snprintf(s, len, "%s%s", s1, s2);
+	return (s);
 }
 
 /*

@@ -37,15 +37,14 @@
 .Nd remove preprocessor conditionals from code
 .Sh SYNOPSIS
 .Nm
-.Op Fl bBcdeKknsStV
+.Op Fl bBcdeKkmnsStV
 .Op Fl I Ns Ar path
-.Op Fl D Ns Ar sym Ns Op = Ns Ar val
-.Op Fl U Ns Ar sym
-.Op Fl iD Ns Ar sym Ns Op = Ns Ar val
-.Op Fl iU Ns Ar sym
+.Op Fl [i]D Ns Ar sym Ns Op = Ns Ar val
+.Op Fl [i]U Ns Ar sym
 .Ar ...
 .Op Fl o Ar outfile
-.Op Ar infile
+.Op Fl M Ar backext
+.Op Ar infile ...
 .Nm unifdefall
 .Op Fl I Ns Ar path
 .Ar ...
@@ -262,6 +261,15 @@ because they typically start
 and are used as a kind of comment to sketch out future or past development.
 It would be rude to strip them out, just as it would be for normal comments.
 .Pp
+.It Fl m
+Modify one or more input files in place.
+.Pp
+.It Fl M Ar backext
+Modify input files in place, and keep backups of the original files by
+appending the
+.Ar backext
+to the input filenames.
+.Pp
 .It Fl n
 Add
 .Li #line
@@ -272,17 +280,10 @@ line numbers in the input file.
 .It Fl o Ar outfile
 Write output to the file
 .Ar outfile
-instead of the standard output.
-If
-.Ar outfile
-is the same as the input file,
-the output is written to a temporary file
-which is renamed into place when
-.Nm
-completes successfully.
+instead of the standard output when processing a single file.
 .Pp
 .It Fl s
-Instead of processing the input file as usual,
+Instead of processing an input file as usual,
 this option causes
 .Nm
 to produce a list of symbols that appear in expressions
@@ -321,13 +322,18 @@ Print version details.
 .Pp
 The
 .Nm
-utility copies its output to
-.Em stdout
-and will take its input from
+utility takes its input from
 .Em stdin
-if no
+if there are no
 .Ar file
-argument is given.
+arguments.
+You must use the
+.Fl m
+or
+.Fl M
+options if there are multiple input files.
+You can specify inut from stdin or output to stdout with
+.Ql - .
 .Pp
 The
 .Nm
