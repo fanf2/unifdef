@@ -43,12 +43,8 @@
  *   it possible to handle all "dodgy" directives correctly.
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-
 #include <ctype.h>
 #include <err.h>
-#include <errno.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -675,7 +671,7 @@ parseline(void)
 	linenum++;
 	if (fgets(tline, MAXLINE, input) == NULL) {
 		if (ferror(input))
-			error(strerror(errno));
+			err(2, "can't read %s", filename);
 		else
 			return (LT_EOF);
 	}
@@ -753,7 +749,7 @@ parseline(void)
 			size_t len = cp - tline;
 			if (fgets(tline + len, MAXLINE - len, input) == NULL) {
 				if (ferror(input))
-					error(strerror(errno));
+					err(2, "can't read %s", filename);
 				/* append the missing newline at eof */
 				strcpy(tline + len, newline);
 				cp += strlen(newline);
