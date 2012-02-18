@@ -210,12 +210,13 @@ static void             done(void);
 static void             error(const char *);
 static int              findsym(const char *);
 static void             flushline(bool);
-static Linetype         parseline(void);
+static void             help(void);
 static Linetype         ifeval(const char **);
 static void             ignoreoff(void);
 static void             ignoreon(void);
 static void             keywordedit(const char *);
 static void             nest(void);
+static Linetype         parseline(void);
 static void             process(void);
 static void             processinout(const char *, const char *);
 static const char      *skipargs(const char *);
@@ -237,7 +238,7 @@ main(int argc, char *argv[])
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "i:D:U:I:M:o:bBcdeKklmnsStV")) != -1)
+	while ((opt = getopt(argc, argv, "i:D:U:I:M:o:bBcdehKklmnsStV")) != -1)
 		switch (opt) {
 		case 'i': /* treat stuff controlled by these symbols as text */
 			/*
@@ -277,6 +278,9 @@ main(int argc, char *argv[])
 		case 'e': /* fewer errors from dodgy lines */
 			iocccok = true;
 			break;
+		case 'h':
+			help();
+			break;
 		case 'K': /* keep ambiguous #ifs */
 			strictlogic = true;
 			break;
@@ -305,8 +309,9 @@ main(int argc, char *argv[])
 		case 't': /* don't parse C comments */
 			text = true;
 			break;
-		case 'V': /* print version */
+		case 'V':
 			version();
+			break;
 		default:
 			usage();
 		}
@@ -404,11 +409,50 @@ version(void)
 }
 
 static void
+synopsis(FILE *fp)
+{
+	fprintf(fp,
+	    "usage:	unifdef [-bBcdehKkmnsStV] [-Mext] [-opath] \\\n"
+	    "		[-[i]Dsym[=val]] [-[i]Usym] ... [file] ...\n");
+}
+
+static void
 usage(void)
 {
-	fprintf(stderr, "usage: unifdef [-bBcdeKkmnsStV] [-Mext] [-opath]"
-	    " [-[i]Dsym[=val]] [-[i]Usym] ... [file] ...\n");
+	synopsis(stderr);
 	exit(2);
+}
+
+static void
+help(void)
+{
+	synopsis(stdout);
+	printf(
+	    "	-Dsym=val  define preprocessor symbol with given value\n"
+	    "	-Dsym      define preprocessor symbol with value 1\n"
+	    "	-Usym	   preprocessor symbol is undefined\n"
+	    "	-iDsym=val \\  ignore C strings and comments\n"
+	    "	-iDsym      ) in sections controlled by these\n"
+	    "	-iUsym	   /  preprocessor symbols\n"
+	    "	-b	blank lines instead of deleting them\n"
+	    "	-B	compress blank lines around deleted section\n"
+	    "	-c	complement (invert) keep vs. delete\n"
+	    "	-d	debugging mode\n"
+	    "	-e	ignore multiline preprocessor directives\n"
+	    "	-h	print help\n"
+	    "	-Ipath	extra include file path (ignored)\n"
+	    "	-K	disable && and || short-circuiting\n"
+	    "	-k	process constant #if expressions\n"
+	    "	-Mext	modify in place and keep backups\n"
+	    "	-m	modify input files in place\n"
+	    "	-n	add #line directives to output\n"
+	    "	-opath	output file name\n"
+	    "	-S	list #if control symbols with nesting\n"
+	    "	-s	list #if control symbols\n"
+	    "	-t	ignore C strings and comments\n"
+	    "	-V	print version\n"
+	);
+	exit(0);
 }
 
 /*
