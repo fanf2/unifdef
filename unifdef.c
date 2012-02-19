@@ -88,6 +88,9 @@ static char const * const linetype_name[] = {
 	"PLAIN", "EOF", "ERROR"
 };
 
+#define linetype_if2elif(lt) ((Linetype)(lt - LT_IF + LT_ELIF))
+#define linetype_2dodgy(lt) ((Linetype)(lt + LT_DODGY))
+
 /* state of #if processing */
 typedef enum {
 	IS_OUTSIDE,
@@ -684,11 +687,11 @@ closeout(void)
 static void
 process(void)
 {
+	Linetype lineval = LT_PLAIN;
 	/* When compressing blank lines, act as if the file
 	   is preceded by a large number of blank lines. */
 	blankmax = blankcount = 1000;
 	zerosyms = true;
-	Linetype lineval = LT_PLAIN;
 	while (lineval != LT_EOF) {
 		lineval = parseline();
 		trans_table[ifstate[depth]][lineval]();
@@ -763,7 +766,7 @@ parseline(void)
 		} else if (strlcmp("if", keyword, kwlen) == 0)
 			retval = ifeval(&cp);
 		else if (strlcmp("elif", keyword, kwlen) == 0)
-			retval = ifeval(&cp) - LT_IF + LT_ELIF;
+			retval = linetype_if2elif(ifeval(&cp));
 		else if (strlcmp("else", keyword, kwlen) == 0)
 			retval = LT_ELSE;
 		else if (strlcmp("endif", keyword, kwlen) == 0)
@@ -782,7 +785,7 @@ parseline(void)
 				retval = LT_ELIF;
 		}
 		if (retval != LT_PLAIN && (wascomment || incomment)) {
-			retval += LT_DODGY;
+			retval = linetype_2dodgy(retval);
 			if (incomment)
 				linestate = LS_DIRTY;
 		}
@@ -872,13 +875,15 @@ static eval_fn eval_table, eval_unary;
  * element of the table. Innermost expressions have special non-table-driven
  * handling.
  */
-static const struct ops {
+struct op {
+	const char *str;
+	Linetype (*fn)(int *, Linetype, int, Linetype, int);
+};
+struct ops {
 	eval_fn *inner;
-	struct op {
-		const char *str;
-		Linetype (*fn)(int *, Linetype, int, Linetype, int);
-	} op[5];
-} eval_ops[] = {
+	struct op op[5];
+};
+static const struct ops eval_ops[] = {
 	{ eval_table, { { "||", op_or } } },
 	{ eval_table, { { "&&", op_and } } },
 	{ eval_table, { { "==", op_eq },
@@ -1024,7 +1029,7 @@ eval_table(const struct ops *ops, int *valp, const char **cpp)
 static Linetype
 ifeval(const char **cpp)
 {
-	int ret;
+	Linetype ret;
 	int val = 0;
 
 	debug("eval %s", *cpp);
@@ -1280,7 +1285,7 @@ astrcat(const char *s1, const char *s2)
 	int len;
 
 	len = 1 + snprintf(NULL, 0, "%s%s", s1, s2);
-	s = malloc(len);
+	s = (char *)malloc(len);
 	if (s == NULL)
 		err(2, "malloc");
 	snprintf(s, len, "%s%s", s1, s2);
