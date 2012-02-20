@@ -43,6 +43,9 @@
  *   it possible to handle all "dodgy" directives correctly.
  */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include <ctype.h>
 #include <err.h>
 #include <stdarg.h>
@@ -351,6 +354,7 @@ main(int argc, char *argv[])
 static void
 processinout(const char *ifn, const char *ofn)
 {
+	struct stat st;
 	int ofd;
 
 	if (ifn == NULL || strcmp(ifn, "-") == 0) {
@@ -367,12 +371,20 @@ processinout(const char *ifn, const char *ofn)
 		process();
 		return;
 	}
+	if (stat(ofn, &st) < 0) {
+		output = fopen(ofn, "wb");
+		if (output == NULL)
+			err(2, "can't create %s", ofn);
+		process();
+		return;
+	}
 
 	tempname = astrcat(ofn, ".XXXXXX");
 	ofd = mkstemp(tempname);
 	output = ofd < 0 ? NULL : fdopen(ofd, "wb");
 	if (output == NULL)
 		err(2, "can't create %s", tempname);
+	fchmod(ofd, st.st_mode & (S_IRWXU|S_IRWXG|S_IRWXO));
 
 	process();
 
