@@ -6,7 +6,7 @@ for cmd in *.sh
 do
 	t=${cmd%.sh}
 
-	. ./${cmd} >${t}.out 2>${t}.err
+	sh ./${cmd} >${t}.out 2>${t}.err
 	echo $? >${t}.rc
 
 	ok=true
