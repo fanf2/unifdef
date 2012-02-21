@@ -43,17 +43,7 @@
  *   it possible to handle all "dodgy" directives correctly.
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-
-#include <ctype.h>
-#include <err.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+#include "unifdef.h"
 
 static const char copyright[] =
     #include "version.h"
@@ -355,11 +345,10 @@ static void
 processinout(const char *ifn, const char *ofn)
 {
 	struct stat st;
-	int ofd;
 
 	if (ifn == NULL || strcmp(ifn, "-") == 0) {
 		filename = "[stdin]";
-		input = stdin;
+		input = fbinmode(stdin);
 	} else {
 		filename = ifn;
 		input = fopen(ifn, "rb");
@@ -367,7 +356,7 @@ processinout(const char *ifn, const char *ofn)
 			err(2, "can't open %s", ifn);
 	}
 	if (strcmp(ofn, "-") == 0) {
-		output = stdout;
+		output = fbinmode(stdout);
 		process();
 		return;
 	}
@@ -380,11 +369,9 @@ processinout(const char *ifn, const char *ofn)
 	}
 
 	tempname = astrcat(ofn, ".XXXXXX");
-	ofd = mkstemp(tempname);
-	output = ofd < 0 ? NULL : fdopen(ofd, "wb");
+	output = mktempmode(tempname, st.st_mode);
 	if (output == NULL)
 		err(2, "can't create %s", tempname);
-	fchmod(ofd, st.st_mode & (S_IRWXU|S_IRWXG|S_IRWXO));
 
 	process();
 

@@ -2,8 +2,9 @@ unifdef copyright licence
 -------------------------
 
 All files in this package are distributed under the two-clause BSD
-copyright licence, except for the manual page unifdef.1 which has a
-three-clause BSD copyright licence.
+copyright licence, except for the manual page unifdef.1 and the
+portability support code in the FreeBSD subdirectory, which all have
+a three-clause BSD copyright licence.
 
 Unifdef was derived from software contributed to Berkeley by Dave
 Yost. It was rewritten to support ANSI C by Tony Finch. The original
@@ -15,7 +16,7 @@ Unless otherwise stated, the files in this package are:
 
   Copyright (c) 2002 - 2012 Tony Finch <dot@dotat.at>
 
-unifdefall.sh is
+unifdefall.sh is:
 
   Copyright (c) 2002 - 2010 Tony Finch <dot@dotat.at>
   Copyright (c) 2009 - 2010 Jonathan Nieder <jrnieder@gmail.com>
@@ -47,13 +48,14 @@ The two-clause BSD copyright licence applying to all the above files is:
   OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
   SUCH DAMAGE.
 
-The three-clause BSD copyright licence for the manual page unifdef.1 is
-below. The fourth advertising clause that used to appear between clauses
-2 and 3 was rescinded by the University of California Berkeley in 1999.
+The three-clause BSD copyright licence for the manual page unifdef.1
+and the portability support code from FreeBSD is below. The fourth
+advertising clause that used to appear between clauses 2 and 3 was
+rescinded by the University of California Berkeley in 1999.
 ftp://ftp.cs.berkeley.edu/pub/4bsd/README.Impt.License.Change
 
-  Copyright (c) 1985, 1991, 1993
- 	The Regents of the University of California.  All rights reserved.
+  Copyright (c) 1985 - 1994
+	The Regents of the University of California.  All rights reserved.
   Copyright (c) 2002 - 2012 Tony Finch <dot@dotat.at>.  All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
