@@ -49,7 +49,10 @@ release: ${DISTEXTRA}
 	mkdir -p $$W/tests $$W/FreeBSD $$W/win32; \
 	for f in $$DISTFILES ${DISTEXTRA}; \
 	do cp $$f $$W/$$f; done; \
-	cd web; tar cfz $$V.tar.gz $$V; rm -R $$V
+	cd web; \
+	zip -qr $$V.zip $$V; \
+	tar cfz $$V.tar.gz $$V; \
+	rm -R $$V
 
 unifdef.txt: unifdef.1
 	nroff -Tascii -mdoc unifdef.1 | sed -e 's/.//g' >unifdef.txt
