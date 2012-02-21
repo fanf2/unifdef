@@ -407,7 +407,7 @@ static void
 cleantemp(void)
 {
 	if (tempname != NULL)
-		unlink(tempname);
+		remove(tempname);
 }
 
 /*
