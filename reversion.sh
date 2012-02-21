@@ -21,7 +21,8 @@ then
 	fi
 	if [ "$GV $GD" != "$V $D" ]
 	then
-		echo "version $V" 1>&2
+		echo "version $V $D"   1>&2
+		echo "     -> $GV $GD" 1>&2
 		V="$GV"
 		D="$GD"
 		echo "V=\"$V\""  >version.sh

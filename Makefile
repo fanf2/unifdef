@@ -57,7 +57,7 @@ release: ${DISTEXTRA}
 unifdef.txt: unifdef.1
 	nroff -Tascii -mdoc unifdef.1 | sed -e 's/.//g' >unifdef.txt
 
-Changelog:
+Changelog: version.h
 	line="---------------------------------------------------"; \
 	git log --no-merges --stat --pretty=format:"$$line%n%ai %an <%ae>%n%n%s%n%n%b" |\
 	awk '/^$$/ { n++ } \
