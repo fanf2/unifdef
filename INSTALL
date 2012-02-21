@@ -1,7 +1,7 @@
 unifdef installation instructions
 
 
-To build, type `make`. You can adjust the compilation options
+To build on unix, type `make`. You can adjust the compilation options
 using the POSIX standard CFLAGS and LDFLAGS make variables.
 
 To install in your home directory, type `make install`
@@ -9,10 +9,12 @@ or to install in /usr type `make prefix=/usr install`.
 See the start of the Makefile for the install location
 variables.
 
+We assume unix provides the BSD err.h functions and C99 stdbool.h.
 
-Non-portable dependencies:
-
-This program requires the BSD err.h functions, and C99 stdbool.h.
+The FreeBSD subdirectory has copies of err.c and getopt.c for systems
+that don't have them built in. The win32 subdirectory contains build
+files for Visual Studio 2010 which make use of the FreeBSD code plus
+some other portability wrappers.
 
 
 - end -

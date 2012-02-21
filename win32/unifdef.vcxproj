@@ -76,6 +76,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\version.h" />
     <ClInclude Include="..\win32\unifdef.h" />
   </ItemGroup>
   <ItemGroup>

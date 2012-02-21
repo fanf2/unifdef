@@ -41,24 +41,14 @@ realclean: clean
 		-name '*.orig' -o -name '*.core' \
 		\) -delete
 
-DISTFILES=             \
-	Changelog      \
-	COPYING        \
-	INSTALL        \
-	Makefile       \
-	README         \
-	reversion.sh   \
-	runtests.sh    \
-	tests          \
-	unifdef.c      \
-	unifdef.1      \
-	unifdef.txt    \
-	unifdefall.sh  \
-	version.sh
+DISTEXTRA= version.h version.sh unifdef.txt Changelog
 
-release: version.sh unifdef.txt Changelog
-	. version.sh; \
-	mkdir web/$$V; cp -R ${DISTFILES} web/$$V; \
+release: ${DISTEXTRA}
+	. version.sh; W=web/$$V; \
+	DISTFILES=$$(git ls-files | egrep -v '^web/|^[.]git'); \
+	mkdir -p $$W/tests $$W/FreeBSD $$W/win32; \
+	for f in $$DISTFILES ${DISTEXTRA}; \
+	do cp $$f $$W/$$f; done; \
 	cd web; tar cfz $$V.tar.gz $$V; rm -R $$V
 
 unifdef.txt: unifdef.1
