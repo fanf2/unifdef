@@ -388,10 +388,15 @@ processinout(const char *ifn, const char *ofn)
 
 	process();
 
-	if (backext != NULL && rename(ofn, astrcat(ofn, backext)) < 0)
-		err(2, "can't rename \"%s\" to \"%s%s\"", ofn, ofn, backext);
+	if (backext != NULL) {
+		char *backname = astrcat(ofn, backext);
+		if (rename(ofn, backname) < 0)
+			err(2, "can't rename \"%s\" to \"%s%s\"", ofn, ofn, backext);
+		free(backname);
+	}
 	if (rename(tempname, ofn) < 0)
 		err(2, "can't rename \"%s\" to \"%s\"", tempname, ofn);
+	free(tempname);
 	tempname = NULL;
 }
 
