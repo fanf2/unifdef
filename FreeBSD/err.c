@@ -27,50 +27,10 @@
  * SUCH DAMAGE.
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)err.c	8.1 (Berkeley) 6/4/93";
-#endif /* LIBC_SCCS and not lint */
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/lib/libc/gen/err.c 177893 2008-04-03 20:36:44Z imp $");
-
-#include "namespace.h"
-#include <err.h>
-#include <errno.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "un-namespace.h"
-
-#include "libc_private.h"
-
-static FILE *err_file; /* file to use for error output */
-static void (*err_exit)(int);
-
-/*
- * This is declared to take a `void *' so that the caller is not required
- * to include <stdio.h> first.  However, it is really a `FILE *', and the
- * manual page documents it as such.
- */
-void
-err_set_file(void *fp)
-{
-	if (fp)
-		err_file = fp;
-	else
-		err_file = stderr;
-}
+#include "unifdef.h"
 
 void
-err_set_exit(void (*ef)(int))
-{
-	err_exit = ef;
-}
-
-__weak_reference(_err, err);
-
-void
-_err(int eval, const char *fmt, ...)
+err(int eval, const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
@@ -79,10 +39,7 @@ _err(int eval, const char *fmt, ...)
 }
 
 void
-verr(eval, fmt, ap)
-	int eval;
-	const char *fmt;
-	va_list ap;
+verr(int eval, const char *fmt, va_list ap)
 {
 	verrc(eval, errno, fmt, ap);
 }
@@ -99,16 +56,12 @@ errc(int eval, int code, const char *fmt, ...)
 void
 verrc(int eval, int code, const char *fmt, va_list ap)
 {
-	if (err_file == 0)
-		err_set_file((FILE *)0);
-	fprintf(err_file, "%s: ", _getprogname());
+	fprintf(stderr, "%s: ", _getprogname());
 	if (fmt != NULL) {
-		vfprintf(err_file, fmt, ap);
-		fprintf(err_file, ": ");
+		vfprintf(stderr, fmt, ap);
+		fprintf(stderr, ": ");
 	}
-	fprintf(err_file, "%s\n", strerror(code));
-	if (err_exit)
-		err_exit(eval);
+	fprintf(stderr, "%s\n", strerror(code));
 	exit(eval);
 }
 
@@ -124,21 +77,15 @@ errx(int eval, const char *fmt, ...)
 void
 verrx(int eval, const char *fmt, va_list ap)
 {
-	if (err_file == 0)
-		err_set_file((FILE *)0);
-	fprintf(err_file, "%s: ", _getprogname());
+	fprintf(stderr, "%s: ", _getprogname());
 	if (fmt != NULL)
-		vfprintf(err_file, fmt, ap);
-	fprintf(err_file, "\n");
-	if (err_exit)
-		err_exit(eval);
+		vfprintf(stderr, fmt, ap);
+	fprintf(stderr, "\n");
 	exit(eval);
 }
 
-__weak_reference(_warn, warn);
-
 void
-_warn(const char *fmt, ...)
+warn(const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
@@ -164,14 +111,12 @@ warnc(int code, const char *fmt, ...)
 void
 vwarnc(int code, const char *fmt, va_list ap)
 {
-	if (err_file == 0)
-		err_set_file((FILE *)0);
-	fprintf(err_file, "%s: ", _getprogname());
+	fprintf(stderr, "%s: ", _getprogname());
 	if (fmt != NULL) {
-		vfprintf(err_file, fmt, ap);
-		fprintf(err_file, ": ");
+		vfprintf(stderr, fmt, ap);
+		fprintf(stderr, ": ");
 	}
-	fprintf(err_file, "%s\n", strerror(code));
+	fprintf(stderr, "%s\n", strerror(code));
 }
 
 void
@@ -186,10 +131,8 @@ warnx(const char *fmt, ...)
 void
 vwarnx(const char *fmt, va_list ap)
 {
-	if (err_file == 0)
-		err_set_file((FILE *)0);
-	fprintf(err_file, "%s: ", _getprogname());
+	fprintf(stderr, "%s: ", _getprogname());
 	if (fmt != NULL)
-		vfprintf(err_file, fmt, ap);
-	fprintf(err_file, "\n");
+		vfprintf(stderr, fmt, ap);
+	fprintf(stderr, "\n");
 }
