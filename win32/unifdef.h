@@ -32,6 +32,8 @@
 
 /* Windows POSIX-flavoured headers */
 
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <io.h>
 
 #define stat     _stat
