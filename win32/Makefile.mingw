@@ -1,0 +1,13 @@
+## Build:
+##  mingw32-make -f Makefile.mingw
+
+CFLAGS=-I.
+
+all: unifdef.exe
+
+unifdef.exe: ../unifdef.c win32.c ../FreeBSD/getopt.c ../FreeBSD/err.c
+	$(CC) -o $@ $(CFLAGS) $^
+
+unifdef.exe: version.h
+version.h:
+	echo "" > version.h
