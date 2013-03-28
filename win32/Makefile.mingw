@@ -1,0 +1,7 @@
+# To build, run:
+# mingw32-make -f win32/Makefile.mingw
+
+all: unifdef.exe
+
+unifdef.exe: unifdef.c win32/win32.c FreeBSD/getopt.c FreeBSD/err.c
+	$(CC) $(CFLAGS) -Iwin32 -I. -I- -o $@ $^

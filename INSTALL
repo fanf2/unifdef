@@ -1,5 +1,5 @@
 unifdef installation instructions
-
+---------------------------------
 
 To build on unix, type `make`. You can adjust the compilation options
 using the POSIX standard CFLAGS and LDFLAGS make variables.
@@ -13,8 +13,10 @@ We assume unix provides the BSD err.h functions and C99 stdbool.h.
 
 The FreeBSD subdirectory has copies of err.c and getopt.c for systems
 that don't have them built in. The win32 subdirectory contains build
-files for Visual Studio 2010 which make use of the FreeBSD code plus
-some other portability wrappers.
+files for MinGW and Visual Studio 2010 which make use of the FreeBSD
+code plus some other portability wrappers.
+
+To build with MinGW, type `mingw32-make win32/Makefile.mingw`.
 
 
 - end -
