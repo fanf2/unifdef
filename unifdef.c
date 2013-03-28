@@ -345,6 +345,7 @@ main(int argc, char *argv[])
 	case(0): exit(exitstat);
 	case(1): exit(!exitstat);
 	case(2): exit(0);
+	default: abort(); /* bug */
 	}
 }
 
@@ -690,14 +691,14 @@ flushline(bool keep)
 static void
 hashline(void)
 {
-	int err;
+	int e;
 
 	if (linefile == NULL)
-		err = fprintf(output, "#line %d%s", linenum, newline);
+		e = fprintf(output, "#line %d%s", linenum, newline);
 	else
-		err = fprintf(output, "#line %d \"%s\"%s",
+		e = fprintf(output, "#line %d \"%s\"%s",
 		    linenum, linefile, newline);
-	if (err < 0)
+	if (e < 0)
 		closeout();
 }
 
