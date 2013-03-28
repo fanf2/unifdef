@@ -170,6 +170,7 @@ static int              nsyms;			/* number of symbols */
 static FILE            *input;			/* input file pointer */
 static const char      *filename;		/* input file name */
 static int              linenum;		/* current line number */
+static const char      *linefile;		/* file name for #line */
 static FILE            *output;			/* output file pointer */
 static const char      *ofilename;		/* output file name */
 static const char      *backext;		/* backup extension */
@@ -207,6 +208,7 @@ static void             done(void);
 static void             error(const char *);
 static int              findsym(const char *);
 static void             flushline(bool);
+static void             hashline(void);
 static void             help(void);
 static Linetype         ifeval(const char **);
 static void             ignoreoff(void);
@@ -356,9 +358,11 @@ processinout(const char *ifn, const char *ofn)
 
 	if (ifn == NULL || strcmp(ifn, "-") == 0) {
 		filename = "[stdin]";
+		linefile = NULL;
 		input = fbinmode(stdin);
 	} else {
 		filename = ifn;
+		linefile = ifn;
 		input = fopen(ifn, "rb");
 		if (input == NULL)
 			err(2, "can't open %s", ifn);
@@ -662,9 +666,8 @@ flushline(bool keep)
 			delcount += 1;
 			blankcount += 1;
 		} else {
-			if (lnnum && delcount > 0 &&
-			    fprintf(output, "#line %d%s", linenum, newline) < 0)
-				closeout();
+			if (lnnum && delcount > 0)
+				hashline();
 			if (fputs(tline, output) == EOF)
 				closeout();
 			delcount = 0;
@@ -678,6 +681,23 @@ flushline(bool keep)
 		blankcount = 0;
 	}
 	if (debugging && fflush(output) == EOF)
+		closeout();
+}
+
+/*
+ * Format of #line directives depends on whether we know the input filename.
+ */
+static void
+hashline(void)
+{
+	int err;
+
+	if (linefile == NULL)
+		err = fprintf(output, "#line %d%s", linenum, newline);
+	else
+		err = fprintf(output, "#line %d \"%s\"%s",
+		    linenum, linefile, newline);
+	if (err < 0)
 		closeout();
 }
 

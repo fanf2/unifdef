@@ -5,13 +5,13 @@ see the COPYING file for details. */
 #include <stdio.h>
 #include <stdlib.h>
 
-#line 9
+#line 9 "overwrite.c"
 int foo() { return 0; }
-#line 13
+#line 13 "overwrite.c"
 
-#line 17
+#line 17 "overwrite.c"
 int bar() { return 0; }
-#line 21
+#line 21 "overwrite.c"
 
 int main()
 {
