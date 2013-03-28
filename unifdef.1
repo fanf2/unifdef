@@ -42,8 +42,9 @@
 .Op Fl [i]D Ns Ar sym Ns Op = Ns Ar val
 .Op Fl [i]U Ns Ar sym
 .Ar ...
-.Op Fl o Ar outfile
+.Op Fl x Bro Ar 012 Brc
 .Op Fl M Ar backext
+.Op Fl o Ar outfile
 .Op Ar infile ...
 .Nm unifdefall
 .Op Fl I Ns Ar path
@@ -321,6 +322,12 @@ flags.
 .Pp
 .It Fl V
 Print version details.
+.Pp
+.It Fl x Bro Ar 012 Brc
+Set exit status mode to zero, one, or two.
+See the
+.Sx EXIT STATUS
+section below for details.
 .El
 .Pp
 The
@@ -345,10 +352,35 @@ utility works nicely with the
 option of
 .Xr diff 1 .
 .Sh EXIT STATUS
-The
+In normal usage the
 .Nm
-utility exits 0 if the output is an exact copy of the input,
-1 if not, and 2 if in trouble.
+utility's exit status depends on the mode set using the
+.Fl x
+option.
+.Pp
+If the exit mode is zero (the default) then
+.Nm
+exits with status 0 if the output is an exact copy of the input,
+or with status 1 if the output differs.
+.Pp
+If the exit mode is one,
+.Nm
+exits with status 1 if the output is unmodified
+or 0 if it differs.
+.Pp
+If the exit mode is two,
+.Nm
+exits with status zero in both cases.
+.Pp
+In all exit modes,
+.Nm
+exits with status 2 if there is an error.
+.Pp
+The exit status is 0 if the
+.Fl h
+or
+.Fl V
+command line options are given.
 .Sh DIAGNOSTICS
 .Bl -item
 .It

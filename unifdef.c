@@ -195,6 +195,7 @@ static bool             constexpr;		/* constant #if expression */
 static bool             zerosyms;		/* to format symdepth output */
 static bool             firstsym;		/* ditto */
 
+static int              exitmode;		/* exit status mode */
 static int              exitstat;		/* program exit status */
 
 static void             addsym(bool, bool, char *);
@@ -234,7 +235,7 @@ main(int argc, char *argv[])
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "i:D:U:I:M:o:bBcdehKklmnsStV")) != -1)
+	while ((opt = getopt(argc, argv, "i:D:U:I:M:o:x:bBcdehKklmnsStV")) != -1)
 		switch (opt) {
 		case 'i': /* treat stuff controlled by these symbols as text */
 			/*
@@ -308,6 +309,11 @@ main(int argc, char *argv[])
 		case 'V':
 			version();
 			break;
+		case 'x':
+			exitmode = atoi(optarg);
+			if(exitmode < 0 || exitmode > 2)
+				usage();
+			break;
 		default:
 			usage();
 		}
@@ -327,15 +333,17 @@ main(int argc, char *argv[])
 		ofilename = "-";
 
 	atexit(cleantemp);
-	if (ofilename != NULL) {
+	if (ofilename != NULL)
 		processinout(*argv, ofilename);
-		exit(exitstat);
-	}
-	while (argc-- > 0) {
+	else while (argc-- > 0) {
 		processinout(*argv, *argv);
 		argv++;
 	}
-	exit(exitstat);
+	switch(exitmode) {
+	case(0): exit(exitstat);
+	case(1): exit(!exitstat);
+	case(2): exit(0);
+	}
 }
 
 /*
@@ -419,7 +427,7 @@ static void
 synopsis(FILE *fp)
 {
 	fprintf(fp,
-	    "usage:	unifdef [-bBcdehKkmnsStV] [-Mext] [-opath] \\\n"
+	    "usage:	unifdef [-bBcdehKkmnsStV] [-x{012}] [-Mext] [-opath] \\\n"
 	    "		[-[i]Dsym[=val]] [-[i]Usym] ... [file] ...\n");
 }
 
@@ -458,6 +466,7 @@ help(void)
 	    "	-s	list #if control symbols\n"
 	    "	-t	ignore C strings and comments\n"
 	    "	-V	print version\n"
+	    "	-x{012}	exit status mode\n"
 	);
 	exit(0);
 }
