@@ -928,6 +928,12 @@ static const struct ops eval_ops[] = {
 			{ ">", op_gt } } }
 };
 
+/* Current operator precedence level */
+static int prec(const struct ops *ops)
+{
+	return (ops - eval_ops);
+}
+
 /*
  * Function for evaluating the innermost parts of expressions,
  * viz. !expr (expr) number defined(symbol) symbol
@@ -944,7 +950,7 @@ eval_unary(const struct ops *ops, int *valp, const char **cpp)
 
 	cp = skipcomment(*cpp);
 	if (*cp == '!') {
-		debug("eval%d !", ops - eval_ops);
+		debug("eval%d !", prec(ops));
 		cp++;
 		lt = eval_unary(ops, valp, &cp);
 		if (lt == LT_ERROR)
@@ -955,7 +961,7 @@ eval_unary(const struct ops *ops, int *valp, const char **cpp)
 		}
 	} else if (*cp == '(') {
 		cp++;
-		debug("eval%d (", ops - eval_ops);
+		debug("eval%d (", prec(ops));
 		lt = eval_table(eval_ops, valp, &cp);
 		if (lt == LT_ERROR)
 			return (LT_ERROR);
@@ -963,7 +969,7 @@ eval_unary(const struct ops *ops, int *valp, const char **cpp)
 		if (*cp++ != ')')
 			return (LT_ERROR);
 	} else if (isdigit((unsigned char)*cp)) {
-		debug("eval%d number", ops - eval_ops);
+		debug("eval%d number", prec(ops));
 		*valp = strtol(cp, &ep, 0);
 		if (ep == cp)
 			return (LT_ERROR);
@@ -971,7 +977,7 @@ eval_unary(const struct ops *ops, int *valp, const char **cpp)
 		cp = skipsym(cp);
 	} else if (strncmp(cp, "defined", 7) == 0 && endsym(cp[7])) {
 		cp = skipcomment(cp+7);
-		debug("eval%d defined", ops - eval_ops);
+		debug("eval%d defined", prec(ops));
 		if (*cp == '(') {
 			cp = skipcomment(cp+1);
 			defparen = true;
@@ -991,7 +997,7 @@ eval_unary(const struct ops *ops, int *valp, const char **cpp)
 			return (LT_ERROR);
 		constexpr = false;
 	} else if (!endsym(*cp)) {
-		debug("eval%d symbol", ops - eval_ops);
+		debug("eval%d symbol", prec(ops));
 		sym = findsym(cp);
 		cp = skipsym(cp);
 		if (sym < 0) {
@@ -1009,12 +1015,12 @@ eval_unary(const struct ops *ops, int *valp, const char **cpp)
 		}
 		constexpr = false;
 	} else {
-		debug("eval%d bad expr", ops - eval_ops);
+		debug("eval%d bad expr", prec(ops));
 		return (LT_ERROR);
 	}
 
 	*cpp = cp;
-	debug("eval%d = %d", ops - eval_ops, *valp);
+	debug("eval%d = %d", prec(ops), *valp);
 	return (lt);
 }
 
@@ -1029,7 +1035,7 @@ eval_table(const struct ops *ops, int *valp, const char **cpp)
 	int val;
 	Linetype lt, rt;
 
-	debug("eval%d", ops - eval_ops);
+	debug("eval%d", prec(ops));
 	cp = *cpp;
 	lt = ops->inner(ops+1, valp, &cp);
 	if (lt == LT_ERROR)
@@ -1042,7 +1048,7 @@ eval_table(const struct ops *ops, int *valp, const char **cpp)
 		if (op->str == NULL)
 			break;
 		cp += strlen(op->str);
-		debug("eval%d %s", ops - eval_ops, op->str);
+		debug("eval%d %s", prec(ops), op->str);
 		rt = ops->inner(ops+1, &val, &cp);
 		if (rt == LT_ERROR)
 			return (LT_ERROR);
@@ -1050,8 +1056,8 @@ eval_table(const struct ops *ops, int *valp, const char **cpp)
 	}
 
 	*cpp = cp;
-	debug("eval%d = %d", ops - eval_ops, *valp);
-	debug("eval%d lt = %s", ops - eval_ops, linetype_name[lt]);
+	debug("eval%d = %d", prec(ops), *valp);
+	debug("eval%d lt = %s", prec(ops), linetype_name[lt]);
 	return (lt);
 }
 
