@@ -14,7 +14,7 @@ then
 	git update-index -q --refresh
 	if git diff-index --quiet HEAD
 	then
-		GD="$(git show --pretty=format:%ai --quiet HEAD)"
+		GD="$(git show --pretty=format:%ai -s HEAD)"
 	else
 		GD="$(date +'%Y-%m-%d %H:%M:%S %z')"
 		GV=$GV.XX
