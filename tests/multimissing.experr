@@ -1,3 +1,2 @@
 unifdef: can't open ifmissing.c: No such file or directory
-diff: if2.c~: No such file or directory
-mv: if2.c~: No such file or directory
+test success: if2.c was not processed
