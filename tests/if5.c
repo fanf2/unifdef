@@ -18,7 +18,7 @@ int foo2() { return 0; }
 #endif
 
 #if FOOB == 42 || FOO == 1
-intx foo3() { return 0; }
+int foo3() { return 0; }
 #else
 #error FOO not 1 or BAR not 1
 #endif
