@@ -48,7 +48,7 @@ export LC_ALL=C
 # list of all controlling macros
 "$unifdef" $debug -s "$@" | sort | uniq >"$tmp/ctrl"
 # list of all macro definitions
-cpp -dM "$@" | sort | sed 's/^#define //' >"$tmp/hashdefs"
+cc -E -dM "$@" | sort | sed 's/^#define //' >"$tmp/hashdefs"
 # list of defined macro names
 sed 's/[^A-Za-z0-9_].*$//' <"$tmp/hashdefs" >"$tmp/alldef"
 # list of undefined and defined controlling macros
