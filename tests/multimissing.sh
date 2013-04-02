@@ -3,5 +3,5 @@ e=$?
 diff -u if1.c~ if1.c | sed 's/	20.*//'
 diff -u if2.c~ if2.c | sed 's/	20.*//'
 mv if1.c~ if1.c
-mv if2.c~ if2.c
+test -e if2.c~ || echo "mv: if2.c~: No such file or directory" >&2
 exit $e
