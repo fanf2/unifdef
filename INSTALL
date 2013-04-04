@@ -16,7 +16,7 @@ that don't have them built in. The win32 subdirectory contains build
 files for MinGW and Visual Studio 2010 which make use of the FreeBSD
 code plus some other portability wrappers.
 
-To build with MinGW, type `mingw32-make win32/Makefile.mingw`.
+To build with MinGW, type `mingw32-make -f win32/Makefile.mingw`.
 
 
 - end -
