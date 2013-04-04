@@ -44,7 +44,7 @@ realclean: clean
 DISTEXTRA= version.h version.sh unifdef.txt Changelog
 
 release: ${DISTEXTRA}
-	. version.sh; W=web/$$V; \
+	. ./version.sh; W=web/$$V; \
 	DISTFILES=$$(git ls-files | egrep -v '^web/|^[.]git'); \
 	mkdir -p $$W/tests $$W/FreeBSD $$W/win32; \
 	for f in $$DISTFILES ${DISTEXTRA}; \
