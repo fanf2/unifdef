@@ -38,6 +38,8 @@
 
 #define fbinmode(fp) (fp)
 
+#define replace(old,new) rename(old,new)
+
 static FILE *
 mktempmode(char *tmp, int mode)
 {

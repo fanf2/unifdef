@@ -394,7 +394,7 @@ processinout(const char *ifn, const char *ofn)
 			err(2, "can't rename \"%s\" to \"%s%s\"", ofn, ofn, backext);
 		free(backname);
 	}
-	if (rename(tempname, ofn) < 0)
+	if (replace(tempname, ofn) < 0)
 		err(2, "can't rename \"%s\" to \"%s\"", tempname, ofn);
 	free(tempname);
 	tempname = NULL;

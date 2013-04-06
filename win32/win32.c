@@ -25,6 +25,39 @@
 
 #include "unifdef.h"
 
+/*
+ * The Windows implementation of rename() fails if the new filename
+ * already exists. This uses ReplaceFile() instead, and it includes
+ * Windows-ish error handling rather than returning to the caller's
+ * Unix-style handling.
+ */
+int
+replace(const char *old, const char *new)
+{
+	const char *message;
+	int count;
+
+	if(ReplaceFile(old, new, NULL, 0, NULL, NULL))
+		return (0);
+	count = FormatMessage(
+	    FORMAT_MESSAGE_ALLOCATE_BUFFER |
+	    FORMAT_MESSAGE_FROM_SYSTEM |
+	    FORMAT_MESSAGE_MAX_WIDTH_MASK,
+	    NULL,
+	    GetLastError(),
+	    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+	    (LPTSTR)&message,
+	    0,
+	    NULL);
+	if (count != 0)
+		fprintf(stderr, "unifdef: can't rename \"%s\" to \"%s\": %s\n",
+			old, new, message);
+	else
+		fprintf(stderr, "unifdef: can't rename \"%s\" to \"%s\"\n",
+			old, new);
+	exit(2);
+}
+
 FILE *
 mktempmode(char *tmp, int mode)
 {

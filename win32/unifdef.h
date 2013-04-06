@@ -48,6 +48,7 @@
 #define _getprogname() "unifdef"
 
 /* win32.c */
+int replace(const char *old, const char *new);
 FILE *mktempmode(char *tmp, int mode);
 FILE *fbinmode(FILE *fp);
 
