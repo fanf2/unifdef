@@ -211,7 +211,7 @@ static int              exitstat;		/* program exit status */
 static void             addsym(bool, bool, char *);
 static char            *astrcat(const char *, const char *);
 static void             cleantemp(void);
-static void             closeout(void);
+static void             closeio(void);
 static void             debug(const char *, ...);
 static void             done(void);
 static void             error(const char *);
@@ -658,12 +658,12 @@ done(void)
 {
 	if (incomment)
 		error("EOF in comment");
-	closeout();
+	closeio();
 }
 
 /*
  * Write a line to the output or not, according to command line options.
- * If writing fails, closeout() will print the error and exit.
+ * If writing fails, closeio() will print the error and exit.
  */
 static void
 flushline(bool keep)
@@ -679,19 +679,19 @@ flushline(bool keep)
 			if (lnnum && delcount > 0)
 				hashline();
 			if (fputs(tline, output) == EOF)
-				closeout();
+				closeio();
 			delcount = 0;
 			blankmax = blankcount = blankline ? blankcount + 1 : 0;
 		}
 	} else {
 		if (lnblank && fputs(newline, output) == EOF)
-			closeout();
+			closeio();
 		exitstat = 1;
 		delcount += 1;
 		blankcount = 0;
 	}
 	if (debugging && fflush(output) == EOF)
-		closeout();
+		closeio();
 }
 
 /*
@@ -708,20 +708,21 @@ hashline(void)
 		e = fprintf(output, "#line %d \"%s\"%s",
 		    linenum, linefile, newline);
 	if (e < 0)
-		closeout();
+		closeio();
 }
 
 /*
  * Flush the output and handle errors.
  */
 static void
-closeout(void)
+closeio(void)
 {
 	/* Tidy up after findsym(). */
 	if (symdepth && !zerosyms)
 		printf("\n");
 	if (ferror(output) || fclose(output) == EOF)
 		err(2, "%s: can't write to output", filename);
+	fclose(input);
 }
 
 /*
@@ -1364,6 +1365,6 @@ error(const char *msg)
 	else
 		warnx("%s: %d: %s (#if line %d depth %d)",
 		    filename, linenum, msg, stifline[depth], depth);
-	closeout();
+	closeio();
 	errx(2, "output may be truncated");
 }
