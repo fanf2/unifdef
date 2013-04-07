@@ -400,7 +400,7 @@ processinout(const char *ifn, const char *ofn)
 	if (backext != NULL) {
 		char *backname = astrcat(ofn, backext);
 		if (rename(ofn, backname) < 0)
-			err(2, "can't rename \"%s\" to \"%s%s\"", ofn, ofn, backext);
+			err(2, "can't rename \"%s\" to \"%s\"", ofn, backname);
 		free(backname);
 	}
 	if (replace(tempname, ofn) < 0)
