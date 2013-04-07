@@ -179,6 +179,15 @@ static char            *tempname;		/* avoid splatting input */
 static char             tline[MAXLINE+EDITSLOP];/* input buffer plus space */
 static char            *keyword;		/* used for editing #elif's */
 
+/*
+ * When processing a file, the output's newline style will match the
+ * input's, and unifdef correctly handles CRLF or LF endings whatever
+ * the platform's native style. The stdio streams are opened in binary
+ * mode to accommodate platforms whose native newline style is CRLF.
+ * When the output isn't a processed input file (when it is error /
+ * debug / diagnostic messages) then unifdef uses native line endings.
+ */
+
 static const char      *newline;		/* input file format */
 static const char       newline_unix[] = "\n";
 static const char       newline_crlf[] = "\r\n";
