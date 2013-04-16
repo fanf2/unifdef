@@ -226,6 +226,7 @@ static void             keywordedit(const char *);
 static void             nest(void);
 static Linetype         parseline(void);
 static void             process(void);
+static void             process_definitions_file(const char *filename);
 static void             processinout(const char *, const char *);
 static const char      *skipargs(const char *);
 static const char      *skipcomment(const char *);
@@ -246,7 +247,7 @@ main(int argc, char *argv[])
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "i:D:U:I:M:o:x:bBcdehKklmnsStV")) != -1)
+	while ((opt = getopt(argc, argv, "i:D:U:I:M:o:x:bBcdehKklmnsStVX:")) != -1)
 		switch (opt) {
 		case 'i': /* treat stuff controlled by these symbols as text */
 			/*
@@ -324,6 +325,9 @@ main(int argc, char *argv[])
 			exitmode = atoi(optarg);
 			if(exitmode < 0 || exitmode > 2)
 				usage();
+			break;
+		case 'X': /* definitions file */
+			process_definitions_file(optarg);
 			break;
 		default:
 			usage();
@@ -442,7 +446,7 @@ synopsis(FILE *fp)
 {
 	fprintf(fp,
 	    "usage:	unifdef [-bBcdehKkmnsStV] [-x{012}] [-Mext] [-opath] \\\n"
-	    "		[-[i]Dsym[=val]] [-[i]Usym] ... [file] ...\n");
+	    "		[-[i]Dsym[=val]] [-[i]Usym] [-Xfile] ... [file] ...\n");
 }
 
 static void
@@ -481,6 +485,7 @@ help(void)
 	    "	-t	ignore C strings and comments\n"
 	    "	-V	print version\n"
 	    "	-x{012}	exit status mode\n"
+        "   -Xfile file of preprocessor symbols\n"
 	);
 	exit(0);
 }
@@ -1310,6 +1315,28 @@ addsym(bool ignorethis, bool definethis, char *sym)
 	    value[symind] ? value[symind] : "undef");
 }
 
+static void
+addsym2(bool ignorethis, bool definethis, const char *sym, const char *val)
+{
+	int symind;
+
+	symind = findsym(sym);
+	if (symind < 0) {
+		if (nsyms >= MAXSYMS)
+			errx(2, "too many symbols");
+		symind = nsyms++;
+	}
+	symname[symind] = sym;
+	ignore[symind] = ignorethis;
+	if (definethis) {
+        value[symind] = val;
+	} else {
+		if (val  &&  *val != '\0')
+			usage();
+		value[symind] = NULL;
+	}
+}
+
 /*
  * Compare s with n characters of t.
  * The same as strncmp() except that it checks that s[n] == '\0'.
@@ -1367,4 +1394,140 @@ error(const char *msg)
 		    filename, linenum, msg, stifline[depth], depth);
 	closeio();
 	errx(2, "output may be truncated");
+}
+
+/*
+ * Parse a line looking for #define and #undef lines.
+ */
+static Linetype
+get_definitions_line(FILE *input)
+{
+	const char *cp;
+	const char *cp2;
+	char *x;
+	char *y;
+	char *z;
+	int cursym;
+	int kwlen;
+	Linetype retval;
+	Comment_state wascomment;
+	int len;
+
+	if (fgets(tline, MAXLINE, input) == NULL)
+		return (LT_EOF);
+#if 1
+	/* Remove a possibly uncontrolled muddle of carriage returns and line feeds at the
+	   end of the line... */
+	len = strlen(tline);
+	while (len > 0  &&  (tline[len - 1] == '\r'  ||  tline[len - 1] == '\n'))
+	{
+		tline[--len] = '\0';
+	}
+	/* ...and insert a nice, well controlled new line. */
+	tline[len] = '\n';
+	tline[len + 1] = '\0';
+#endif
+
+	retval = LT_PLAIN;
+	wascomment = incomment;
+	cp = skipcomment(tline);
+	if (linestate == LS_START) {
+		if (*cp == '#') {
+			linestate = LS_HASH;
+			cp = skipcomment(cp + 1);
+		} else if (*cp != '\0')
+			linestate = LS_DIRTY;
+	}
+	if (!incomment && linestate == LS_HASH) {
+		keyword = tline + (cp - tline);
+		cp = skipsym(cp);
+		kwlen = cp - keyword;
+		/* no way can we deal with a continuation inside a keyword */
+		if (strncmp(cp, "\\\n", 2) == 0)
+			Eioccc();
+		if (strlcmp("define", keyword, kwlen) == 0) {
+			cp = skipcomment(cp);
+			x = strdup(cp);
+			z = (char *) skipsym(x);
+			*z++ = '\0';
+			y = (char *) skipcomment(z);
+			z = (char *) skipsym(y);
+			*z++ = '\0';
+			fprintf(stderr, "Defining '%s' as '%s'\n", x, y);
+			if ((cursym = findsym(x)) < 0) {
+				addsym2(false, true, x, y);
+				retval = LT_IF;
+			} else {
+				if (value[cursym] == NULL)
+					retval = (retval == LT_TRUE)
+						? LT_FALSE : LT_TRUE;
+				if (ignore[cursym])
+					retval = (retval == LT_TRUE)
+						? LT_TRUEI : LT_FALSEI;
+			}
+			cp = skipsym(cp);
+		} else if (strlcmp("undef", keyword, kwlen) == 0) {
+			cp = skipcomment(cp);
+			x = strdup(cp);
+			y = (char *) skipsym(x);
+			*y = '\0';
+			fprintf(stderr, "Undefining '%s'\n", x);
+			if ((cursym = findsym(x)) < 0) {
+				retval = LT_IF;
+				addsym2(false, false, x, NULL);
+			} else {
+				if (value[cursym] == NULL)
+					retval = (retval == LT_TRUE)
+						? LT_FALSE : LT_TRUE;
+				if (ignore[cursym])
+					retval = (retval == LT_TRUE)
+						? LT_TRUEI : LT_FALSEI;
+			}
+			cp = skipsym(cp);
+		} else {
+			linestate = LS_DIRTY;
+			retval = LT_PLAIN;
+		}
+		cp = skipcomment(cp);
+		if (*cp != '\0') {
+			linestate = LS_DIRTY;
+			if (retval == LT_TRUE || retval == LT_FALSE ||
+				retval == LT_TRUEI || retval == LT_FALSEI)
+				retval = LT_IF;
+			if (retval == LT_ELTRUE || retval == LT_ELFALSE)
+				retval = LT_ELIF;
+		}
+		if (retval != LT_PLAIN && (wascomment || incomment)) {
+			retval += LT_DODGY;
+			if (incomment)
+				linestate = LS_DIRTY;
+		}
+		/* skipcomment should have changed the state */
+		if (linestate == LS_HASH)
+			abort(); /* bug */
+	}
+	if (linestate == LS_DIRTY) {
+		while (*cp != '\0')
+			cp = skipcomment(cp + 1);
+	}
+	debug("parser %s comment %s line",
+		comment_name[incomment], linestate_name[linestate]);
+	return (retval);
+}
+
+static void
+process_definitions_file(const char *filename)
+{
+	Linetype lineval;
+	FILE *input;
+
+	if ((input = fopen(filename, "r")) == NULL) {
+		err(2, "can't open %s", filename);
+	}
+
+	for (;;) {
+		if ((lineval = get_definitions_line(input)) == LT_EOF)
+			break;
+	}
+	fclose(input);
 }
