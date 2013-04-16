@@ -214,6 +214,7 @@ static char            *astrcat(const char *, const char *);
 static void             cleantemp(void);
 static void             closeio(void);
 static void             debug(const char *, ...);
+static Linetype         defundef(FILE *);
 static void             done(void);
 static void             error(const char *);
 static int              findsym(const char *);
@@ -1282,7 +1283,7 @@ findsym(const char *str)
 }
 
 /*
- * Add a symbol with the format sym=val
+ * Add a symbol to the symbol table, specified with the format sym=val
  */
 static void
 addsym1(bool ignorethis, bool definethis, char *symval)
@@ -1330,69 +1331,27 @@ addsym2(bool ignorethis, bool definethis, const char *sym, const char *val)
 }
 
 /*
- * Compare s with n characters of t.
- * The same as strncmp() except that it checks that s[n] == '\0'.
- */
-static int
-strlcmp(const char *s, const char *t, size_t n)
-{
-	while (n-- && *t != '\0')
-		if (*s != *t)
-			return ((unsigned char)*s - (unsigned char)*t);
-		else
-			++s, ++t;
-	return ((unsigned char)*s);
-}
-
-/*
- * Concatenate two strings into new memory, checking for failure.
- */
-static char *
-astrcat(const char *s1, const char *s2)
-{
-	char *s;
-	int len;
-
-	len = 1 + snprintf(NULL, 0, "%s%s", s1, s2);
-	s = (char *)malloc(len);
-	if (s == NULL)
-		err(2, "malloc");
-	snprintf(s, len, "%s%s", s1, s2);
-	return (s);
-}
-
-/*
- * Diagnostics.
+ * Add symbols to the symbol table from a file containing
+ * #define and #undef preprocessor directives.
  */
 static void
-debug(const char *msg, ...)
+undefile(const char *fn)
 {
-	va_list ap;
+	FILE *fp;
 
-	if (debugging) {
-		va_start(ap, msg);
-		vwarnx(msg, ap);
-		va_end(ap);
-	}
-}
-
-static void
-error(const char *msg)
-{
-	if (depth == 0)
-		warnx("%s: %d: %s", filename, linenum, msg);
-	else
-		warnx("%s: %d: %s (#if line %d depth %d)",
-		    filename, linenum, msg, stifline[depth], depth);
-	closeio();
-	errx(2, "output may be truncated");
+	fp = fopen(fn, "rb");
+	if (fp == NULL)
+		err(2, "can't open %s", fn);
+	while (defundef(fp) != LT_EOF)
+		;
+	fclose(fp);
 }
 
 /*
- * Parse a line looking for #define and #undef lines.
+ * Read and one #define or #undef directive
  */
 static Linetype
-get_definitions_line(FILE *input)
+defundef(FILE *input)
 {
 	const char *cp;
 	const char *cp2;
@@ -1507,19 +1466,61 @@ get_definitions_line(FILE *input)
 	return (retval);
 }
 
-static void
-undefile(const char *filename)
+/*
+ * Compare s with n characters of t.
+ * The same as strncmp() except that it checks that s[n] == '\0'.
+ */
+static int
+strlcmp(const char *s, const char *t, size_t n)
 {
-	Linetype lineval;
-	FILE *input;
+	while (n-- && *t != '\0')
+		if (*s != *t)
+			return ((unsigned char)*s - (unsigned char)*t);
+		else
+			++s, ++t;
+	return ((unsigned char)*s);
+}
 
-	if ((input = fopen(filename, "r")) == NULL) {
-		err(2, "can't open %s", filename);
-	}
+/*
+ * Concatenate two strings into new memory, checking for failure.
+ */
+static char *
+astrcat(const char *s1, const char *s2)
+{
+	char *s;
+	int len;
 
-	for (;;) {
-		if ((lineval = get_definitions_line(input)) == LT_EOF)
-			break;
+	len = 1 + snprintf(NULL, 0, "%s%s", s1, s2);
+	s = (char *)malloc(len);
+	if (s == NULL)
+		err(2, "malloc");
+	snprintf(s, len, "%s%s", s1, s2);
+	return (s);
+}
+
+/*
+ * Diagnostics.
+ */
+static void
+debug(const char *msg, ...)
+{
+	va_list ap;
+
+	if (debugging) {
+		va_start(ap, msg);
+		vwarnx(msg, ap);
+		va_end(ap);
 	}
-	fclose(input);
+}
+
+static void
+error(const char *msg)
+{
+	if (depth == 0)
+		warnx("%s: %d: %s", filename, linenum, msg);
+	else
+		warnx("%s: %d: %s (#if line %d depth %d)",
+		    filename, linenum, msg, stifline[depth], depth);
+	closeio();
+	errx(2, "output may be truncated");
 }
