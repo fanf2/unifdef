@@ -1345,17 +1345,19 @@ undefile(const char *fn)
 		err(2, "can't open %s", fn);
 	while (defundef(fp) != LT_EOF)
 		;
-	fclose(fp);
+	if (ferror(fp))
+		err(2, "can't read %s", fn);
+	else
+		fclose(fp);
 }
 
 /*
- * Read and one #define or #undef directive
+ * Read and process one #define or #undef directive
  */
 static Linetype
-defundef(FILE *input)
+defundef(FILE *fp)
 {
 	const char *cp;
-	const char *cp2;
 	char *x;
 	char *y;
 	char *z;
@@ -1365,20 +1367,16 @@ defundef(FILE *input)
 	Comment_state wascomment;
 	int len;
 
-	if (fgets(tline, MAXLINE, input) == NULL)
+	if (fgets(tline, MAXLINE, fp) == NULL)
 		return (LT_EOF);
-#if 1
-	/* Remove a possibly uncontrolled muddle of carriage returns and line feeds at the
-	   end of the line... */
+	/* No need to preserve the newline style,
+	   so replace trailing CRs and LFs with an LF. */
 	len = strlen(tline);
-	while (len > 0  &&  (tline[len - 1] == '\r'  ||  tline[len - 1] == '\n'))
-	{
+	while (len > 0 && (tline[len - 1] == '\r' || tline[len - 1] == '\n'))
 		tline[--len] = '\0';
-	}
-	/* ...and insert a nice, well controlled new line. */
+	/* This is OK because of EDITSLOP. */
 	tline[len] = '\n';
 	tline[len + 1] = '\0';
-#endif
 
 	retval = LT_PLAIN;
 	wascomment = incomment;
