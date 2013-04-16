@@ -743,6 +743,7 @@ process(void)
 	   is preceded by a large number of blank lines. */
 	blankmax = blankcount = 1000;
 	zerosyms = true;
+	newline = NULL;
 	while (lineval != LT_EOF) {
 		lineval = parseline();
 		trans_table[ifstate[depth]][lineval]();
