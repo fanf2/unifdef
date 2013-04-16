@@ -42,6 +42,7 @@
 .Op Fl [i]D Ns Ar sym Ns Op = Ns Ar val
 .Op Fl [i]U Ns Ar sym
 .Ar ...
+.Op Fl f Ar undefile
 .Op Fl x Bro Ar 012 Brc
 .Op Fl M Ar backext
 .Op Fl o Ar outfile
@@ -193,6 +194,27 @@ and
 blocks
 controlled by symbols
 specified with these options.
+.Pp
+.It Fl f Ar undefile
+The file
+.Ar undefile
+contains
+.Ic #define
+and
+.Ic #undef
+preprocessor directives,
+which have the same effect as the corresponding
+.Fl D
+and
+.Fl U
+command-line arguments.
+You can have multiple
+.Fl f
+arguments and mix them with
+.Fl D
+and
+.Fl U
+arguments.
 .Pp
 .It Fl b
 Replace removed lines with blank lines

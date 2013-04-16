@@ -226,7 +226,7 @@ static void             keywordedit(const char *);
 static void             nest(void);
 static Linetype         parseline(void);
 static void             process(void);
-static void             process_definitions_file(const char *filename);
+static void             process_definitions_file(const char *);
 static void             processinout(const char *, const char *);
 static const char      *skipargs(const char *);
 static const char      *skipcomment(const char *);
@@ -247,7 +247,7 @@ main(int argc, char *argv[])
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "i:D:U:I:M:o:x:bBcdehKklmnsStVX:")) != -1)
+	while ((opt = getopt(argc, argv, "i:D:U:f:I:M:o:x:bBcdehKklmnsStV")) != -1)
 		switch (opt) {
 		case 'i': /* treat stuff controlled by these symbols as text */
 			/*
@@ -287,6 +287,9 @@ main(int argc, char *argv[])
 		case 'e': /* fewer errors from dodgy lines */
 			iocccok = true;
 			break;
+		case 'f': /* definitions file */
+			process_definitions_file(optarg);
+			break;
 		case 'h':
 			help();
 			break;
@@ -325,9 +328,6 @@ main(int argc, char *argv[])
 			exitmode = atoi(optarg);
 			if(exitmode < 0 || exitmode > 2)
 				usage();
-			break;
-		case 'X': /* definitions file */
-			process_definitions_file(optarg);
 			break;
 		default:
 			usage();
@@ -446,7 +446,7 @@ synopsis(FILE *fp)
 {
 	fprintf(fp,
 	    "usage:	unifdef [-bBcdehKkmnsStV] [-x{012}] [-Mext] [-opath] \\\n"
-	    "		[-[i]Dsym[=val]] [-[i]Usym] [-Xfile] ... [file] ...\n");
+	    "		[-[i]Dsym[=val]] [-[i]Usym] [-fpath] ... [file] ...\n");
 }
 
 static void
@@ -467,6 +467,7 @@ help(void)
 	    "	-iDsym=val \\  ignore C strings and comments\n"
 	    "	-iDsym      ) in sections controlled by these\n"
 	    "	-iUsym	   /  preprocessor symbols\n"
+	    "	-fpath	file containing #define and #undef directives\n"
 	    "	-b	blank lines instead of deleting them\n"
 	    "	-B	compress blank lines around deleted section\n"
 	    "	-c	complement (invert) keep vs. delete\n"
@@ -485,7 +486,6 @@ help(void)
 	    "	-t	ignore C strings and comments\n"
 	    "	-V	print version\n"
 	    "	-x{012}	exit status mode\n"
-        "   -Xfile file of preprocessor symbols\n"
 	);
 	exit(0);
 }
