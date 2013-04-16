@@ -1403,7 +1403,7 @@ defundef(FILE *fp)
 			y = (char *) skipcomment(z);
 			z = (char *) skipsym(y);
 			*z++ = '\0';
-			fprintf(stderr, "Defining '%s' as '%s'\n", x, y);
+			debug("#define");
 			if ((cursym = findsym(x)) < 0) {
 				addsym2(false, true, x, y);
 				retval = LT_IF;
@@ -1421,7 +1421,7 @@ defundef(FILE *fp)
 			x = strdup(cp);
 			y = (char *) skipsym(x);
 			*y = '\0';
-			fprintf(stderr, "Undefining '%s'\n", x);
+			debug("#undef\n");
 			if ((cursym = findsym(x)) < 0) {
 				retval = LT_IF;
 				addsym2(false, false, x, NULL);
