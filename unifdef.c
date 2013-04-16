@@ -208,7 +208,8 @@ static bool             firstsym;		/* ditto */
 static int              exitmode;		/* exit status mode */
 static int              exitstat;		/* program exit status */
 
-static void             addsym(bool, bool, char *);
+static void             addsym1(bool, bool, char *);
+static void             addsym2(bool, bool, const char *, const char *);
 static char            *astrcat(const char *, const char *);
 static void             cleantemp(void);
 static void             closeio(void);
@@ -226,13 +227,13 @@ static void             keywordedit(const char *);
 static void             nest(void);
 static Linetype         parseline(void);
 static void             process(void);
-static void             process_definitions_file(const char *);
 static void             processinout(const char *, const char *);
 static const char      *skipargs(const char *);
 static const char      *skipcomment(const char *);
 static const char      *skipsym(const char *);
 static void             state(Ifstate);
 static int              strlcmp(const char *, const char *, size_t);
+static void             undefile(const char *);
 static void             unnest(void);
 static void             usage(void);
 static void             version(void);
@@ -257,17 +258,17 @@ main(int argc, char *argv[])
 			 */
 			opt = *optarg++;
 			if (opt == 'D')
-				addsym(true, true, optarg);
+				addsym1(true, true, optarg);
 			else if (opt == 'U')
-				addsym(true, false, optarg);
+				addsym1(true, false, optarg);
 			else
 				usage();
 			break;
 		case 'D': /* define a symbol */
-			addsym(false, true, optarg);
+			addsym1(false, true, optarg);
 			break;
 		case 'U': /* undef a symbol */
-			addsym(false, false, optarg);
+			addsym1(false, false, optarg);
 			break;
 		case 'I': /* no-op for compatibility with cpp */
 			break;
@@ -288,7 +289,7 @@ main(int argc, char *argv[])
 			iocccok = true;
 			break;
 		case 'f': /* definitions file */
-			process_definitions_file(optarg);
+			undefile(optarg);
 			break;
 		case 'h':
 			help();
@@ -1281,40 +1282,25 @@ findsym(const char *str)
 }
 
 /*
- * Add a symbol to the symbol table.
+ * Add a symbol with the format sym=val
  */
 static void
-addsym(bool ignorethis, bool definethis, char *sym)
+addsym1(bool ignorethis, bool definethis, char *symval)
 {
-	int symind;
-	char *val;
+	const char *sym, *val;
 
-	symind = findsym(sym);
-	if (symind < 0) {
-		if (nsyms >= MAXSYMS)
-			errx(2, "too many symbols");
-		symind = nsyms++;
+	sym = symval;
+	val = skipsym(sym);
+	if (*val == '=') {
+		symval[val - sym] = '\0';
+		val = val + 1;
 	}
-	symname[symind] = sym;
-	ignore[symind] = ignorethis;
-	val = sym + (skipsym(sym) - sym);
-	if (definethis) {
-		if (*val == '=') {
-			value[symind] = val+1;
-			*val = '\0';
-		} else if (*val == '\0')
-			value[symind] = "1";
-		else
-			usage();
-	} else {
-		if (*val != '\0')
-			usage();
-		value[symind] = NULL;
-	}
-	debug("addsym %s=%s", symname[symind],
-	    value[symind] ? value[symind] : "undef");
+	addsym2(ignorethis, definethis, sym, val);
 }
 
+/*
+ * Add a symbol to the symbol table.
+ */
 static void
 addsym2(bool ignorethis, bool definethis, const char *sym, const char *val)
 {
@@ -1329,12 +1315,18 @@ addsym2(bool ignorethis, bool definethis, const char *sym, const char *val)
 	symname[symind] = sym;
 	ignore[symind] = ignorethis;
 	if (definethis) {
-        value[symind] = val;
+		if (val && *val != '\0')
+			value[symind] = val;
+		else
+			value[symind] = "1";
 	} else {
-		if (val  &&  *val != '\0')
-			usage();
-		value[symind] = NULL;
+		if (val && *val != '\0')
+			abort(); /* bug */
+		else
+			value[symind] = NULL;
 	}
+	debug("addsym %s=%s", symname[symind],
+	    value[symind] ? value[symind] : "undef");
 }
 
 /*
@@ -1516,7 +1508,7 @@ get_definitions_line(FILE *input)
 }
 
 static void
-process_definitions_file(const char *filename)
+undefile(const char *filename)
 {
 	Linetype lineval;
 	FILE *input;
