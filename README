@@ -37,6 +37,9 @@ Anders H Kaseorg <andersk@mit.edu>
 Ben Hutchings at Solarflare Communications
  - lenient evaluation of && and ||
 
+Steve Underwood <steveu@coppice.org>
+ - read #define and #undef directives from a file
+
 Other contributions are listed in the Changelog.
 
 - end -
