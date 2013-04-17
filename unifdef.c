@@ -231,6 +231,8 @@ static void             process(void);
 static void             processinout(const char *, const char *);
 static const char      *skipargs(const char *);
 static const char      *skipcomment(const char *);
+static const char      *skiphash(void);
+static const char      *skipline(const char *);
 static const char      *skipsym(const char *);
 static void             state(Ifstate);
 static int              strlcmp(const char *, const char *, size_t);
@@ -767,101 +769,71 @@ parseline(void)
 	Linetype retval;
 	Comment_state wascomment;
 
-	linenum++;
-	if (fgets(tline, MAXLINE, input) == NULL) {
-		if (ferror(input))
-			err(2, "can't read %s", filename);
-		else
-			return (LT_EOF);
-	}
+	wascomment = incomment;
+	cp = skiphash();
+	if (cp == NULL)
+		return (LT_EOF);
 	if (newline == NULL) {
 		if (strrchr(tline, '\n') == strrchr(tline, '\r') + 1)
 			newline = newline_crlf;
 		else
 			newline = newline_unix;
 	}
-	retval = LT_PLAIN;
-	wascomment = incomment;
-	cp = skipcomment(tline);
-	if (linestate == LS_START) {
-		if (*cp == '#') {
-			linestate = LS_HASH;
-			firstsym = true;
-			cp = skipcomment(cp + 1);
-		} else if (*cp != '\0')
-			linestate = LS_DIRTY;
+	if (*cp == '\0') {
+		retval = LT_PLAIN;
+		goto done;
 	}
-	if (!incomment && linestate == LS_HASH) {
-		keyword = tline + (cp - tline);
-		cp = skipsym(cp);
-		kwlen = cp - keyword;
-		/* no way can we deal with a continuation inside a keyword */
-		if (strncmp(cp, "\\\r\n", 3) == 0 ||
-		    strncmp(cp, "\\\n", 2) == 0)
-			Eioccc();
-		if (strlcmp("ifdef", keyword, kwlen) == 0 ||
-		    strlcmp("ifndef", keyword, kwlen) == 0) {
-			cp = skipcomment(cp);
-			if ((cursym = findsym(cp)) < 0)
-				retval = LT_IF;
-			else {
-				retval = (keyword[2] == 'n')
-				    ? LT_FALSE : LT_TRUE;
-				if (value[cursym] == NULL)
-					retval = (retval == LT_TRUE)
-					    ? LT_FALSE : LT_TRUE;
-				if (ignore[cursym])
-					retval = (retval == LT_TRUE)
-					    ? LT_TRUEI : LT_FALSEI;
-			}
-			cp = skipsym(cp);
-		} else if (strlcmp("if", keyword, kwlen) == 0)
-			retval = ifeval(&cp);
-		else if (strlcmp("elif", keyword, kwlen) == 0)
-			retval = linetype_if2elif(ifeval(&cp));
-		else if (strlcmp("else", keyword, kwlen) == 0)
-			retval = LT_ELSE;
-		else if (strlcmp("endif", keyword, kwlen) == 0)
-			retval = LT_ENDIF;
-		else {
-			linestate = LS_DIRTY;
-			retval = LT_PLAIN;
-		}
+	keyword = tline + (cp - tline);
+	cp = skipsym(cp);
+	kwlen = cp - keyword;
+	/* no way can we deal with a continuation inside a keyword */
+	if (strncmp(cp, "\\\r\n", 3) == 0 ||
+	    strncmp(cp, "\\\n", 2) == 0)
+		Eioccc();
+	if (strlcmp("ifdef", keyword, kwlen) == 0 ||
+	    strlcmp("ifndef", keyword, kwlen) == 0) {
 		cp = skipcomment(cp);
-		if (*cp != '\0') {
+		if ((cursym = findsym(cp)) < 0)
+			retval = LT_IF;
+		else {
+			retval = (keyword[2] == 'n')
+			    ? LT_FALSE : LT_TRUE;
+			if (value[cursym] == NULL)
+				retval = (retval == LT_TRUE)
+				    ? LT_FALSE : LT_TRUE;
+			if (ignore[cursym])
+				retval = (retval == LT_TRUE)
+				    ? LT_TRUEI : LT_FALSEI;
+		}
+		cp = skipsym(cp);
+	} else if (strlcmp("if", keyword, kwlen) == 0)
+		retval = ifeval(&cp);
+	else if (strlcmp("elif", keyword, kwlen) == 0)
+		retval = linetype_if2elif(ifeval(&cp));
+	else if (strlcmp("else", keyword, kwlen) == 0)
+		retval = LT_ELSE;
+	else if (strlcmp("endif", keyword, kwlen) == 0)
+		retval = LT_ENDIF;
+	else {
+		cp = skipline(cp);
+		retval = LT_PLAIN;
+		goto done;
+	}
+	cp = skipcomment(cp);
+	if (*cp != '\0') {
+		cp = skipline(cp);
+		if (retval == LT_TRUE || retval == LT_FALSE ||
+		    retval == LT_TRUEI || retval == LT_FALSEI)
+			retval = LT_IF;
+		if (retval == LT_ELTRUE || retval == LT_ELFALSE)
+			retval = LT_ELIF;
+	}
+	if (retval != LT_PLAIN && (wascomment || incomment)) {
+		retval = linetype_2dodgy(retval);
+		if (incomment)
 			linestate = LS_DIRTY;
-			if (retval == LT_TRUE || retval == LT_FALSE ||
-			    retval == LT_TRUEI || retval == LT_FALSEI)
-				retval = LT_IF;
-			if (retval == LT_ELTRUE || retval == LT_ELFALSE)
-				retval = LT_ELIF;
-		}
-		if (retval != LT_PLAIN && (wascomment || incomment)) {
-			retval = linetype_2dodgy(retval);
-			if (incomment)
-				linestate = LS_DIRTY;
-		}
-		/* skipcomment normally changes the state, except
-		   if the last line of the file lacks a newline, or
-		   if there is too much whitespace in a directive */
-		if (linestate == LS_HASH) {
-			size_t len = cp - tline;
-			if (fgets(tline + len, MAXLINE - len, input) == NULL) {
-				if (ferror(input))
-					err(2, "can't read %s", filename);
-				/* append the missing newline at eof */
-				strcpy(tline + len, newline);
-				cp += strlen(newline);
-				linestate = LS_START;
-			} else {
-				linestate = LS_DIRTY;
-			}
-		}
 	}
-	if (linestate == LS_DIRTY) {
-		while (*cp != '\0')
-			cp = skipcomment(cp + 1);
-	}
+done:
 	debug("parser line %d state %s comment %s line", linenum,
 	    comment_name[incomment], linestate_name[linestate]);
 	return (retval);
@@ -1095,6 +1067,48 @@ ifeval(const char **cpp)
 	ret = eval_table(eval_ops, &val, cpp);
 	debug("eval = %d", val);
 	return (constexpr ? LT_IF : ret == LT_ERROR ? LT_IF : ret);
+}
+
+/*
+ * Read a line and examine its initial part to determine if it is a
+ * preprocessor directive. Returns NULL on EOF, or a pointer to a
+ * preprocessor directive name, or a pointer to the zero byte at the
+ * end of the line.
+ */
+static const char *
+skiphash(void)
+{
+	const char *cp;
+
+	linenum++;
+	if (fgets(tline, MAXLINE, input) == NULL) {
+		if (ferror(input))
+			err(2, "can't read %s", filename);
+		else
+			return (NULL);
+	}
+	cp = skipcomment(tline);
+	if (linestate == LS_START && *cp == '#') {
+		linestate = LS_HASH;
+		return (skipcomment(cp + 1));
+	} else if (*cp == '\0') {
+		return (cp);
+	} else {
+		return (skipline(cp));
+	}
+}
+
+/*
+ * Mark a line dirty and consume the rest of it, keeping track of the
+ * lexical state.
+ */
+static const char *
+skipline(const char *cp)
+{
+	linestate = LS_DIRTY;
+	while (*cp != '\0')
+		cp = skipcomment(cp + 1);
+	return (cp);
 }
 
 /*
