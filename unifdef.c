@@ -828,10 +828,24 @@ parseline(void)
 		if (retval == LT_ELTRUE || retval == LT_ELFALSE)
 			retval = LT_ELIF;
 	}
-	if (retval != LT_PLAIN && (wascomment || incomment)) {
-		retval = linetype_2dodgy(retval);
-		if (incomment)
+	/* the following can happen if the last line of the file lacks a
+	   newline or if there is too much whitespace in a directive */
+	if (linestate == LS_HASH) {
+		size_t len = cp - tline;
+		if (fgets(tline + len, MAXLINE - len, input) == NULL) {
+			if (ferror(input))
+				err(2, "can't read %s", filename);
+			/* append the missing newline at eof */
+			strcpy(tline + len, newline);
+			cp += strlen(newline);
+			linestate = LS_START;
+		} else {
 			linestate = LS_DIRTY;
+		}
+	}
+	if (retval != LT_PLAIN && (wascomment || linestate != LS_START)) {
+		retval = linetype_2dodgy(retval);
+		linestate = LS_DIRTY;
 	}
 done:
 	debug("parser line %d state %s comment %s line", linenum,
