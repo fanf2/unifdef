@@ -215,6 +215,7 @@ static void             cleantemp(void);
 static void             closeio(void);
 static void             debug(const char *, ...);
 static Linetype         defundef(FILE *);
+static void             defundefile(const char *);
 static void             done(void);
 static void             error(const char *);
 static int              findsym(const char *);
@@ -236,7 +237,6 @@ static const char      *skipline(const char *);
 static const char      *skipsym(const char *);
 static void             state(Ifstate);
 static int              strlcmp(const char *, const char *, size_t);
-static void             undefile(const char *);
 static void             unnest(void);
 static void             usage(void);
 static void             version(void);
@@ -292,7 +292,7 @@ main(int argc, char *argv[])
 			iocccok = true;
 			break;
 		case 'f': /* definitions file */
-			undefile(optarg);
+			defundefile(optarg);
 			break;
 		case 'h':
 			help();
@@ -729,8 +729,8 @@ closeio(void)
 	/* Tidy up after findsym(). */
 	if (symdepth && !zerosyms)
 		printf("\n");
-	if (ferror(output) || fclose(output) == EOF)
-		err(2, "%s: can't write to output", filename);
+	if (output != NULL && (ferror(output) || fclose(output) == EOF))
+			err(2, "%s: can't write to output", filename);
 	fclose(input);
 }
 
@@ -1359,19 +1359,21 @@ addsym2(bool ignorethis, const char *sym, const char *val)
  * #define and #undef preprocessor directives.
  */
 static void
-undefile(const char *fn)
+defundefile(const char *fn)
 {
-	FILE *fp;
-
-	fp = fopen(fn, "rb");
-	if (fp == NULL)
+	filename = fn;
+	input = fopen(fn, "rb");
+	if (input == NULL)
 		err(2, "can't open %s", fn);
-	while (defundef(fp) != LT_EOF)
+	linenum = 0;
+	while (defundef(input) != LT_EOF)
 		;
-	if (ferror(fp))
-		err(2, "can't read %s", fn);
+	if (ferror(input))
+		err(2, "can't read %s", filename);
 	else
-		fclose(fp);
+		fclose(input);
+	if (incomment)
+		error("EOF in comment");
 }
 
 /*
