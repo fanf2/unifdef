@@ -12,7 +12,7 @@ man1dest=	${DESTDIR}${man1dir}
 all: unifdef
 
 unifdef: unifdef.c
-unifdef.c: version.h
+unifdef.c: unifdef.h version.h
 version.h version.sh::
 	./reversion.sh
 
