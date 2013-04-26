@@ -19,6 +19,9 @@ then
 		GD="$(date +'%Y-%m-%d %H:%M:%S %z')"
 		GV=$GV.XX
 	fi
+	[ unifdef -nt unifdef.c ] &&
+	[ unifdef -nt unifdef.h ] &&
+		GD="$D"
 	if [ "$GV $GD" != "$V $D" ]
 	then
 		echo "version $V $D"   1>&2
