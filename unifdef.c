@@ -209,7 +209,7 @@ static int              exitmode;		/* exit status mode */
 static int              exitstat;		/* program exit status */
 
 static void             addsym1(bool, bool, char *);
-static void             addsym2(bool, bool, const char *, const char *);
+static void             addsym2(bool, const char *, const char *);
 static char            *astrcat(const char *, const char *);
 static void             cleantemp(void);
 static void             closeio(void);
@@ -1322,18 +1322,22 @@ addsym1(bool ignorethis, bool definethis, char *symval)
 
 	sym = symval;
 	val = skipsym(sym);
-	if (*val == '=') {
+	if (definethis && *val == '=') {
 		symval[val - sym] = '\0';
 		val = val + 1;
+	} else if (*val == '\0') {
+		val = definethis ? "1" : NULL;
+	} else {
+		usage();
 	}
-	addsym2(ignorethis, definethis, sym, val);
+	addsym2(ignorethis, sym, val);
 }
 
 /*
  * Add a symbol to the symbol table.
  */
 static void
-addsym2(bool ignorethis, bool definethis, const char *sym, const char *val)
+addsym2(bool ignorethis, const char *sym, const char *val)
 {
 	int symind;
 
@@ -1343,19 +1347,9 @@ addsym2(bool ignorethis, bool definethis, const char *sym, const char *val)
 			errx(2, "too many symbols");
 		symind = nsyms++;
 	}
-	symname[symind] = sym;
 	ignore[symind] = ignorethis;
-	if (definethis) {
-		if (val && *val != '\0')
-			value[symind] = val;
-		else
-			value[symind] = "1";
-	} else {
-		if (val && *val != '\0')
-			abort(); /* bug */
-		else
-			value[symind] = NULL;
-	}
+	symname[symind] = sym;
+	value[symind] = val;
 	debug("addsym %s=%s", symname[symind],
 	    value[symind] ? value[symind] : "undef");
 }
@@ -1434,7 +1428,7 @@ defundef(FILE *fp)
 			*z++ = '\0';
 			debug("#define");
 			if ((cursym = findsym(x)) < 0) {
-				addsym2(false, true, x, y);
+				addsym2(false, x, y);
 				retval = LT_IF;
 			} else {
 				if (value[cursym] == NULL)
@@ -1453,7 +1447,7 @@ defundef(FILE *fp)
 			debug("#undef\n");
 			if ((cursym = findsym(x)) < 0) {
 				retval = LT_IF;
-				addsym2(false, false, x, NULL);
+				addsym2(false, x, NULL);
 			} else {
 				if (value[cursym] == NULL)
 					retval = (retval == LT_TRUE)
