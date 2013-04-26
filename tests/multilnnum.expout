@@ -1,0 +1,42 @@
+--- if1.c~
++++ if1.c
+@@ -5,19 +5,13 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ 
+-#if FOO
++#line 9 "if1.c"
+ int foo() { return 0; }
+-#else
+-#error FOO not defined
+-#endif
++#line 13 "if1.c"
+ 
+-#if BAR
+-int foo() { return 0; }
+-#elif FOO
++#line 17 "if1.c"
+ int bar() { return 0; }
+-#else
+-#error FOO not defined
+-#endif
++#line 21 "if1.c"
+ 
+ int main()
+ {
+--- if2.c~
++++ if2.c
+@@ -5,11 +5,9 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ 
+-#if defined(FOO)
++#line 9 "if2.c"
+ int foo() { return 0; }
+-#else
+-#error FOO not defined
+-#endif
++#line 13 "if2.c"
+ 
+ int main()
+ {

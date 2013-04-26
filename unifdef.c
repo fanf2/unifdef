@@ -746,6 +746,7 @@ process(void)
 	blankmax = blankcount = 1000;
 	zerosyms = true;
 	newline = NULL;
+	linenum = 0;
 	while (lineval != LT_EOF) {
 		lineval = parseline();
 		trans_table[ifstate[depth]][lineval]();
