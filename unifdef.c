@@ -214,7 +214,7 @@ static char            *astrcat(const char *, const char *);
 static void             cleantemp(void);
 static void             closeio(void);
 static void             debug(const char *, ...);
-static Linetype         defundef(FILE *);
+static bool             defundef(void);
 static void             defundefile(const char *);
 static void             done(void);
 static void             error(const char *);
@@ -1351,7 +1351,8 @@ addsym2(bool ignorethis, const char *sym, const char *val)
 	ignore[symind] = ignorethis;
 	symname[symind] = sym;
 	value[symind] = val;
-	debug("addsym %s=%s", symname[symind],
+	debug("addsym %s%c%s", symname[symind],
+	    value[symind] ? '=' : ' ',
 	    value[symind] ? value[symind] : "undef");
 }
 
@@ -1367,7 +1368,7 @@ defundefile(const char *fn)
 	if (input == NULL)
 		err(2, "can't open %s", fn);
 	linenum = 0;
-	while (defundef(input) != LT_EOF)
+	while (defundef())
 		;
 	if (ferror(input))
 		err(2, "can't read %s", filename);
@@ -1380,115 +1381,60 @@ defundefile(const char *fn)
 /*
  * Read and process one #define or #undef directive
  */
-static Linetype
-defundef(FILE *fp)
+static bool
+defundef(void)
 {
-	const char *cp;
-	char *x;
-	char *y;
-	char *z;
-	int cursym;
-	int kwlen;
-	Linetype retval;
+	const char *cp, *sym, *val, *end;
+	ssize_t kwlen;
 	Comment_state wascomment;
-	int len;
 
-	if (fgets(tline, MAXLINE, fp) == NULL)
-		return (LT_EOF);
-	/* No need to preserve the newline style,
-	   so replace trailing CRs and LFs with an LF. */
-	len = strlen(tline);
-	while (len > 0 && (tline[len - 1] == '\r' || tline[len - 1] == '\n'))
-		tline[--len] = '\0';
-	/* This is OK because of EDITSLOP. */
-	tline[len] = '\n';
-	tline[len + 1] = '\0';
-
-	retval = LT_PLAIN;
 	wascomment = incomment;
-	cp = skipcomment(tline);
-	if (linestate == LS_START) {
-		if (*cp == '#') {
-			linestate = LS_HASH;
-			cp = skipcomment(cp + 1);
-		} else if (*cp != '\0')
-			linestate = LS_DIRTY;
-	}
-	if (!incomment && linestate == LS_HASH) {
-		keyword = tline + (cp - tline);
-		cp = skipsym(cp);
-		kwlen = cp - keyword;
-		/* no way can we deal with a continuation inside a keyword */
-		if (strncmp(cp, "\\\n", 2) == 0)
-			Eioccc();
-		if (strlcmp("define", keyword, kwlen) == 0) {
-			cp = skipcomment(cp);
-			x = strdup(cp);
-			z = (char *) skipsym(x);
-			*z++ = '\0';
-			y = (char *) skipcomment(z);
-			z = (char *) skipsym(y);
-			*z++ = '\0';
-			debug("#define");
-			if ((cursym = findsym(x)) < 0) {
-				addsym2(false, x, y);
-				retval = LT_IF;
-			} else {
-				if (value[cursym] == NULL)
-					retval = (retval == LT_TRUE)
-						? LT_FALSE : LT_TRUE;
-				if (ignore[cursym])
-					retval = (retval == LT_TRUE)
-						? LT_TRUEI : LT_FALSEI;
-			}
-			cp = skipsym(cp);
-		} else if (strlcmp("undef", keyword, kwlen) == 0) {
-			cp = skipcomment(cp);
-			x = strdup(cp);
-			y = (char *) skipsym(x);
-			*y = '\0';
-			debug("#undef\n");
-			if ((cursym = findsym(x)) < 0) {
-				retval = LT_IF;
-				addsym2(false, x, NULL);
-			} else {
-				if (value[cursym] == NULL)
-					retval = (retval == LT_TRUE)
-						? LT_FALSE : LT_TRUE;
-				if (ignore[cursym])
-					retval = (retval == LT_TRUE)
-						? LT_TRUEI : LT_FALSEI;
-			}
-			cp = skipsym(cp);
-		} else {
-			linestate = LS_DIRTY;
-			retval = LT_PLAIN;
-		}
+	cp = skiphash();
+	if (cp == NULL)
+		return (false);
+	if (*cp == '\0')
+		goto done;
+	/* strip trailing whitespace, and do a fairly rough check to
+	   avoid unsupported multi-line preprocessor directives */
+	end = cp + strlen(cp);
+	while (end > tline && strchr(" \t\n\r", end[-1]) != NULL)
+		--end;
+	if (*end == '\\')
+		Eioccc();
+
+	keyword = tline + (cp - tline);
+	cp = skipsym(cp);
+	kwlen = cp - keyword;
+	cp = skipcomment(cp);
+	sym = cp;
+	cp = skipsym(cp);
+
+	if (strlcmp("define", keyword, kwlen) == 0) {
+		if (cp == sym)
+			error("missing macro name in #define");
+		if (*cp == '(')
+			error("function-like macros are not supported");
+		sym = xstrdup(sym, cp);
 		cp = skipcomment(cp);
-		if (*cp != '\0') {
-			linestate = LS_DIRTY;
-			if (retval == LT_TRUE || retval == LT_FALSE ||
-				retval == LT_TRUEI || retval == LT_FALSEI)
-				retval = LT_IF;
-			if (retval == LT_ELTRUE || retval == LT_ELFALSE)
-				retval = LT_ELIF;
-		}
-		if (retval != LT_PLAIN && (wascomment || incomment)) {
-			retval += LT_DODGY;
-			if (incomment)
-				linestate = LS_DIRTY;
-		}
-		/* skipcomment should have changed the state */
-		if (linestate == LS_HASH)
-			abort(); /* bug */
+		val = (cp < end) ? xstrdup(cp, end) : "";
+		debug("#define");
+		addsym2(false, sym, val);
+	} else if (strlcmp("undef", keyword, kwlen) == 0) {
+		if (cp == sym)
+			error("missing macro name in #undef");
+		sym = xstrdup(sym, cp);
+		debug("#undef\n");
+		addsym2(false, sym, NULL);
+	} else {
+		error("unrecognized preprocessor directive");
 	}
-	if (linestate == LS_DIRTY) {
-		while (*cp != '\0')
-			cp = skipcomment(cp + 1);
-	}
-	debug("parser %s comment %s line",
-		comment_name[incomment], linestate_name[linestate]);
-	return (retval);
+	cp = skipcomment(cp);
+	if (*cp != '\0')
+		cp = skipline(cp);
+done:
+	debug("parser line %d state %s comment %s line", linenum,
+	    comment_name[incomment], linestate_name[linestate]);
+	return (true);
 }
 
 /*
