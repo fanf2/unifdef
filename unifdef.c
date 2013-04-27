@@ -1399,7 +1399,7 @@ defundef(void)
 	end = cp + strlen(cp);
 	while (end > tline && strchr(" \t\n\r", end[-1]) != NULL)
 		--end;
-	if (*end == '\\')
+	if (end > tline && end[-1] == '\\')
 		Eioccc();
 
 	cp = skipsym(kw = cp);
