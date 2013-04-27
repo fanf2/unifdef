@@ -1384,7 +1384,7 @@ defundefile(const char *fn)
 static bool
 defundef(void)
 {
-	const char *cp, *sym, *val, *end;
+	const char *cp, *kw, *sym, *val, *end;
 	ssize_t kwlen;
 	Comment_state wascomment;
 
@@ -1402,14 +1402,12 @@ defundef(void)
 	if (*end == '\\')
 		Eioccc();
 
-	keyword = tline + (cp - tline);
-	cp = skipsym(cp);
-	kwlen = cp - keyword;
+	cp = skipsym(kw = cp);
+	kwlen = cp - kw;
 	cp = skipcomment(cp);
-	sym = cp;
-	cp = skipsym(cp);
+	cp = skipsym(sym = cp);
 
-	if (strlcmp("define", keyword, kwlen) == 0) {
+	if (strlcmp("define", kw, kwlen) == 0) {
 		if (cp == sym)
 			error("missing macro name in #define");
 		if (*cp == '(')
@@ -1419,7 +1417,7 @@ defundef(void)
 		val = (cp < end) ? xstrdup(cp, end) : "";
 		debug("#define");
 		addsym2(false, sym, val);
-	} else if (strlcmp("undef", keyword, kwlen) == 0) {
+	} else if (strlcmp("undef", kw, kwlen) == 0) {
 		if (cp == sym)
 			error("missing macro name in #undef");
 		sym = xstrdup(sym, cp);
