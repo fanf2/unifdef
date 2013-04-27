@@ -4,6 +4,7 @@ export PATH="$(pwd):${PATH}"
 ${1:+cd} ${1:-:}
 for cmd in *.sh
 do
+	printf .
 	t=${cmd%.sh}
 
 	sh ./${cmd} >${t}.out 2>${t}.err
@@ -16,6 +17,7 @@ do
 		got=${t}.${e}
 		if ! cmp -s ${exp} ${got}
 		then
+			echo
 			echo FAILED: ${got}: $(cat ${cmd})
 			diff -u ${exp} ${got}
 			ok=false
@@ -27,4 +29,5 @@ do
 	else rc=1
 	fi
 done
+echo
 exit ${rc}
