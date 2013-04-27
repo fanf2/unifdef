@@ -236,10 +236,11 @@ static const char      *skiphash(void);
 static const char      *skipline(const char *);
 static const char      *skipsym(const char *);
 static void             state(Ifstate);
-static int              strlcmp(const char *, const char *, size_t);
+static int              strlcmp(const char *, const char *, ssize_t);
 static void             unnest(void);
 static void             usage(void);
 static void             version(void);
+static const char      *xstrdup(const char *, const char *);
 
 #define endsym(c) (!isalnum((unsigned char)c) && c != '_')
 
@@ -766,7 +767,7 @@ parseline(void)
 {
 	const char *cp;
 	int cursym;
-	int kwlen;
+	ssize_t kwlen;
 	Linetype retval;
 	Comment_state wascomment;
 
@@ -832,7 +833,7 @@ parseline(void)
 	/* the following can happen if the last line of the file lacks a
 	   newline or if there is too much whitespace in a directive */
 	if (linestate == LS_HASH) {
-		size_t len = cp - tline;
+		ssize_t len = cp - tline;
 		if (fgets(tline + len, MAXLINE - len, input) == NULL) {
 			if (ferror(input))
 				err(2, "can't read %s", filename);
@@ -858,34 +859,34 @@ done:
  * These are the binary operators that are supported by the expression
  * evaluator.
  */
-static Linetype op_strict(int *p, int v, Linetype at, Linetype bt) {
+static Linetype op_strict(long *p, long v, Linetype at, Linetype bt) {
 	if(at == LT_IF || bt == LT_IF) return (LT_IF);
 	return (*p = v, v ? LT_TRUE : LT_FALSE);
 }
-static Linetype op_lt(int *p, Linetype at, int a, Linetype bt, int b) {
+static Linetype op_lt(long *p, Linetype at, long a, Linetype bt, long b) {
 	return op_strict(p, a < b, at, bt);
 }
-static Linetype op_gt(int *p, Linetype at, int a, Linetype bt, int b) {
+static Linetype op_gt(long *p, Linetype at, long a, Linetype bt, long b) {
 	return op_strict(p, a > b, at, bt);
 }
-static Linetype op_le(int *p, Linetype at, int a, Linetype bt, int b) {
+static Linetype op_le(long *p, Linetype at, long a, Linetype bt, long b) {
 	return op_strict(p, a <= b, at, bt);
 }
-static Linetype op_ge(int *p, Linetype at, int a, Linetype bt, int b) {
+static Linetype op_ge(long *p, Linetype at, long a, Linetype bt, long b) {
 	return op_strict(p, a >= b, at, bt);
 }
-static Linetype op_eq(int *p, Linetype at, int a, Linetype bt, int b) {
+static Linetype op_eq(long *p, Linetype at, long a, Linetype bt, long b) {
 	return op_strict(p, a == b, at, bt);
 }
-static Linetype op_ne(int *p, Linetype at, int a, Linetype bt, int b) {
+static Linetype op_ne(long *p, Linetype at, long a, Linetype bt, long b) {
 	return op_strict(p, a != b, at, bt);
 }
-static Linetype op_or(int *p, Linetype at, int a, Linetype bt, int b) {
+static Linetype op_or(long *p, Linetype at, long a, Linetype bt, long b) {
 	if (!strictlogic && (at == LT_TRUE || bt == LT_TRUE))
 		return (*p = 1, LT_TRUE);
 	return op_strict(p, a || b, at, bt);
 }
-static Linetype op_and(int *p, Linetype at, int a, Linetype bt, int b) {
+static Linetype op_and(long *p, Linetype at, long a, Linetype bt, long b) {
 	if (!strictlogic && (at == LT_FALSE || bt == LT_FALSE))
 		return (*p = 0, LT_FALSE);
 	return op_strict(p, a && b, at, bt);
@@ -903,7 +904,7 @@ static Linetype op_and(int *p, Linetype at, int a, Linetype bt, int b) {
  */
 struct ops;
 
-typedef Linetype eval_fn(const struct ops *, int *, const char **);
+typedef Linetype eval_fn(const struct ops *, long *, const char **);
 
 static eval_fn eval_table, eval_unary;
 
@@ -916,7 +917,7 @@ static eval_fn eval_table, eval_unary;
  */
 struct op {
 	const char *str;
-	Linetype (*fn)(int *, Linetype, int, Linetype, int);
+	Linetype (*fn)(long *, Linetype, long, Linetype, long);
 };
 struct ops {
 	eval_fn *inner;
@@ -934,7 +935,7 @@ static const struct ops eval_ops[] = {
 };
 
 /* Current operator precedence level */
-static int prec(const struct ops *ops)
+static long prec(const struct ops *ops)
 {
 	return (ops - eval_ops);
 }
@@ -945,7 +946,7 @@ static int prec(const struct ops *ops)
  * We reset the constexpr flag in the last two cases.
  */
 static Linetype
-eval_unary(const struct ops *ops, int *valp, const char **cpp)
+eval_unary(const struct ops *ops, long *valp, const char **cpp)
 {
 	const char *cp;
 	char *ep;
@@ -1033,11 +1034,11 @@ eval_unary(const struct ops *ops, int *valp, const char **cpp)
  * Table-driven evaluation of binary operators.
  */
 static Linetype
-eval_table(const struct ops *ops, int *valp, const char **cpp)
+eval_table(const struct ops *ops, long *valp, const char **cpp)
 {
 	const struct op *op;
 	const char *cp;
-	int val;
+	long val;
 	Linetype lt, rt;
 
 	debug("eval%d", prec(ops));
@@ -1075,7 +1076,7 @@ static Linetype
 ifeval(const char **cpp)
 {
 	Linetype ret;
-	int val = 0;
+	long val = 0;
 
 	debug("eval %s", *cpp);
 	constexpr = killconsts ? false : true;
@@ -1495,8 +1496,9 @@ defundef(FILE *fp)
  * The same as strncmp() except that it checks that s[n] == '\0'.
  */
 static int
-strlcmp(const char *s, const char *t, size_t n)
+strlcmp(const char *s, const char *t, ssize_t n)
 {
+	if (n < 0) abort(); /* bug */
 	while (n-- && *t != '\0')
 		if (*s != *t)
 			return ((unsigned char)*s - (unsigned char)*t);
@@ -1513,12 +1515,30 @@ astrcat(const char *s1, const char *s2)
 {
 	char *s;
 	int len;
+	size_t size;
 
-	len = 1 + snprintf(NULL, 0, "%s%s", s1, s2);
-	s = (char *)malloc(len);
+	len = snprintf(NULL, 0, "%s%s", s1, s2);
+	if (len < 0)
+		err(2, "snprintf");
+	size = (size_t)len + 1;
+	s = (char *)malloc(size);
 	if (s == NULL)
 		err(2, "malloc");
-	snprintf(s, len, "%s%s", s1, s2);
+	snprintf(s, size, "%s%s", s1, s2);
+	return (s);
+}
+
+/*
+ * Duplicate a segment of a string, checking for failure.
+ */
+static const char *
+xstrdup(const char *start, const char *end)
+{
+	const char *s;
+	if (end < start) abort(); /* bug */
+	s = strndup(start, (size_t)(end - start));
+	if (s == NULL)
+		err(2, "malloc");
 	return (s);
 }
 
