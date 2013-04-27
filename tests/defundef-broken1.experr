@@ -1,0 +1,2 @@
+unifdef: broken1.h: 1: function-like macros are not supported
+unifdef: output may be truncated
