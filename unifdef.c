@@ -1410,11 +1410,13 @@ defundef(void)
 	if (strlcmp("define", kw, kwlen) == 0) {
 		if (cp == sym)
 			error("missing macro name in #define");
-		if (*cp == '(')
-			error("function-like macros are not supported");
 		sym = xstrdup(sym, cp);
-		cp = skipcomment(cp);
-		val = (cp < end) ? xstrdup(cp, end) : "";
+		if (*cp == '(') {
+			val = "1";
+		} else {
+			cp = skipcomment(cp);
+			val = (cp < end) ? xstrdup(cp, end) : "";
+		}
 		debug("#define");
 		addsym2(false, sym, val);
 	} else if (strlcmp("undef", kw, kwlen) == 0) {
@@ -1426,9 +1428,7 @@ defundef(void)
 	} else {
 		error("unrecognized preprocessor directive");
 	}
-	cp = skipcomment(cp);
-	if (*cp != '\0')
-		cp = skipline(cp);
+	cp = skipline(cp);
 done:
 	debug("parser line %d state %s comment %s line", linenum,
 	    comment_name[incomment], linestate_name[linestate]);

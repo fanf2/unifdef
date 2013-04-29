@@ -42,7 +42,7 @@
 .Op Fl [i]D Ns Ar sym Ns Op = Ns Ar val
 .Op Fl [i]U Ns Ar sym
 .Ar ...
-.Op Fl f Ar undefile
+.Op Fl f Ar defile
 .Op Fl x Bro Ar 012 Brc
 .Op Fl M Ar backext
 .Op Fl o Ar outfile
@@ -71,7 +71,9 @@ and
 .Ic #endif
 lines.
 A directive is only processed
-if the symbols specified on the command line are sufficient to allow
+if the symbols specified on the command line or in a
+.Fl f
+definitions file are sufficient to allow
 .Nm
 to get a definite value for its control expression.
 If the result is false,
@@ -130,16 +132,34 @@ if either operand of
 .Ic ||
 is definitely true then the result is true.
 .Pp
-In most cases, the
+In most cases,
 .Nm
-utility does not distinguish between object-like macros
+does not distinguish between object-like macros
 (without arguments) and function-like macros (with arguments).
-If a macro is not explicitly defined, or is defined with the
+A function-like macro invocation can appear in
+.Ic #if
+and
+.Ic #elif
+control expressions.
+If the macro is not explicitly defined,
+or is defined with the
 .Fl D
-flag on the command-line, its arguments are ignored.
+flag on the command-line,
+or with
+.Ic #define
+in a
+.Fl f
+definitions file,
+its arguments are ignored.
 If a macro is explicitly undefined on the command line with the
 .Fl U
-flag, it may not have any arguments since this leads to a syntax error.
+flag,
+or with
+.Ic #undef
+in a
+.Fl f
+definitions file,
+it may not have any arguments since this leads to a syntax error.
 .Pp
 The
 .Nm
@@ -168,12 +188,12 @@ with appropriate arguments to process the file.
 .Sh OPTIONS
 .Bl -tag -width indent -compact
 .It Fl D Ns Ar sym Ns = Ns Ar val
-Specify that a symbol is defined to a given value
-which is used when evaluating
+Specify that a symbol is defined to a given value.
+The value is only used when evaluating
 .Ic #if
 and
 .Ic #elif
-control expressions.
+control expressions, and nust be numeric.
 .Pp
 .It Fl D Ns Ar sym
 Specify that a symbol is defined to the value 1.
@@ -216,12 +236,11 @@ and
 .Fl U
 arguments.
 .Pp
-The
-.Ic #define
-directives must be on a single line,
-and only object-like macros
-(not function-like macros)
-are supported.
+The directives must be on a single line.
+Object-like macro definitions (without arguments)
+are set to the given value, which must be numeric.
+Function-like macro definitions (with arguments)
+are treated as if they are set to 1.
 .Pp
 .It Fl b
 Replace removed lines with blank lines
