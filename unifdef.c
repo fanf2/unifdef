@@ -1423,12 +1423,14 @@ defundef(void)
 		if (cp == sym)
 			error("missing macro name in #undef");
 		sym = xstrdup(sym, cp);
+		cp = skipcomment(cp);
 		debug("#undef");
 		addsym2(false, sym, NULL);
 	} else {
 		error("unrecognized preprocessor directive");
 	}
-	cp = skipline(cp);
+	if (cp < end)
+		cp = skipline(cp);
 done:
 	debug("parser line %d state %s comment %s line", linenum,
 	    comment_name[incomment], linestate_name[linestate]);
