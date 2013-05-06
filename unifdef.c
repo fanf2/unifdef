@@ -137,7 +137,7 @@ static char const * const linestate_name[] = {
  */
 #define	MAXDEPTH        64			/* maximum #if nesting */
 #define	MAXLINE         4096			/* maximum length of line */
-#define	MAXSYMS         4096			/* maximum number of symbols */
+#define	MAXSYMS         16384			/* maximum number of symbols */
 
 /*
  * Sometimes when editing a keyword the replacement text is longer, so
