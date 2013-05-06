@@ -1,6 +1,11 @@
 unifdef installation instructions
 ---------------------------------
 
+Dependencies:
+ * unifdef is mostly ANSI C, with a few unixisms
+ * unifdefall is a Unix shell script
+ * the manual uses the nroff mdoc macros
+
 To build on unix, type `make`. You can adjust the compilation options
 using the POSIX standard CFLAGS and LDFLAGS make variables.
 
@@ -17,6 +22,5 @@ files for MinGW and Visual Studio 2010 which make use of the FreeBSD
 code plus some other portability wrappers.
 
 To build with MinGW, type `mingw32-make -f win32/Makefile.mingw`.
-
 
 - end -
