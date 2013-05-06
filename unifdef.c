@@ -1423,7 +1423,7 @@ defundef(void)
 		if (cp == sym)
 			error("missing macro name in #undef");
 		sym = xstrdup(sym, cp);
-		debug("#undef\n");
+		debug("#undef");
 		addsym2(false, sym, NULL);
 	} else {
 		error("unrecognized preprocessor directive");
