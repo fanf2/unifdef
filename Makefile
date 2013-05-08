@@ -48,7 +48,7 @@ release: ${DISTEXTRA}
 	scripts/release.sh ${DISTEXTRA}
 
 unifdef.txt: unifdef.1
-	nroff -Tascii -mdoc unifdef.1 | sed -e 's/.//g' >unifdef.txt
+	nroff -Tascii -mdoc unifdef.1 | col -bx >unifdef.txt
 
 Changelog: version.sh
 	scripts/gitlog2changelog.sh >Changelog
