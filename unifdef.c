@@ -1322,18 +1322,27 @@ static void
 indirectsym(void)
 {
 	const char *cp;
-	int sym, ind;
+	int changed, sym, ind;
 
-	for (sym = 0; sym < nsyms; ++sym) {
-		if (value[sym] == NULL)
-			continue;
-		cp = skipsym(value[sym]);
-		if (cp == value[sym] || *cp != '\0')
-			continue;
-		while (ind = findsym(value[sym]),
-		    ind != -1 && ind != sym)
+	do {
+		changed = 0;
+		for (sym = 0; sym < nsyms; ++sym) {
+			if (value[sym] == NULL)
+				continue;
+			cp = skipsym(value[sym]);
+			if (cp == value[sym] || *cp != '\0')
+				continue;
+			ind = findsym(value[sym]);
+			if (ind == -1 || ind == sym ||
+			    value[ind] == NULL ||
+			    value[ind] == value[sym])
+				continue;
+			debug("indirectsym %s %s -> %s",
+			    symname[sym], value[sym], value[ind]);
 			value[sym] = value[ind];
-	}
+			changed++;
+		}
+	} while (changed);
 }
 
 /*
