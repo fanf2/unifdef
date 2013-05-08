@@ -214,6 +214,7 @@ static char            *astrcat(const char *, const char *);
 static void             cleantemp(void);
 static void             closeio(void);
 static void             debug(const char *, ...);
+static void             debugsym(const char *, int);
 static bool             defundef(void);
 static void             defundefile(const char *);
 static void             done(void);
@@ -1307,8 +1308,7 @@ findsym(const char *str)
 	}
 	for (symind = 0; symind < nsyms; ++symind) {
 		if (strlcmp(symname[symind], str, cp-str) == 0) {
-			debug("findsym %s %s", symname[symind],
-			    value[symind] ? value[symind] : "");
+			debugsym("findsym", symind);
 			return (symind);
 		}
 	}
@@ -1337,9 +1337,9 @@ indirectsym(void)
 			    value[ind] == NULL ||
 			    value[ind] == value[sym])
 				continue;
-			debug("indirectsym %s %s -> %s",
-			    symname[sym], value[sym], value[ind]);
+			debugsym("indir...", sym);
 			value[sym] = value[ind];
+			debugsym("...ectsym", sym);
 			changed++;
 		}
 	} while (changed);
@@ -1383,7 +1383,13 @@ addsym2(bool ignorethis, const char *sym, const char *val)
 	ignore[symind] = ignorethis;
 	symname[symind] = sym;
 	value[symind] = val;
-	debug("addsym %s%c%s", symname[symind],
+	debugsym("addsym", symind);
+}
+
+static void
+debugsym(const char *why, int symind)
+{
+	debug("%s %s%c%s", why, symname[symind],
 	    value[symind] ? '=' : ' ',
 	    value[symind] ? value[symind] : "undef");
 }
