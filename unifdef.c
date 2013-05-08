@@ -225,6 +225,7 @@ static void             help(void);
 static Linetype         ifeval(const char **);
 static void             ignoreoff(void);
 static void             ignoreon(void);
+static void             indirectsym(void);
 static void             keywordedit(const char *);
 static void             nest(void);
 static Linetype         parseline(void);
@@ -351,6 +352,7 @@ main(int argc, char *argv[])
 		argc = 1;
 	if (argc == 1 && !inplace && ofilename == NULL)
 		ofilename = "-";
+	indirectsym();
 
 	atexit(cleantemp);
 	if (ofilename != NULL)
@@ -1311,6 +1313,27 @@ findsym(const char *str)
 		}
 	}
 	return (-1);
+}
+
+/*
+ * Resolve indirect symbol values to their final definitions.
+ */
+static void
+indirectsym(void)
+{
+	const char *cp;
+	int sym, ind;
+
+	for (sym = 0; sym < nsyms; ++sym) {
+		if (value[sym] == NULL)
+			continue;
+		cp = skipsym(value[sym]);
+		if (cp == value[sym] || *cp != '\0')
+			continue;
+		while (ind = findsym(value[sym]),
+		    ind != -1 && ind != sym)
+			value[sym] = value[ind];
+	}
 }
 
 /*
