@@ -10,5 +10,7 @@ done
 
 cd web
 zip -qr $V.zip $V
-tar cfz $V.tar.gz $V
-rm -R $V
+tar cf $V.tar $V
+gzip -k9 $V.tar
+xz -k9 $V.tar
+rm -R $V $V.tar
