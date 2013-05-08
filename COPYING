@@ -82,4 +82,12 @@ ftp://ftp.cs.berkeley.edu/pub/4bsd/README.Impt.License.Change
   OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
   SUCH DAMAGE.
 
+The file tests/xterm-292-main.c is:
+
+  Copyright 2002-2012,2013 by Thomas E. Dickey
+  Copyright 1987, 1988  The Open Group
+  Copyright 1987, 1988 by Digital Equipment Corporation, Maynard.
+
+XTerm is under the MIT / X licence; see the file for details.
+
 - end -
