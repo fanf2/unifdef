@@ -24,12 +24,16 @@
  delimit, while otherwise leaving the file alone.</p>
 
 <p>It is useful for avoiding distractions when studying code that uses
- <tt>#ifdef</tt> heavily for portability (the original motivation
- was <tt>xterm</tt>'s <tt>pty</tt> handling code), or as a lightweight
- preprocessor to strip out internal routines from a public header (the
- Linux kernel uses <tt>unifdef</tt> to strip out
- <tt>#ifdef __KERNEL__</tt> sections from the headers it exports to
- userland).</p>
+ <tt>#ifdef</tt> heavily for portability: my original motivation
+ was to understand <tt>xterm</tt>'s <tt>pty</tt> handling code.
+ It can be used as a lightweight preprocessor; for example
+ <a href="http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/scripts/headers_install.sh">the
+ Linux kernel uses <tt>unifdef</tt></a> to strip out
+ <tt>#ifdef __KERNEL__</tt> sections from the headers it exports to userland.
+ You can use <tt>unifdef</tt> with languages other than C;
+ for example <a href="http://www.uit.co.uk/">UIT</a>,
+ a publisher in Cambridge where I live, uses
+ <a href="http://www.uit.co.uk/ForAuth/LatexConditionals">unifdef with LaTeX</a>.</p>
 
 <ul>
  <li>Download:
