@@ -50,7 +50,7 @@ release: ${DISTEXTRA}
 unifdef.txt: unifdef.1
 	nroff -Tascii -mdoc unifdef.1 | col -bx >unifdef.txt
 
-Changelog: version.sh
+Changelog: version.sh scripts/gitlog2changelog.sh
 	scripts/gitlog2changelog.sh >Changelog
 
 # eof
