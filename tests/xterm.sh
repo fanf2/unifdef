@@ -1,12 +1,12 @@
 # hacks so we don't have to distribute huge chunks of XTerm
 
-if [ ! -f xterm.really ]
+if [ ! -f xterm-really ]
 then
 	cat xterm.expout
 	cat xterm.experr 1>&2
 	exit $(cat xterm.exprc)
 fi
-if [ -f xterm.clean ]
+if [ -f xterm-clean ]
 then
 	rm xterm.tar.gz xterm-defs.h xterm-main.c
 fi
@@ -30,7 +30,6 @@ unifdef -s xterm-main.c | sed 's/^/#undef /' >xterm-undefs.h
 echo $? 1>&2
 unifdef -f xterm-undefs.h -f xterm-defs.h xterm-main.c >xterm-out.c
 echo $? 1>&2
-cat xterm-out.c
-grep '#if' xterm-out.c
+grep '#' xterm-out.c
 echo $? 1>&2
 rm -f xterm-undefs.h xterm-out.c
