@@ -1518,11 +1518,15 @@ astrcat(const char *s1, const char *s2)
 static const char *
 xstrdup(const char *start, const char *end)
 {
-	const char *s;
+	size_t n;
+	char *s;
+
 	if (end < start) abort(); /* bug */
-	s = strndup(start, (size_t)(end - start));
+	n = (size_t)(end - start) + 1;
+	s = malloc(n);
 	if (s == NULL)
 		err(2, "malloc");
+	snprintf(s, n, "%s", start);
 	return (s);
 }
 
