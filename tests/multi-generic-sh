@@ -2,7 +2,7 @@ mfiles=""
 for f in $files
 do
 	rm -f m$f
-	cp $f m$f
+	[ -f $f ] && cp $f m$f
 	mfiles="$mfiles m$f"
 done
 unifdef -M~ $opts $mfiles
