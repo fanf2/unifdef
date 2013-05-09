@@ -1,9 +1,9 @@
 #!/bin/sh
 
-me=$(git config user.name)
+me=$(git config user.name || echo WHO-AM-I)
 now=$(date +%Y)
 
-git grep -l "Copyright .* $me" |
+! git grep -l "Copyright .* $me" |
 grep -v 'tests/.*[.]exp[a-z]*' |
 ( while read f
   do git log --format="%ci $f" -1 -- $f
@@ -12,9 +12,6 @@ grep -v 'tests/.*[.]exp[a-z]*' |
 ) |
 grep ^$now |
 while read d t z f
-do
-	echo -n $f:
-	grep -m 1 "Copyright .* $me" $f
+do grep -H -m 1 "Copyright .* $me" $f
 done |
-! grep -v $now
-
+grep -v $now
