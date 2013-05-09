@@ -1,2 +1,5 @@
-unifdef: can't open ifmissing.c: No such file or directory
-test success: if2.c was not processed
+cp: ifmissing.c: No such file or directory
+unifdef: can't open mifmissing.c: No such file or directory
+diff: mifmissing.c~: No such file or directory
+diff: mifmissing.c: No such file or directory
+diff: mif2.c~: No such file or directory

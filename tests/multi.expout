@@ -1,5 +1,5 @@
---- if1.c~
-+++ if1.c
+--- mif1.c~
++++ mif1.c
 @@ -5,19 +5,9 @@
  #include <stdio.h>
  #include <stdlib.h>
@@ -20,8 +20,8 @@
  
  int main()
  {
---- if2.c~
-+++ if2.c
+--- mif2.c~
++++ mif2.c
 @@ -5,11 +5,7 @@
  #include <stdio.h>
  #include <stdlib.h>

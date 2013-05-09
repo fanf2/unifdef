@@ -1,5 +1,5 @@
---- if1.c~
-+++ if1.c
+--- mif1.c~
++++ mif1.c
 @@ -5,19 +5,9 @@
  #include <stdio.h>
  #include <stdlib.h>
