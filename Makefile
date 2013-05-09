@@ -13,7 +13,8 @@ all: unifdef
 
 unifdef: unifdef.c
 unifdef.c: unifdef.h version.h
-version.h version.sh::
+version.h: version.sh
+version.sh::
 	scripts/reversion.sh
 
 test: unifdef
@@ -42,7 +43,7 @@ realclean: clean
 		-name 'xterm-*' -o -name 'xterm.tar.gz' \
 		\) -delete
 
-DISTEXTRA= version.sh unifdef.txt Changelog
+DISTEXTRA= version.h version.sh unifdef.txt Changelog
 
 release: ${DISTEXTRA}
 	scripts/copycheck.sh
