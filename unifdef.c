@@ -238,7 +238,7 @@ static const char      *skiphash(void);
 static const char      *skipline(const char *);
 static const char      *skipsym(const char *);
 static void             state(Ifstate);
-static int              strlcmp(const char *, const char *, ssize_t);
+static int              strlcmp(const char *, const char *, long);
 static void             unnest(void);
 static void             usage(void);
 static void             version(void);
@@ -770,7 +770,7 @@ parseline(void)
 {
 	const char *cp;
 	int cursym;
-	ssize_t kwlen;
+	long kwlen;
 	Linetype retval;
 	Comment_state wascomment;
 
@@ -836,7 +836,7 @@ parseline(void)
 	/* the following can happen if the last line of the file lacks a
 	   newline or if there is too much whitespace in a directive */
 	if (linestate == LS_HASH) {
-		ssize_t len = cp - tline;
+		long len = cp - tline;
 		if (fgets(tline + len, MAXLINE - len, input) == NULL) {
 			if (ferror(input))
 				err(2, "can't read %s", filename);
@@ -1423,7 +1423,7 @@ static bool
 defundef(void)
 {
 	const char *cp, *kw, *sym, *val, *end;
-	ssize_t kwlen;
+	long kwlen;
 	Comment_state wascomment;
 
 	wascomment = incomment;
@@ -1480,7 +1480,7 @@ done:
  * The same as strncmp() except that it checks that s[n] == '\0'.
  */
 static int
-strlcmp(const char *s, const char *t, ssize_t n)
+strlcmp(const char *s, const char *t, long n)
 {
 	if (n < 0) abort(); /* bug */
 	while (n-- && *t != '\0')
