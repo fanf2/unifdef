@@ -5,8 +5,9 @@ Dependencies:
  * unifdef is mostly ANSI C, with a few unixisms
  * unifdefall is a Unix shell script
  * the manual uses the nroff mdoc macros
+ * the support and test scripts are Unix shell scripts
 
-To build on unix, type `make`. You can adjust the compilation options
+To build on Unix, type `make`. You can adjust the compilation options
 using the POSIX standard CFLAGS and LDFLAGS make variables.
 
 To install in your home directory, type `make install`
@@ -14,13 +15,20 @@ or to install in /usr type `make prefix=/usr install`.
 See the start of the Makefile for the install location
 variables.
 
-We assume unix provides the BSD err.h functions and C99 stdbool.h.
-
-The FreeBSD subdirectory has copies of err.c and getopt.c for systems
-that don't have them built in. The win32 subdirectory contains build
-files for MinGW and Visual Studio 2010 which make use of the FreeBSD
-code plus some other portability wrappers.
+The win32 subdirectory contains build files for MinGW and Visual
+Studio 2010 which make use of the FreeBSD code plus some other
+portability wrappers.
 
 To build with MinGW, type `mingw32-make -f win32/Makefile.mingw`.
+
+The Windows builds are designed to run from a release tar or zip file
+that contains a pre-generated copy of version.h. Building unifdef on
+Windows from a git clone is not supported because the repository does
+not include version.h and the script that updates it has not been
+ported to Windows.
+
+We assume Unix provides the BSD err.h functions and C99 stdbool.h. The
+FreeBSD subdirectory has copies of err.c and getopt.c for systems such
+as Windows that don't have them built in.
 
 - end -
