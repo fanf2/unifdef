@@ -15,3 +15,5 @@ while read d t z f
 do grep -H -m 1 "Copyright .* $me" $f
 done |
 grep -v $now
+
+grep ^[.]Dd unifdef.1 | grep -v "$(date +'%B .., %Y')"
