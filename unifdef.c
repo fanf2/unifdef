@@ -219,7 +219,7 @@ static bool             defundef(void);
 static void             defundefile(const char *);
 static void             done(void);
 static void             error(const char *);
-static int              findsym(const char *);
+static int              findsym(const char **);
 static void             flushline(bool);
 static void             hashline(void);
 static void             help(void);
@@ -228,6 +228,7 @@ static void             ignoreoff(void);
 static void             ignoreon(void);
 static void             indirectsym(void);
 static void             keywordedit(const char *);
+static const char      *matchsym(const char *, const char *);
 static void             nest(void);
 static Linetype         parseline(void);
 static void             process(void);
@@ -238,7 +239,6 @@ static const char      *skiphash(void);
 static const char      *skipline(const char *);
 static const char      *skipsym(const char *);
 static void             state(Ifstate);
-static int              strlcmp(const char *, const char *, long);
 static void             unnest(void);
 static void             usage(void);
 static void             version(void);
@@ -770,7 +770,6 @@ parseline(void)
 {
 	const char *cp;
 	int cursym;
-	long kwlen;
 	Linetype retval;
 	Comment_state wascomment;
 
@@ -789,16 +788,10 @@ parseline(void)
 		goto done;
 	}
 	keyword = tline + (cp - tline);
-	cp = skipsym(cp);
-	kwlen = cp - keyword;
-	/* no way can we deal with a continuation inside a keyword */
-	if (strncmp(cp, "\\\r\n", 3) == 0 ||
-	    strncmp(cp, "\\\n", 2) == 0)
-		Eioccc();
-	if (strlcmp("ifdef", keyword, kwlen) == 0 ||
-	    strlcmp("ifndef", keyword, kwlen) == 0) {
+	if ((cp = matchsym("ifdef", keyword)) != NULL ||
+	    (cp = matchsym("ifndef", keyword)) != NULL) {
 		cp = skipcomment(cp);
-		if ((cursym = findsym(cp)) < 0)
+		if ((cursym = findsym(&cp)) < 0)
 			retval = LT_IF;
 		else {
 			retval = (keyword[2] == 'n')
@@ -810,16 +803,20 @@ parseline(void)
 				retval = (retval == LT_TRUE)
 				    ? LT_TRUEI : LT_FALSEI;
 		}
-		cp = skipsym(cp);
-	} else if (strlcmp("if", keyword, kwlen) == 0)
+	} else if ((cp = matchsym("if", keyword)) != NULL)
 		retval = ifeval(&cp);
-	else if (strlcmp("elif", keyword, kwlen) == 0)
+	else if ((cp = matchsym("elif", keyword)) != NULL)
 		retval = linetype_if2elif(ifeval(&cp));
-	else if (strlcmp("else", keyword, kwlen) == 0)
+	else if ((cp = matchsym("else", keyword)) != NULL)
 		retval = LT_ELSE;
-	else if (strlcmp("endif", keyword, kwlen) == 0)
+	else if ((cp = matchsym("endif", keyword)) != NULL)
 		retval = LT_ENDIF;
 	else {
+		cp = skipsym(keyword);
+		/* no way can we deal with a continuation inside a keyword */
+		if (strncmp(cp, "\\\r\n", 3) == 0 ||
+		    strncmp(cp, "\\\n", 2) == 0)
+			Eioccc();
 		cp = skipline(cp);
 		retval = LT_PLAIN;
 		goto done;
@@ -983,32 +980,33 @@ eval_unary(const struct ops *ops, long *valp, const char **cpp)
 		if (ep == cp)
 			return (LT_ERROR);
 		lt = *valp ? LT_TRUE : LT_FALSE;
-		cp = skipsym(cp);
-	} else if (strncmp(cp, "defined", 7) == 0 && endsym(cp[7])) {
+		cp = ep;
+	} else if (matchsym("defined", cp) != NULL) {
 		cp = skipcomment(cp+7);
-		debug("eval%d defined", prec(ops));
 		if (*cp == '(') {
 			cp = skipcomment(cp+1);
 			defparen = true;
 		} else {
 			defparen = false;
 		}
-		sym = findsym(cp);
+		sym = findsym(&cp);
+		cp = skipcomment(cp);
+		if (defparen && *cp++ != ')') {
+			debug("eval%d defined missing ')'", prec(ops));
+			return (LT_ERROR);
+		}
 		if (sym < 0) {
+			debug("eval%d defined unknown", prec(ops));
 			lt = LT_IF;
 		} else {
+			debug("eval%d defined %s", prec(ops), symname[sym]);
 			*valp = (value[sym] != NULL);
 			lt = *valp ? LT_TRUE : LT_FALSE;
 		}
-		cp = skipsym(cp);
-		cp = skipcomment(cp);
-		if (defparen && *cp++ != ')')
-			return (LT_ERROR);
 		constexpr = false;
 	} else if (!endsym(*cp)) {
 		debug("eval%d symbol", prec(ops));
-		sym = findsym(cp);
-		cp = skipsym(cp);
+		sym = findsym(&cp);
 		if (sym < 0) {
 			lt = LT_IF;
 			cp = skipargs(cp);
@@ -1283,31 +1281,68 @@ skipsym(const char *cp)
 }
 
 /*
+ * Skip whitespace and take a copy of any following identifier.
+ */
+static const char *
+getsym(const char **cpp)
+{
+	const char *cp = *cpp, *sym;
+
+	cp = skipcomment(cp);
+	cp = skipsym(sym = cp);
+	if (cp == sym)
+		return NULL;
+	*cpp = cp;
+	return (xstrdup(sym, cp));
+}
+
+/*
+ * Check that s (a symbol) matches the start of t, and that the
+ * following character in t is not a symbol character. Returns a
+ * pointer to the following character in t if there is a match,
+ * otherwise NULL.
+ */
+static const char *
+matchsym(const char *s, const char *t)
+{
+	while (*s != '\0' && *t != '\0')
+		if (*s != *t)
+			return (NULL);
+		else
+			++s, ++t;
+	if (*s == '\0' && endsym(*t))
+		return(t);
+	else
+		return(NULL);
+}
+
+/*
  * Look for the symbol in the symbol table. If it is found, we return
  * the symbol table index, else we return -1.
  */
 static int
-findsym(const char *str)
+findsym(const char **strp)
 {
-	const char *cp;
+	const char *str;
 	int symind;
 
-	cp = skipsym(str);
-	if (cp == str)
-		return (-1);
+	str = *strp;
+	*strp = skipsym(str);
 	if (symlist) {
+		if (*strp == str)
+			return (-1);
 		if (symdepth && firstsym)
 			printf("%s%3d", zerosyms ? "" : "\n", depth);
 		firstsym = zerosyms = false;
 		printf("%s%.*s%s",
-		    symdepth ? " " : "",
-		    (int)(cp-str), str,
-		    symdepth ? "" : "\n");
+		       symdepth ? " " : "",
+		       (int)(*strp-str), str,
+		       symdepth ? "" : "\n");
 		/* we don't care about the value of the symbol */
 		return (0);
 	}
 	for (symind = 0; symind < nsyms; ++symind) {
-		if (strlcmp(symname[symind], str, cp-str) == 0) {
+		if (matchsym(symname[symind], str) != NULL) {
 			debugsym("findsym", symind);
 			return (symind);
 		}
@@ -1329,11 +1364,10 @@ indirectsym(void)
 		for (sym = 0; sym < nsyms; ++sym) {
 			if (value[sym] == NULL)
 				continue;
-			cp = skipsym(value[sym]);
-			if (cp == value[sym] || *cp != '\0')
-				continue;
-			ind = findsym(value[sym]);
+			cp = value[sym];
+			ind = findsym(&cp);
 			if (ind == -1 || ind == sym ||
+			    *cp != '\0' ||
 			    value[ind] == NULL ||
 			    value[ind] == value[sym])
 				continue;
@@ -1372,9 +1406,10 @@ addsym1(bool ignorethis, bool definethis, char *symval)
 static void
 addsym2(bool ignorethis, const char *sym, const char *val)
 {
+	const char *cp = sym;
 	int symind;
 
-	symind = findsym(sym);
+	symind = findsym(&cp);
 	if (symind < 0) {
 		if (nsyms >= MAXSYMS)
 			errx(2, "too many symbols");
@@ -1423,7 +1458,6 @@ static bool
 defundef(void)
 {
 	const char *cp, *kw, *sym, *val, *end;
-	long kwlen;
 	Comment_state wascomment;
 
 	wascomment = incomment;
@@ -1440,15 +1474,11 @@ defundef(void)
 	if (end > tline && end[-1] == '\\')
 		Eioccc();
 
-	cp = skipsym(kw = cp);
-	kwlen = cp - kw;
-	cp = skipcomment(cp);
-	cp = skipsym(sym = cp);
-
-	if (strlcmp("define", kw, kwlen) == 0) {
-		if (cp == sym)
+	kw = cp;
+	if ((cp = matchsym("define", kw)) != NULL) {
+		sym = getsym(&cp);
+		if (sym == NULL)
 			error("missing macro name in #define");
-		sym = xstrdup(sym, cp);
 		if (*cp == '(') {
 			val = "1";
 		} else {
@@ -1457,38 +1487,21 @@ defundef(void)
 		}
 		debug("#define");
 		addsym2(false, sym, val);
-	} else if (strlcmp("undef", kw, kwlen) == 0) {
-		if (cp == sym)
+	} else if ((cp = matchsym("undef", kw)) != NULL) {
+		sym = getsym(&cp);
+		if (sym == NULL)
 			error("missing macro name in #undef");
-		sym = xstrdup(sym, cp);
 		cp = skipcomment(cp);
 		debug("#undef");
 		addsym2(false, sym, NULL);
 	} else {
 		error("unrecognized preprocessor directive");
 	}
-	if (cp < end)
-		cp = skipline(cp);
+	skipline(cp);
 done:
 	debug("parser line %d state %s comment %s line", linenum,
 	    comment_name[incomment], linestate_name[linestate]);
 	return (true);
-}
-
-/*
- * Compare s with n characters of t.
- * The same as strncmp() except that it checks that s[n] == '\0'.
- */
-static int
-strlcmp(const char *s, const char *t, long n)
-{
-	if (n < 0) abort(); /* bug */
-	while (n-- && *t != '\0')
-		if (*s != *t)
-			return ((unsigned char)*s - (unsigned char)*t);
-		else
-			++s, ++t;
-	return ((unsigned char)*s);
 }
 
 /*
