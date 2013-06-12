@@ -21,11 +21,13 @@ portability wrappers.
 
 To build with MinGW, type `mingw32-make -f win32/Makefile.mingw`.
 
-The Windows builds are designed to run from a release tar or zip file
-that contains a pre-generated copy of version.h. Building unifdef on
-Windows from a git clone is not supported because the repository does
-not include version.h and the script that updates it has not been
-ported to Windows.
+Unlike the Unix Makefile, the Windows builds do not automatically
+create or update version.h. The release tar and zip files include a
+pre-generated version.h but the git repository does not. To build from
+a git clone you need a Unix shell environment, which you can get as
+part of GitHub for Windows - http://windows.github.com/
+To update version.h, right-click on the fanf2/unifdef repository and
+select "open a shell here", then type `sh scripts\reversion.sh`.
 
 We assume Unix provides the BSD err.h functions and C99 stdbool.h. The
 FreeBSD subdirectory has copies of err.c and getopt.c for systems such
