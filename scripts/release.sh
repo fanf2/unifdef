@@ -14,3 +14,5 @@ tar cf $V.tar $V
 xz -k9 $V.tar
 gzip -9 $V.tar
 rm -R $V
+
+ls -l $V.*
