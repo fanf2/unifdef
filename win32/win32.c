@@ -51,3 +51,25 @@ fbinmode(FILE *fp)
 	_setmode(_fileno(fp), _O_BINARY);
 	return (fp);
 }
+
+/*
+ * While Windows has _snprintf() it does not work like real snprintf().
+ */
+int snprintf(char *buf, size_t size, const char *format, ...)
+{
+	va_list ap;
+	int count = -1;
+
+	if (size > 0) {
+		va_start(ap, format);
+		count = _vsnprintf_s(str, size, _TRUNCATE, format, ap);
+		va_end(ap);
+	}
+	if (count < 0) {
+		va_start(ap, format);
+		count = _vscprintf(format, ap);
+		va_end(ap);
+	}
+
+	return count;
+}

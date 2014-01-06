@@ -37,7 +37,6 @@
 #include <io.h>
 
 #define stat     _stat
-#define snprintf _snprintf
 
 /* fake stdbool.h */
 #define true 1
