@@ -62,7 +62,7 @@ int snprintf(char *buf, size_t size, const char *format, ...)
 
 	if (size > 0) {
 		va_start(ap, format);
-		count = _vsnprintf_s(str, size, _TRUNCATE, format, ap);
+		count = _vsnprintf_s(buf, size, _TRUNCATE, format, ap);
 		va_end(ap);
 	}
 	if (count < 0) {
