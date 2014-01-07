@@ -1122,7 +1122,8 @@ skiphash(void)
 static const char *
 skipline(const char *cp)
 {
-	linestate = LS_DIRTY;
+	if (*cp != '\0')
+		linestate = LS_DIRTY;
 	while (*cp != '\0')
 		cp = skipcomment(cp + 1);
 	return (cp);
@@ -1458,9 +1459,7 @@ static bool
 defundef(void)
 {
 	const char *cp, *kw, *sym, *val, *end;
-	Comment_state wascomment;
 
-	wascomment = incomment;
 	cp = skiphash();
 	if (cp == NULL)
 		return (false);
