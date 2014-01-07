@@ -377,6 +377,7 @@ static void
 processinout(const char *ifn, const char *ofn)
 {
 	struct stat st;
+	int exitold;
 
 	if (ifn == NULL || strcmp(ifn, "-") == 0) {
 		filename = "[stdin]";
@@ -407,6 +408,9 @@ processinout(const char *ifn, const char *ofn)
 	if (output == NULL)
 		err(2, "can't create %s", tempname);
 
+	/* save exit status so we can find out if this file is modified */
+	exitold = exitstat;
+	exitstat = 0;
 	process();
 
 	if (backext != NULL) {
@@ -415,10 +419,17 @@ processinout(const char *ifn, const char *ofn)
 			err(2, "can't rename \"%s\" to \"%s\"", ofn, backname);
 		free(backname);
 	}
-	if (replace(tempname, ofn) < 0)
+	/* leave file unmodified if unifdef made no changes */
+	if (exitstat == 0 && backext == NULL) {
+		if (remove(tempname) < 0)
+			warn("can't remove \"%s\"", tempname);
+	} else if (replace(tempname, ofn) < 0)
 		err(2, "can't rename \"%s\" to \"%s\"", tempname, ofn);
 	free(tempname);
 	tempname = NULL;
+
+	/* merge previous file status into overall exit status */
+	exitstat |= exitold;
 }
 
 /*
