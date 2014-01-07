@@ -16,4 +16,6 @@ do grep -H -m 1 "Copyright .* $me" $f
 done |
 grep -v $now
 
-grep ^[.]Dd unifdef.1 | grep -v "$(date +'%B .., %Y')"
+grep ^[.]Dd unifdef.1 | grep -v "$(date +'%B [0-9]*, %Y')"
+
+exit 0
