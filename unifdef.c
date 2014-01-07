@@ -207,6 +207,7 @@ static bool             firstsym;		/* ditto */
 
 static int              exitmode;		/* exit status mode */
 static int              exitstat;		/* program exit status */
+static bool             altered;		/* was this file modified? */
 
 static void             addsym1(bool, bool, char *);
 static void             addsym2(bool, const char *, const char *);
@@ -377,7 +378,6 @@ static void
 processinout(const char *ifn, const char *ofn)
 {
 	struct stat st;
-	int exitold;
 
 	if (ifn == NULL || strcmp(ifn, "-") == 0) {
 		filename = "[stdin]";
@@ -408,9 +408,6 @@ processinout(const char *ifn, const char *ofn)
 	if (output == NULL)
 		err(2, "can't create %s", tempname);
 
-	/* save exit status so we can find out if this file is modified */
-	exitold = exitstat;
-	exitstat = 0;
 	process();
 
 	if (backext != NULL) {
@@ -420,16 +417,13 @@ processinout(const char *ifn, const char *ofn)
 		free(backname);
 	}
 	/* leave file unmodified if unifdef made no changes */
-	if (exitstat == 0 && backext == NULL) {
+	if (!altered && backext == NULL) {
 		if (remove(tempname) < 0)
 			warn("can't remove \"%s\"", tempname);
 	} else if (replace(tempname, ofn) < 0)
 		err(2, "can't rename \"%s\" to \"%s\"", tempname, ofn);
 	free(tempname);
 	tempname = NULL;
-
-	/* merge previous file status into overall exit status */
-	exitstat |= exitold;
 }
 
 /*
@@ -648,7 +642,7 @@ keywordedit(const char *replacement)
 {
 	snprintf(keyword, tline + sizeof(tline) - keyword,
 	    "%s%s", replacement, newline);
-	exitstat = 1;
+	altered = true;
 	print();
 }
 static void
@@ -711,7 +705,7 @@ flushline(bool keep)
 	} else {
 		if (lnblank && fputs(newline, output) == EOF)
 			closeio();
-		exitstat = 1;
+		altered = true;
 		delcount += 1;
 		blankcount = 0;
 	}
@@ -763,6 +757,7 @@ process(void)
 	zerosyms = true;
 	newline = NULL;
 	linenum = 0;
+	altered = false;
 	while (lineval != LT_EOF) {
 		lineval = parseline();
 		trans_table[ifstate[depth]][lineval]();
@@ -770,6 +765,7 @@ process(void)
 		    linenum, linetype_name[lineval],
 		    ifstate_name[ifstate[depth]], depth);
 	}
+	exitstat |= altered;
 }
 
 /*
