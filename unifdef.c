@@ -637,6 +637,7 @@ keywordedit(const char *replacement)
 {
 	snprintf(keyword, tline + sizeof(tline) - keyword,
 	    "%s%s", replacement, newline);
+	exitstat = 1;
 	print();
 }
 static void
