@@ -36,6 +36,8 @@
 #include <fcntl.h>
 #include <io.h>
 
+#include <crtdefs.h>
+
 #define stat     _stat
 
 /* fake stdbool.h */
