@@ -53,6 +53,19 @@ fbinmode(FILE *fp)
 }
 
 /*
+ * To stop small buffer sizes passed to snprintf() from killing us.
+ */
+static void invalid_parameter_handler(
+	const wchar_t *expression,
+	const wchar_t *function, 
+	const wchar_t *file, 
+	unsigned int line,
+	uintptr_t pReserved
+) {
+	return;
+}
+
+/*
  * While Windows has _snprintf() it does not work like real snprintf().
  */
 int snprintf(char *buf, size_t size, const char *format, ...)
@@ -61,8 +74,9 @@ int snprintf(char *buf, size_t size, const char *format, ...)
 	int count = -1;
 
 	if (size > 0) {
+		_set_invalid_parameter_handler(invalid_parameter_handler);
 		va_start(ap, format);
-		count = _vsnprintf_s(buf, size, _TRUNCATE, format, ap);
+		count = _vsnprintf_s(buf, size, size-1, format, ap);
 		va_end(ap);
 	}
 	if (count < 0) {
