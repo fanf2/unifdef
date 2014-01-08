@@ -28,7 +28,7 @@ script:
       echo -e '#!/bin/bash\nexec wine $0.exe "$@"' > unifdef;
       chmod ugo+x unifdef;
       make version.h &&
-      make -f win32/Makefile.mingw test
+      make -f win32/Makefile.mingw test;
     fi
 
 ## whitelist
