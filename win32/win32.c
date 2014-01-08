@@ -53,37 +53,35 @@ fbinmode(FILE *fp)
 }
 
 /*
- * To stop small buffer sizes passed to snprintf() from killing us.
+ * Windows has _snprintf() but it does not work like real snprintf().
  */
-static void invalid_parameter_handler(
-	const wchar_t *expression,
-	const wchar_t *function, 
-	const wchar_t *file, 
-	unsigned int line,
-	uintptr_t pReserved
-) {
-	return;
-}
-
-/*
- * While Windows has _snprintf() it does not work like real snprintf().
- */
-int snprintf(char *buf, size_t size, const char *format, ...)
+int snprintf(char *buf, size_t buflen, const char *format, ...)
 {
 	va_list ap;
-	int count = -1;
+	int outlen, cpylen, tmplen;
+	char *tmp;
 
-	if (size > 0) {
-		_set_invalid_parameter_handler(invalid_parameter_handler);
-		va_start(ap, format);
-		count = _vsnprintf_s(buf, size, size-1, format, ap);
-		va_end(ap);
-	}
-	if (count < 0) {
-		va_start(ap, format);
-		count = _vscprintf(format, ap);
-		va_end(ap);
-	}
+	va_start(ap, format);
+	outlen = _vscprintf(format, ap);
+	va_end(ap);
+	if (buflen == 0 || outlen < 0)
+		return outlen;
+	if (buflen > outlen)
+		cpylen = outlen;
+	else
+		cpylen = buflen - 1;
+	/* Paranoia about off-by-one errors in _snprintf() */
+	tmplen = outlen + 2;
 
-	return count;
+	tmp = malloc(tmplen);
+	if (tmp == NULL)
+		err(2, "malloc");
+	va_start(ap, format);
+	_vsnprintf(tmp, tmplen, format, ap);
+	va_end(ap);
+	memcpy(buf, tmp, cpylen);
+	buf[cpylen] = '\0';
+	free(tmp);
+
+	return outlen;
 }
