@@ -34,7 +34,7 @@
 #include <string.h>
 #include <unistd.h>
 
-/* portabiity stubs */
+/* portability stubs */
 
 #define fbinmode(fp) (fp)
 
