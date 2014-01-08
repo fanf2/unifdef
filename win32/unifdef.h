@@ -51,6 +51,7 @@
 int replace(const char *old, const char *new);
 FILE *mktempmode(char *tmp, int mode);
 FILE *fbinmode(FILE *fp);
+int snprintf(char *buf, size_t buflen, const char *format, ...);
 
 /* err.c */
 void err(int, const char *, ...);
