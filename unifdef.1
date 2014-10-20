@@ -442,6 +442,8 @@ Inappropriate
 or
 .Ic #endif .
 .It
+Missing macro name in #define or #undef
+.It
 Obfuscated preprocessor control line.
 .It
 Premature
@@ -450,6 +452,10 @@ Premature
 .Ic #if ) .
 .It
 Too many levels of nesting.
+.It
+Unrecognized preprocessor directive
+.It
+Unterminated char or string literal
 .El
 .Sh SEE ALSO
 .Xr cpp 1 ,
