@@ -1,2 +1,2 @@
 unifdef: broken4.h: 1: Obfuscated preprocessor control line
-unifdef: output may be truncated
+unifdef: Output may be truncated
