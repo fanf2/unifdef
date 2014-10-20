@@ -433,7 +433,8 @@ command line options are given.
 .Sh DIAGNOSTICS
 .Bl -item
 .It
-Too many levels of nesting.
+.Tn EOF
+in comment.
 .It
 Inappropriate
 .Ic #elif ,
@@ -448,8 +449,7 @@ Premature
 (with the line number of the most recent unterminated
 .Ic #if ) .
 .It
-.Tn EOF
-in comment.
+Too many levels of nesting.
 .El
 .Sh SEE ALSO
 .Xr cpp 1 ,
