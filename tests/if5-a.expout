@@ -17,6 +17,14 @@ int foo5() { return 0; }
 
 int foo6() { return 0; }
 
+int foo7() { return 0; }
+
+int foo8() { return 0; }
+
+int foo9() { return 0; }
+
+int foo10() { return 0; }
+
 int main()
 {
   foo1();
@@ -25,4 +33,8 @@ int main()
   foo4();
   foo5();
   foo6();
+  foo7();
+  foo8();
+  foo9();
+  foo10();
 }

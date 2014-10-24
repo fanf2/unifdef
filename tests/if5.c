@@ -41,6 +41,30 @@ int foo5() { return 0; }
 int foo6() { return 0; }
 #endif
 
+#if FOO > FOOB
+#error FOO is greater than FOOB
+#else
+int foo7() { return 0; }
+#endif
+
+#if FOOB < FOO
+#error FOOB is less than FOO
+#else
+int foo8() { return 0; }
+#endif
+
+#if FOO >= FOOB
+#error FOO is greater than or equal FOOB
+#else
+int foo9() { return 0; }
+#endif
+
+#if FOOB <= FOO
+#error FOOB is less than or equal FOO
+#else
+int foo10() { return 0; }
+#endif
+
 int main()
 {
   foo1();
@@ -49,4 +73,8 @@ int main()
   foo4();
   foo5();
   foo6();
+  foo7();
+  foo8();
+  foo9();
+  foo10();
 }
