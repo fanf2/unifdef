@@ -106,18 +106,18 @@ static char const * const ifstate_name[] = {
 	"FALSE_TRAILER"
 };
 
-/* state of comment parser */
+/* state of lexical parsers */
 typedef enum {
-	NO_COMMENT = false,	/* outside a comment */
+	LEX_NULLA = false,	/* outside a comment or literal */
 	C_COMMENT,		/* in a comment like this one */
 	CXX_COMMENT,		/* between // and end of line */
 	STARTING_COMMENT,	/* just after slash-backslash-newline */
 	FINISHING_COMMENT,	/* star-backslash-newline in a C comment */
 	CHAR_LITERAL,		/* inside '' */
 	STRING_LITERAL		/* inside "" */
-} Comment_state;
+} Lexical_state;
 
-static char const * const comment_name[] = {
+static char const * const token_name[] = {
 	"NO", "C", "CXX", "STARTING", "FINISHING", "CHAR", "STRING"
 };
 
@@ -192,7 +192,7 @@ static const char      *newline;		/* input file format */
 static const char       newline_unix[] = "\n";
 static const char       newline_crlf[] = "\r\n";
 
-static Comment_state    incomment;		/* comment parser state */
+static Lexical_state    intoken;		/* comment + literal parsers */
 static Line_state       linestate;		/* #if line parser state */
 static Ifstate          ifstate[MAXDEPTH];	/* #if processor state */
 static bool             ignoring[MAXDEPTH];	/* ignore comments state */
@@ -675,8 +675,8 @@ state(Ifstate is)
 static void
 done(void)
 {
-	if (incomment)
-		error("EOF in comment");
+	if (intoken)
+		error("EOF in comment or literal");
 	closeio();
 }
 
@@ -779,9 +779,9 @@ parseline(void)
 	const char *cp;
 	int cursym;
 	Linetype retval;
-	Comment_state wascomment;
+	Lexical_state wastoken;
 
-	wascomment = incomment;
+	wastoken = intoken;
 	cp = skiphash();
 	if (cp == NULL)
 		return (LT_EOF);
@@ -859,7 +859,7 @@ parseline(void)
 	}
 done:
 	debug("parser line %d state %s comment %s line", linenum,
-	    comment_name[incomment], linestate_name[linestate]);
+	    token_name[intoken], linestate_name[linestate]);
 	return (retval);
 }
 
@@ -1124,24 +1124,59 @@ skiphash(void)
 }
 
 /*
- * Mark a line dirty and consume the rest of it, keeping track of the
+ * Consume a line, or the rest of a line, keeping track of the
  * lexical state.
  */
 static const char *
 skipline(const char *cp)
 {
-	if (*cp != '\0')
-		linestate = LS_DIRTY;
-	while (*cp != '\0')
-		cp = skipcomment(cp + 1);
+	while (*cp != '\0') {
+		cp = skipcomment(cp);
+		switch (intoken)
+
+		cp = skiplexical(cp + 1, true);
+	debug("skipline end %d state %s comment %s line", linenum,
+	    token_name[intoken], linestate_name[linestate]);
 	return (cp);
+
+
+			} else if (strncmp(cp, "\'", 1) == 0) {
+				intoken = CHAR_LITERAL;
+				linestate = LS_DIRTY;
+				cp += 1;
+			} else if (strncmp(cp, "\"", 1) == 0) {
+				intoken = STRING_LITERAL;
+				linestate = LS_DIRTY;
+				cp += 1;
+
+
+		case CHAR_LITERAL:
+		case STRING_LITERAL:
+			if ((intoken == CHAR_LITERAL && cp[0] == '\'') ||
+			    (intoken == STRING_LITERAL && cp[0] == '\"')) {
+				intoken = LEX_NULLA;
+				cp += 1;
+			} else if (cp[0] == '\\') {
+				if (cp[1] == '\0')
+					cp += 1;
+				else
+					cp += 2;
+			} else if (strncmp(cp, "\n", 1) == 0) {
+				if (intoken == CHAR_LITERAL)
+					error("unterminated char literal");
+				else
+					error("unterminated string literal");
+			} else
+				cp += 1;
+			continue;
+
 }
 
 /*
- * Skip over comments, strings, and character literals and stop at the
- * next character position that is not whitespace. Between calls we keep
- * the comment state in the global variable incomment, and we also adjust
- * the global variable linestate when we see a newline.
+ * Skip over comments and stop at the next character position that is
+ * not whitespace. Between calls we keep the comment state in the
+ * global variable intoken, and we also adjust the global variable
+ * linestate when we see a newline.
  * XXX: doesn't cope with the buffer splitting inside a state transition.
  */
 static const char *
@@ -1159,28 +1194,20 @@ skipcomment(const char *cp)
 			cp += 3;
 		else if (strncmp(cp, "\\\n", 2) == 0)
 			cp += 2;
-		else switch (incomment) {
-		case NO_COMMENT:
+		else switch (intoken) {
+		case LEX_NULLA:
 			if (strncmp(cp, "/\\\r\n", 4) == 0) {
-				incomment = STARTING_COMMENT;
+				intoken = STARTING_COMMENT;
 				cp += 4;
 			} else if (strncmp(cp, "/\\\n", 3) == 0) {
-				incomment = STARTING_COMMENT;
+				intoken = STARTING_COMMENT;
 				cp += 3;
 			} else if (strncmp(cp, "/*", 2) == 0) {
-				incomment = C_COMMENT;
+				intoken = C_COMMENT;
 				cp += 2;
 			} else if (strncmp(cp, "//", 2) == 0) {
-				incomment = CXX_COMMENT;
+				intoken = CXX_COMMENT;
 				cp += 2;
-			} else if (strncmp(cp, "\'", 1) == 0) {
-				incomment = CHAR_LITERAL;
-				linestate = LS_DIRTY;
-				cp += 1;
-			} else if (strncmp(cp, "\"", 1) == 0) {
-				incomment = STRING_LITERAL;
-				linestate = LS_DIRTY;
-				cp += 1;
 			} else if (strncmp(cp, "\n", 1) == 0) {
 				linestate = LS_START;
 				cp += 1;
@@ -1191,61 +1218,42 @@ skipcomment(const char *cp)
 			continue;
 		case CXX_COMMENT:
 			if (strncmp(cp, "\n", 1) == 0) {
-				incomment = NO_COMMENT;
+				intoken = LEX_NULLA;
 				linestate = LS_START;
 			}
 			cp += 1;
 			continue;
-		case CHAR_LITERAL:
-		case STRING_LITERAL:
-			if ((incomment == CHAR_LITERAL && cp[0] == '\'') ||
-			    (incomment == STRING_LITERAL && cp[0] == '\"')) {
-				incomment = NO_COMMENT;
-				cp += 1;
-			} else if (cp[0] == '\\') {
-				if (cp[1] == '\0')
-					cp += 1;
-				else
-					cp += 2;
-			} else if (strncmp(cp, "\n", 1) == 0) {
-				if (incomment == CHAR_LITERAL)
-					error("unterminated char literal");
-				else
-					error("unterminated string literal");
-			} else
-				cp += 1;
-			continue;
 		case C_COMMENT:
 			if (strncmp(cp, "*\\\r\n", 4) == 0) {
-				incomment = FINISHING_COMMENT;
+				intoken = FINISHING_COMMENT;
 				cp += 4;
 			} else if (strncmp(cp, "*\\\n", 3) == 0) {
-				incomment = FINISHING_COMMENT;
+				intoken = FINISHING_COMMENT;
 				cp += 3;
 			} else if (strncmp(cp, "*/", 2) == 0) {
-				incomment = NO_COMMENT;
+				intoken = LEX_NULLA;
 				cp += 2;
 			} else
 				cp += 1;
 			continue;
 		case STARTING_COMMENT:
 			if (*cp == '*') {
-				incomment = C_COMMENT;
+				intoken = C_COMMENT;
 				cp += 1;
 			} else if (*cp == '/') {
-				incomment = CXX_COMMENT;
+				intoken = CXX_COMMENT;
 				cp += 1;
 			} else {
-				incomment = NO_COMMENT;
+				intoken = LEX_NULLA;
 				linestate = LS_DIRTY;
 			}
 			continue;
 		case FINISHING_COMMENT:
 			if (*cp == '/') {
-				incomment = NO_COMMENT;
+				intoken = LEX_NULLA;
 				cp += 1;
 			} else
-				incomment = C_COMMENT;
+				intoken = C_COMMENT;
 			continue;
 		default:
 			abort(); /* bug */
@@ -1456,8 +1464,8 @@ defundefile(const char *fn)
 		err(2, "can't read %s", filename);
 	else
 		fclose(input);
-	if (incomment)
-		error("EOF in comment");
+	if (intoken)
+		error("EOF in comment or literal");
 }
 
 /*
@@ -1507,7 +1515,7 @@ defundef(void)
 	skipline(cp);
 done:
 	debug("parser line %d state %s comment %s line", linenum,
-	    comment_name[incomment], linestate_name[linestate]);
+	    token_name[intoken], linestate_name[linestate]);
 	return (true);
 }
 
