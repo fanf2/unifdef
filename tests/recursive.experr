@@ -40,7 +40,13 @@ unifdef: eval0
 unifdef: eval1
 unifdef: eval2
 unifdef: eval3
-unifdef: eval4 symbol
+unifdef: eval4
+unifdef: eval5
+unifdef: eval6
+unifdef: eval7
+unifdef: eval8
+unifdef: eval9
+unifdef: eval10 symbol
 unifdef: findsym FOO=BAR
 unifdef: eval = 0
 unifdef: parser line 8 state NO comment START line
@@ -61,7 +67,13 @@ unifdef: eval0
 unifdef: eval1
 unifdef: eval2
 unifdef: eval3
-unifdef: eval4 symbol
+unifdef: eval4
+unifdef: eval5
+unifdef: eval6
+unifdef: eval7
+unifdef: eval8
+unifdef: eval9
+unifdef: eval10 symbol
 unifdef: findsym BAR=BAR
 unifdef: eval = 0
 unifdef: parser line 14 state NO comment START line
@@ -74,7 +86,13 @@ unifdef: eval0
 unifdef: eval1
 unifdef: eval2
 unifdef: eval3
-unifdef: eval4 symbol
+unifdef: eval4
+unifdef: eval5
+unifdef: eval6
+unifdef: eval7
+unifdef: eval8
+unifdef: eval9
+unifdef: eval10 symbol
 unifdef: findsym FOO=BAR
 unifdef: eval = 0
 unifdef: parser line 16 state NO comment START line

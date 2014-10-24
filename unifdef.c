@@ -901,6 +901,36 @@ static Linetype op_and(long *p, Linetype at, long a, Linetype bt, long b) {
 		return (*p = 0, LT_FALSE);
 	return op_strict(p, a && b, at, bt);
 }
+static Linetype op_blsh(long *p, Linetype at, long a, Linetype bt, long b) {
+	return op_strict(p, a << b, at, bt);
+}
+static Linetype op_brsh(long *p, Linetype at, long a, Linetype bt, long b) {
+	return op_strict(p, a >> b, at, bt);
+}
+static Linetype op_add(long *p, Linetype at, long a, Linetype bt, long b) {
+	return op_strict(p, a + b, at, bt);
+}
+static Linetype op_sub(long *p, Linetype at, long a, Linetype bt, long b) {
+	return op_strict(p, a - b, at, bt);
+}
+static Linetype op_mul(long *p, Linetype at, long a, Linetype bt, long b) {
+	return op_strict(p, a * b, at, bt);
+}
+static Linetype op_div(long *p, Linetype at, long a, Linetype bt, long b) {
+	return op_strict(p, a / b, at, bt);
+}
+static Linetype op_mod(long *p, Linetype at, long a, Linetype bt, long b) {
+	return op_strict(p, a % b, at, bt);
+}
+static Linetype op_bor(long *p, Linetype at, long a, Linetype bt, long b) {
+	return op_strict(p, a | b, at, bt);
+}
+static Linetype op_bxor(long *p, Linetype at, long a, Linetype bt, long b) {
+	return op_strict(p, a ^ b, at, bt);
+}
+static Linetype op_band(long *p, Linetype at, long a, Linetype bt, long b) {
+	return op_strict(p, a & b, at, bt);
+}
 
 /*
  * An evaluation function takes three arguments, as follows: (1) a pointer to
@@ -936,12 +966,22 @@ struct ops {
 static const struct ops eval_ops[] = {
 	{ eval_table, { { "||", op_or } } },
 	{ eval_table, { { "&&", op_and } } },
+	{ eval_table, { { "|", op_bor } } },
+	{ eval_table, { { "^", op_bxor } } },
+	{ eval_table, { { "&", op_band } } },
 	{ eval_table, { { "==", op_eq },
 			{ "!=", op_ne } } },
-	{ eval_unary, { { "<=", op_le },
+	{ eval_table, { { "<=", op_le },
 			{ ">=", op_ge },
 			{ "<", op_lt },
-			{ ">", op_gt } } }
+			{ ">", op_gt } } },
+	{ eval_table, { { "<<", op_blsh },
+			{ ">>", op_brsh } } },
+	{ eval_table, { { "+", op_add },
+			{ "-", op_sub } } },
+	{ eval_unary, { { "*", op_mul },
+			{ "/", op_div },
+			{ "%", op_mod } } },
 };
 
 /* Current operator precedence level */
@@ -973,6 +1013,26 @@ eval_unary(const struct ops *ops, long *valp, const char **cpp)
 			return (LT_ERROR);
 		if (lt != LT_IF) {
 			*valp = !*valp;
+			lt = *valp ? LT_TRUE : LT_FALSE;
+		}
+	} else if (*cp == '~') {
+		debug("eval%d ~", prec(ops));
+		cp++;
+		lt = eval_unary(ops, valp, &cp);
+		if (lt == LT_ERROR)
+			return (LT_ERROR);
+		if (lt != LT_IF) {
+			*valp = ~(*valp);
+			lt = *valp ? LT_TRUE : LT_FALSE;
+		}
+	} else if (*cp == '-') {
+		debug("eval%d -", prec(ops));
+		cp++;
+		lt = eval_unary(ops, valp, &cp);
+		if (lt == LT_ERROR)
+			return (LT_ERROR);
+		if (lt != LT_IF) {
+			*valp = -(*valp);
 			lt = *valp ? LT_TRUE : LT_FALSE;
 		}
 	} else if (*cp == '(') {
@@ -1059,9 +1119,22 @@ eval_table(const struct ops *ops, long *valp, const char **cpp)
 		return (LT_ERROR);
 	for (;;) {
 		cp = skipcomment(cp);
-		for (op = ops->op; op->str != NULL; op++)
-			if (strncmp(cp, op->str, strlen(op->str)) == 0)
+		for (op = ops->op; op->str != NULL; op++) {
+			if (strncmp(cp, op->str, strlen(op->str)) == 0) {
+				if (strlen(op->str) == 1) {
+					char opc = op->str[0];
+					char cpc = cp[1];
+
+					if (((opc == '!') && (cpc == '=')) ||
+					    ((opc == '|') && (cpc == '|')) ||
+					    ((opc == '&') && (cpc == '&')) ||
+					    ((opc == '<') && (cpc == '=')) ||
+					    ((opc == '>') && (cpc == '=')))
+						continue;
+				}
 				break;
+			}
+		}
 		if (op->str == NULL)
 			break;
 		cp += strlen(op->str);
