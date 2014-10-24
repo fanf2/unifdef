@@ -954,10 +954,15 @@ static eval_fn eval_table, eval_unary;
  * calls the inner function with its first argument pointing to the next
  * element of the table. Innermost expressions have special non-table-driven
  * handling.
+ *
+ * The stop characters help with lexical analysis: an operator is not
+ * recognized if it is followed by one of the stop characters because
+ * that would make it a different operator.
  */
 struct op {
 	const char *str;
 	Linetype (*fn)(long *, Linetype, long, Linetype, long);
+	const char *stop;
 };
 struct ops {
 	eval_fn *inner;
@@ -966,15 +971,15 @@ struct ops {
 static const struct ops eval_ops[] = {
 	{ eval_table, { { "||", op_or } } },
 	{ eval_table, { { "&&", op_and } } },
-	{ eval_table, { { "|", op_bor } } },
+	{ eval_table, { { "|", op_bor, "|" } } },
 	{ eval_table, { { "^", op_bxor } } },
-	{ eval_table, { { "&", op_band } } },
+	{ eval_table, { { "&", op_band, "&" } } },
 	{ eval_table, { { "==", op_eq },
 			{ "!=", op_ne } } },
 	{ eval_table, { { "<=", op_le },
 			{ ">=", op_ge },
-			{ "<", op_lt },
-			{ ">", op_gt } } },
+			{ "<", op_lt, "<=" },
+			{ ">", op_gt, ">=" } } },
 	{ eval_table, { { "<<", op_blsh },
 			{ ">>", op_brsh } } },
 	{ eval_table, { { "+", op_add },
@@ -1121,18 +1126,12 @@ eval_table(const struct ops *ops, long *valp, const char **cpp)
 		cp = skipcomment(cp);
 		for (op = ops->op; op->str != NULL; op++) {
 			if (strncmp(cp, op->str, strlen(op->str)) == 0) {
-				if (strlen(op->str) == 1) {
-					char opc = op->str[0];
-					char cpc = cp[1];
-
-					if (((opc == '!') && (cpc == '=')) ||
-					    ((opc == '|') && (cpc == '|')) ||
-					    ((opc == '&') && (cpc == '&')) ||
-					    ((opc == '<') && (cpc == '=')) ||
-					    ((opc == '>') && (cpc == '=')))
-						continue;
-				}
-				break;
+				/* assume only one-char operators have stop chars */
+				if (op->stop != NULL && cp[1] != '\0' &&
+				    strchr(op->stop, cp[1]) != NULL)
+					continue;
+				else
+					break;
 			}
 		}
 		if (op->str == NULL)
