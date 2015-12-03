@@ -44,6 +44,9 @@ Ben Hutchings at Solarflare Communications
 Steve Underwood <steveu@coppice.org>
  - read #define and #undef directives from a file
 
+Brian Ginsbach <ginsbach@netbsd.org>
+ - improved expression evaluator
+
 Other contributions are listed in the Changelog.
 
 - end -
