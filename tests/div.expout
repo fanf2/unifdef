@@ -1,0 +1,7 @@
+DIVISION
+#if 10 / DENOM
+DIVISION
+#endif
+#if 10 / DENOM
+DIVISION
+#endif
