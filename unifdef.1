@@ -254,6 +254,11 @@ are set to the given value.
 Function-like macro definitions (with arguments)
 are treated as if they are set to 1.
 .Pp
+.Em Warning:
+string literals and character constants are not parsed correctly in
+.Fl f
+files.
+.Pp
 .It Fl b
 Replace removed lines with blank lines
 instead of deleting them.
@@ -487,6 +492,12 @@ rewrote it to support
 .Tn ANSI\~C .
 .Sh BUGS
 Expression evaluation is very limited.
+.Pp
+Character constants are not evaluated.
+String literals and character constants in
+.Fl f
+definition files are ignored rather than parsed as
+part of a macro's replacement tokens.
 .Pp
 Handling one line at a time means
 preprocessor directives split across more than one physical line
