@@ -4,9 +4,6 @@ compiler:
   - gcc
   - clang
 
-git:
-  depth: 1
-
 matrix:
  include:
    - compiler: i586-mingw32msvc-gcc
