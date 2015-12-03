@@ -312,7 +312,8 @@ main(int argc, char *argv[])
 			break;
 		case 'M': /* modify in place and keep backup */
 			inplace = true;
-			backext = optarg;
+			if (strlen(optarg) > 0)
+				backext = optarg;
 			break;
 		case 'n': /* add #line directive after deleted lines */
 			lnnum = true;
