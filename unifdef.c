@@ -918,7 +918,7 @@ static Linetype op_mul(long *p, Linetype at, long a, Linetype bt, long b) {
 	return op_strict(p, a * b, at, bt);
 }
 static Linetype op_div(long *p, Linetype at, long a, Linetype bt, long b) {
-	if (bt == LT_FALSE) {
+	if (bt != LT_TRUE) {
 		debug("eval division by zero");
 		return (LT_ERROR);
 	}
@@ -1119,7 +1119,7 @@ eval_table(const struct ops *ops, long *valp, const char **cpp)
 {
 	const struct op *op;
 	const char *cp;
-	long val;
+	long val = 0;
 	Linetype lt, rt;
 
 	debug("eval%d", prec(ops));
