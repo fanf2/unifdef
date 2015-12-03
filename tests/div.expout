@@ -1,7 +1,10 @@
-DIVISION
+undef
 #if 10 / DENOM
 DIVISION
 #endif
+one
+DIVISION
+zero
 #if 10 / DENOM
 DIVISION
 #endif
