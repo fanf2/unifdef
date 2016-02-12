@@ -52,9 +52,9 @@ fbinmode(FILE *fp)
 	return (fp);
 }
 
-/*
- * Windows has _snprintf() but it does not work like real snprintf().
- */
+/* Microsoft has finally implemented snprintf in Visual Studio 2015 */
+#if defined(_MSC_VER) && _MSC_VER < 1900
+
 int snprintf(char *buf, size_t buflen, const char *format, ...)
 {
 	va_list ap;
@@ -85,3 +85,4 @@ int snprintf(char *buf, size_t buflen, const char *format, ...)
 
 	return outlen;
 }
+#endif
