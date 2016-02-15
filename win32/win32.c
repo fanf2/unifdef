@@ -52,36 +52,19 @@ fbinmode(FILE *fp)
 	return (fp);
 }
 
-/*
- * Windows has _snprintf() but it does not work like real snprintf().
- */
-int snprintf(char *buf, size_t buflen, const char *format, ...)
+int c99_snprintf(char *buf, size_t buflen, const char *format, ...)
 {
 	va_list ap;
-	int outlen, cpylen, tmplen;
-	char *tmp;
+	int outlen;
 
+	va_start(ap, format);
+	outlen = _vsnprintf_s(buf, buflen, _TRUNCATE, format, ap);
+	va_end(ap);
+	if (outlen >= 0)
+		return (outlen);
+	/* correct return value in case of truncation */
 	va_start(ap, format);
 	outlen = _vscprintf(format, ap);
 	va_end(ap);
-	if (buflen == 0 || outlen < 0)
-		return outlen;
-	if (buflen > outlen)
-		cpylen = outlen;
-	else
-		cpylen = buflen - 1;
-	/* Paranoia about off-by-one errors in _snprintf() */
-	tmplen = outlen + 2;
-
-	tmp = malloc(tmplen);
-	if (tmp == NULL)
-		err(2, "malloc");
-	va_start(ap, format);
-	_vsnprintf(tmp, tmplen, format, ap);
-	va_end(ap);
-	memcpy(buf, tmp, cpylen);
-	buf[cpylen] = '\0';
-	free(tmp);
-
-	return outlen;
+	return (outlen);
 }
