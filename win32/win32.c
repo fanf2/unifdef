@@ -53,8 +53,10 @@ fbinmode(FILE *fp)
 }
 
 /*
- * This is more long-winded than seems necessary because
- * MinGW doesn't have a proper implementation of _vsnprintf_s
+ * This is more long-winded than seems necessary because MinGW
+ * doesn't have a proper implementation of _vsnprintf_s().
+ *
+ * This link has some useful info about snprintf() on Windows:
  * http://stackoverflow.com/questions/2915672/snprintf-and-visual-studio-2010
  */
 int c99_snprintf(char *buf, size_t buflen, const char *format, ...)
