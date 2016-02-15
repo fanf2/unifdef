@@ -52,19 +52,38 @@ fbinmode(FILE *fp)
 	return (fp);
 }
 
+/*
+ * This is more long-winded than seems necessary because
+ * MinGW doesn't have a proper implementation of _vsnprintf_s
+ * http://stackoverflow.com/questions/2915672/snprintf-and-visual-studio-2010
+ */
 int c99_snprintf(char *buf, size_t buflen, const char *format, ...)
 {
 	va_list ap;
-	int outlen;
+	int outlen, cpylen, tmplen;
+	char *tmp;
 
-	va_start(ap, format);
-	outlen = _vsnprintf_s(buf, buflen, _TRUNCATE, format, ap);
-	va_end(ap);
-	if (outlen >= 0)
-		return (outlen);
-	/* correct return value in case of truncation */
 	va_start(ap, format);
 	outlen = _vscprintf(format, ap);
 	va_end(ap);
-	return (outlen);
+	if (buflen == 0 || outlen < 0)
+		return outlen;
+	if (buflen > outlen)
+		cpylen = outlen;
+	else
+		cpylen = buflen - 1;
+	/* Paranoia about off-by-one errors in _snprintf() */
+	tmplen = outlen + 2;
+
+	tmp = malloc(tmplen);
+	if (tmp == NULL)
+		err(2, "malloc");
+	va_start(ap, format);
+	_vsnprintf(tmp, tmplen, format, ap);
+	va_end(ap);
+	memcpy(buf, tmp, cpylen);
+	buf[cpylen] = '\0';
+	free(tmp);
+
+	return outlen;
 }

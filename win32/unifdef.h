@@ -55,7 +55,6 @@
 /*
  * The snprintf() workaround is unnecessary in Visual Studio 2015 or later
  * but dogma dictates that #if directives are not allowed inside unifdef.
- * http://stackoverflow.com/questions/2915672/snprintf-and-visual-studio-2010
  */
 #define snprintf c99_snprintf
 
