@@ -35,6 +35,9 @@ Jonathan Nieder <jrnieder@gmail.com>
 Anders H Kaseorg <andersk@mit.edu>
  - bug fixes and other improvements
 
+Ruediger Meier <ruediger.meier@ga-group.nl>
+ - build and portability cleanups
+
 Ben Hutchings at Solarflare Communications
  - lenient evaluation of && and ||
 
