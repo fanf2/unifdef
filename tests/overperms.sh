@@ -4,7 +4,7 @@ ls -l outfile.c | cut -d' ' -f1 1>&2
 unifdef -DFOO=1 -DFOOB=42 -UBAR -m outfile.c
 e=$?
 case ${BUILD_MINGW} in
-(yes)	printf '%s' '-rw-r-----' 1>&2 ;;
+(yes)	printf '%s\n' '-rw-r-----' 1>&2 ;;
 (*)	ls -l outfile.c | cut -d' ' -f1 1>&2 ;;
 esac
 cat outfile.c
