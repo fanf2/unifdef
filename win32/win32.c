@@ -33,7 +33,7 @@
 int
 replace(const char *old, const char *new)
 {
-	if (remove(new) < 0)
+	if (remove(new) < 0 && errno != ENOENT)
 		warn("can't remove \"%s\"", new);
 	return (rename(old, new));
 }
