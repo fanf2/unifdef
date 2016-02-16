@@ -41,8 +41,10 @@ replace(const char *old, const char *new)
 FILE *
 mktempmode(char *tmp, int mode)
 {
-	mode = mode;
-	return (fopen(_mktemp(tmp), "wb"));
+	char *name = _mktemp(tmp);
+	FILE *fp = fopen(name, "wb");
+	_chmod(name, mode);
+	return (fp);
 }
 
 FILE *
