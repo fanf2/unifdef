@@ -1,7 +1,7 @@
 mfiles=""
 for f in $files
 do
-	rm -f m$f
+	rm -f m$f 2>/dev/null || true
 	[ -f $f ] && cp $f m$f
 	mfiles="$mfiles m$f"
 done
@@ -10,6 +10,6 @@ e=$?
 for f in $mfiles
 do
 	diff -u $f~ $f | sed '/^[+-]\{3\} /s/	.*//'
-	rm -f $f~ $f
+	rm -f $f~ $f 2>/dev/null || true
 done
 exit $e
