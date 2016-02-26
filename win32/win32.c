@@ -31,11 +31,11 @@
  * remove anything that might be in the way before renaming.
  */
 int
-replace(const char *old, const char *new)
+replace(const char *oldname, const char *newname)
 {
-	if (remove(new) < 0 && errno != ENOENT)
-		warn("can't remove \"%s\"", new);
-	return (rename(old, new));
+	if (remove(newname) < 0 && errno != ENOENT)
+		warn("can't remove \"%s\"", newname);
+	return (rename(oldname, newname));
 }
 
 FILE *
@@ -77,7 +77,7 @@ int c99_snprintf(char *buf, size_t buflen, const char *format, ...)
 	/* Paranoia about off-by-one errors in _snprintf() */
 	tmplen = outlen + 2;
 
-	tmp = malloc(tmplen);
+	tmp = (char *)malloc(tmplen);
 	if (tmp == NULL)
 		err(2, "malloc");
 	va_start(ap, format);

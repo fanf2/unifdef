@@ -59,7 +59,7 @@
 #define snprintf c99_snprintf
 
 /* win32.c */
-int replace(const char *old, const char *new);
+int replace(const char *oldname, const char *newname);
 FILE *mktempmode(char *tmp, int mode);
 FILE *fbinmode(FILE *fp);
 int c99_snprintf(char *buf, size_t buflen, const char *format, ...);

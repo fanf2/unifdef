@@ -1626,7 +1626,7 @@ xstrdup(const char *start, const char *end)
 
 	if (end < start) abort(); /* bug */
 	n = (size_t)(end - start) + 1;
-	s = malloc(n);
+	s = (char *)malloc(n);
 	if (s == NULL)
 		err(2, "malloc");
 	snprintf(s, n, "%s", start);
