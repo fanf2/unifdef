@@ -1,0 +1,3 @@
+#if F1
+int f1() { return 0; }
+#endif
