@@ -2,7 +2,7 @@
 
 export PATH="$(pwd):${PATH}"
 ${1:+cd} ${1:-:}
-for cmd in *.sh
+for cmd in *.sh z_1/*.sh
 do
 	printf .
 	t=${cmd%.sh}

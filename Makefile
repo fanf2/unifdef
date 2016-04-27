@@ -33,6 +33,7 @@ install: unifdef unifdefall.sh unifdef.1
 clean:
 	rm -f unifdef version.h
 	rm -f tests/*.out tests/*.err tests/*.rc
+	rm -f tests/z_1/*.out tests/z_1/*.err tests/z_1/*.rc
 
 realclean: clean
 	rm -f unifdef.txt
