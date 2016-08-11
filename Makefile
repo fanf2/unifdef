@@ -1,12 +1,12 @@
 # Makefile for unifdef
 
-prefix =	${HOME}
-bindir =	${prefix}/bin
-mandir =	${prefix}/share/man
-man1dir=	${mandir}/man1
+PREFIX ?=	${HOME}
+bindir  =	${PREFIX}/bin
+mandir  =	${PREFIX}/share/man
+man1dir =	${mandir}/man1
 
-bindest=	${DESTDIR}${bindir}
-man1dest=	${DESTDIR}${man1dir}
+bindest =	${DESTDIR}${bindir}
+man1dest =	${DESTDIR}${man1dir}
 
 all: unifdef
 
