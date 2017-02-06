@@ -848,12 +848,14 @@ parseline(void)
 		if (fgets(tline + len, MAXLINE - len, input) == NULL) {
 			if (ferror(input))
 				err(2, "can't read %s", filename);
-			/* append the missing newline at eof */
+			debug("parser insert newline at EOF", linenum);
 			strcpy(tline + len, newline);
 			cp += strlen(newline);
 			linestate = LS_START;
 		} else {
-			linestate = LS_DIRTY;
+			debug("parser concatenate dangling whitespace");
+			++linenum;
+			cp = skipcomment(cp);
 		}
 	}
 	if (retval != LT_PLAIN && (wascomment || linestate != LS_START)) {
