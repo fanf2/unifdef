@@ -495,24 +495,30 @@ The original implementation was written by
 rewrote it to support
 .Tn ANSI\~C .
 .Sh BUGS
+.Bl -bullet
+.It
 Expression evaluation is very limited.
-.Pp
+.It
 Character constants are not evaluated.
 String literals and character constants in
 .Fl f
 definition files are ignored rather than parsed as
 part of a macro's replacement tokens.
-.Pp
+.It
 Source files are processed one line at a time,
 so preprocessor directives split across more than one physical line
 (because of comments or backslash-newline)
 cannot be handled in every situation.
-.Pp
+.It
 Trigraphs are not recognized.
-.Pp
+.It
 There is no support for macros with different definitions at
 different points in the source file.
-.Pp
+.It
 The text-mode and ignore functionality does not correspond to modern
 .Xr cpp 1
 behaviour.
+.El
+.Pp
+Please send bug reports by email to
+.Aq Mt dot@dotat.at .
