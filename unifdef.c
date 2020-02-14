@@ -114,7 +114,8 @@ typedef enum {
 	STARTING_COMMENT,	/* just after slash-backslash-newline */
 	FINISHING_COMMENT,	/* star-backslash-newline in a C comment */
 	CHAR_LITERAL,		/* inside '' */
-	STRING_LITERAL		/* inside "" */
+	STRING_LITERAL,		/* inside "" */
+	RAW_STRING_LITERAL	/* inside R"()" */
 } Comment_state;
 
 static char const * const comment_name[] = {
@@ -1266,6 +1267,10 @@ skipcomment(const char *cp)
 				incomment = STRING_LITERAL;
 				linestate = LS_DIRTY;
 				cp += 1;
+			} else if (strncmp(cp, "R\"(", 3) == 0) {
+				incomment = RAW_STRING_LITERAL;
+				linestate = LS_DIRTY;
+				cp += 3;
 			} else if (strncmp(cp, "\n", 1) == 0) {
 				linestate = LS_START;
 				cp += 1;
@@ -1297,6 +1302,13 @@ skipcomment(const char *cp)
 					error("Unterminated char literal");
 				else
 					error("Unterminated string literal");
+			} else
+				cp += 1;
+			continue;
+		case RAW_STRING_LITERAL:
+			if (strncmp(cp, ")\"", 2) == 0) {
+				incomment = NO_COMMENT;
+				cp += 2;
 			} else
 				cp += 1;
 			continue;
