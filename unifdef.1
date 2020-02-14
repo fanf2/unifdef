@@ -505,6 +505,12 @@ String literals and character constants in
 definition files are ignored rather than parsed as
 part of a macro's replacement tokens.
 .It
+Only the basic form of C++ raw string literals is recognized,
+like
+.Li R"(string)"
+without delimiters as in
+.Li R"delimiter(string)delimiter" .
+.It
 Source files are processed one line at a time,
 so preprocessor directives split across more than one physical line
 (because of comments or backslash-newline)
