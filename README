@@ -14,6 +14,9 @@ Pre-formatted documentation can be found in unifdef.txt
 You can download the latest release tar and zip files from:
 	http://dotat.at/prog/unifdef
 
+Note: GitHub's "releases" are incomplete and broken, but I am not
+able to redrect them to the right place.
+
 You can clone the development repository using:
 	git clone http://dotat.at/git/unifdef.git
 
