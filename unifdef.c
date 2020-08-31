@@ -1259,6 +1259,12 @@ skipcomment(const char *cp)
 			} else if (strncmp(cp, "//", 2) == 0) {
 				incomment = CXX_COMMENT;
 				cp += 2;
+			/* https://en.cppreference.com/w/cpp/language/integer_literal */
+			} else if ('0' <= cp[0] && cp[0] <= '9' && cp[1] == '\'' &&
+        			   '0' <= cp[2] && cp[2] <= '9') {
+                        	linestate = LS_DIRTY;
+				cp += 2;
+				return (cp);
 			} else if (strncmp(cp, "\'", 1) == 0) {
 				incomment = CHAR_LITERAL;
 				linestate = LS_DIRTY;
