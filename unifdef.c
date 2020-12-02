@@ -209,6 +209,7 @@ static bool             firstsym;		/* ditto */
 static int              exitmode;		/* exit status mode */
 static int              exitstat;		/* program exit status */
 static bool             altered;		/* was this file modified? */
+static int              behavemode;		/* behaviour mode */
 
 static void             addsym1(bool, bool, char *);
 static void             addsym2(bool, const char *, const char *);
@@ -256,7 +257,7 @@ main(int argc, char *argv[])
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "i:D:U:f:I:M:o:x:bBcdehKklmnsStV")) != -1)
+	while ((opt = getopt(argc, argv, "i:D:U:f:I:M:o:x:z:bBcdehKklmnsStV")) != -1)
 		switch (opt) {
 		case 'i': /* treat stuff controlled by these symbols as text */
 			/*
@@ -337,6 +338,11 @@ main(int argc, char *argv[])
 		case 'x':
 			exitmode = atoi(optarg);
 			if(exitmode < 0 || exitmode > 2)
+				usage();
+			break;
+		case 'z':
+			behavemode = atoi(optarg);
+			if(behavemode < 0 || behavemode > 1)
 				usage();
 			break;
 		default:
@@ -503,6 +509,7 @@ help(void)
 	    "	-t	ignore C strings and comments\n"
 	    "	-V	print version\n"
 	    "	-x{012}	exit status mode\n"
+	    "	-z{01}	behaviour mode\n"
 	);
 	exit(0);
 }
@@ -553,6 +560,7 @@ static void Strue (void) { drop();  ignoreoff(); state(IS_TRUE_PREFIX); }
 static void Sfalse(void) { drop();  ignoreoff(); state(IS_FALSE_PREFIX); }
 static void Selse (void) { drop();               state(IS_TRUE_ELSE); }
 /* print/pass this block */
+static void Ptrue (void) { print(); nest();      state(IS_TRUE_PREFIX); }
 static void Pelif (void) { print(); ignoreoff(); state(IS_PASS_MIDDLE); }
 static void Pelse (void) { print();              state(IS_PASS_ELSE); }
 static void Pendif(void) { print(); unnest(); }
@@ -576,11 +584,13 @@ static void Itrue (void) { Ftrue();  ignoreon(); }
 static void Ifalse(void) { Ffalse(); ignoreon(); }
 /* modify this line */
 static void Mpass (void) { memcpy(keyword, "if  ", 4); Pelif(); }
+static void MStrue(void) { memcpy(keyword, "if  ", 4); print(); ignoreoff(); state(IS_TRUE_PREFIX); }
 static void Mtrue (void) { keywordedit("else");  state(IS_TRUE_MIDDLE); }
 static void Melif (void) { keywordedit("endif"); state(IS_FALSE_TRAILER); }
 static void Melse (void) { keywordedit("endif"); state(IS_FALSE_ELSE); }
 
-static state_fn * const trans_table[IS_COUNT][LT_COUNT] = {
+
+static state_fn * const trans_table_0[IS_COUNT][LT_COUNT] = {
 /* IS_OUTSIDE */
 { Itrue, Ifalse,Fpass, Ftrue, Ffalse,Eelif, Eelif, Eelif, Eelse, Eendif,
   Oiffy, Oiffy, Fpass, Oif,   Oif,   Eelif, Eelif, Eelif, Eelse, Eendif,
@@ -625,6 +635,54 @@ static state_fn * const trans_table[IS_COUNT][LT_COUNT] = {
   TRUEI  FALSEI IF     TRUE   FALSE  ELIF   ELTRUE ELFALSE ELSE  ENDIF (DODGY)
   PLAIN  EOF    ERROR */
 };
+
+static state_fn * const trans_table_1[IS_COUNT][LT_COUNT] = {
+/* IS_OUTSIDE */
+{ Itrue, Ifalse,Fpass, Ptrue, Ffalse,Eelif, Eelif, Eelif, Eelse, Eendif,
+  Oiffy, Oiffy, Fpass, Oif,   Oif,   Eelif, Eelif, Eelif, Eelse, Eendif,
+  print, done,  abort },
+/* IS_FALSE_PREFIX */
+{ Idrop, Idrop, Fdrop, Fdrop, Fdrop, Mpass, MStrue, Sfalse,Selse, Dendif,
+  Idrop, Idrop, Fdrop, Fdrop, Fdrop, Mpass, Eioccc,Eioccc,Eioccc,Eioccc,
+  drop,  Eeof,  abort },
+/* IS_TRUE_PREFIX */
+{ Itrue, Ifalse,Fpass, Ftrue, Ffalse,Melif,Melse,Dfalse,Melse, Pendif,
+  Oiffy, Oiffy, Fpass, Oif,   Oif,   Eioccc,Eioccc,Eioccc,Eioccc,Eioccc,
+  print, Eeof,  abort },
+/* IS_PASS_MIDDLE */
+{ Itrue, Ifalse,Fpass, Ptrue, Ffalse,Pelif, Mtrue, Delif, Pelse, Pendif,
+  Oiffy, Oiffy, Fpass, Oif,   Oif,   Pelif, Oelif, Oelif, Pelse, Pendif,
+  print, Eeof,  abort },
+/* IS_FALSE_MIDDLE */
+{ Idrop, Idrop, Fdrop, Fdrop, Fdrop, Pelif, Mtrue, Delif, Pelse, Pendif,
+  Idrop, Idrop, Fdrop, Fdrop, Fdrop, Eioccc,Eioccc,Eioccc,Eioccc,Eioccc,
+  drop,  Eeof,  abort },
+/* IS_TRUE_MIDDLE */
+{ Itrue, Ifalse,Fpass, Ftrue, Ffalse,Melif, Melif, Melif, Melse, Pendif,
+  Oiffy, Oiffy, Fpass, Oif,   Oif,   Eioccc,Eioccc,Eioccc,Eioccc,Pendif,
+  print, Eeof,  abort },
+/* IS_PASS_ELSE */
+{ Itrue, Ifalse,Fpass, Ftrue, Ffalse,Eelif, Eelif, Eelif, Eelse, Pendif,
+  Oiffy, Oiffy, Fpass, Oif,   Oif,   Eelif, Eelif, Eelif, Eelse, Pendif,
+  print, Eeof,  abort },
+/* IS_FALSE_ELSE */
+{ Idrop, Idrop, Fdrop, Fdrop, Fdrop, Eelif, Eelif, Eelif, Eelse, Dendif,
+  Idrop, Idrop, Fdrop, Fdrop, Fdrop, Eelif, Eelif, Eelif, Eelse, Eioccc,
+  drop,  Eeof,  abort },
+/* IS_TRUE_ELSE */
+{ Itrue, Ifalse,Fpass, Ftrue, Ffalse,Eelif, Eelif, Eelif, Eelse, Dendif,
+  Oiffy, Oiffy, Fpass, Oif,   Oif,   Eelif, Eelif, Eelif, Eelse, Eioccc,
+  print, Eeof,  abort },
+/* IS_FALSE_TRAILER */
+{ Idrop, Idrop, Fdrop, Fdrop, Fdrop, Dfalse,Dfalse,Dfalse,Delse, Dendif,
+  Idrop, Idrop, Fdrop, Fdrop, Fdrop, Dfalse,Dfalse,Dfalse,Delse, Eioccc,
+  drop,  Eeof,  abort }
+/*TRUEI  FALSEI IF     TRUE   FALSE  ELIF   ELTRUE ELFALSE ELSE  ENDIF
+  TRUEI  FALSEI IF     TRUE   FALSE  ELIF   ELTRUE ELFALSE ELSE  ENDIF (DODGY)
+  PLAIN  EOF    ERROR */
+};
+
+static state_fn * const (*trans_table)[LT_COUNT] = trans_table_0 ;
 
 /*
  * State machine utility functions
@@ -762,6 +820,11 @@ process(void)
 	newline = NULL;
 	linenum = 0;
 	altered = false;
+	switch(behavemode) {
+	case(0): trans_table = trans_table_0; break;
+	case(1): trans_table = trans_table_1; break;
+	default: abort(); /* bug */
+	}
 	while (lineval != LT_EOF) {
 		lineval = parseline();
 		trans_table[ifstate[depth]][lineval]();
