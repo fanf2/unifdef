@@ -10,8 +10,8 @@ man1dest=	${DESTDIR}${man1dir}
 
 all: unifdef
 
-unifdef: unifdef.c unifdef.h version.h
-	${CC} ${CFLAGS} ${LDFLAGS} -o unifdef unifdef.c
+unifdef: unifdef.c unix/unifdef.h version.h
+	${CC} ${CFLAGS} ${LDFLAGS} -Iunix -o unifdef unifdef.c
 
 version.h: version.sh
 version.sh::
