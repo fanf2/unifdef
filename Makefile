@@ -13,9 +13,8 @@ all: unifdef
 unifdef: unifdef.c unix/unifdef.h version.h
 	${CC} ${CFLAGS} ${LDFLAGS} -Iunix -o unifdef unifdef.c
 
-version.h: version.sh
-version.sh::
-	scripts/reversion.sh
+version.h:
+	scripts/reversion.py
 
 test: unifdef
 	scripts/runtests.sh tests
@@ -36,14 +35,14 @@ clean:
 
 realclean: clean
 	rm -f unifdef.txt
-	[ ! -d .git ] || rm -f Changelog version.sh
+	[ ! -d .git ] || rm -f Changelog
 	find . -name .git -prune -o \( \
 		-name '*~' -o -name '.#*' -o \
 		-name '*.orig' -o -name '*.core' -o \
 		-name 'xterm-*' -o -name 'xterm.tar.gz' \
 		\) -delete
 
-DISTEXTRA= version.h version.sh unifdef.txt Changelog
+DISTEXTRA= version.h unifdef.txt Changelog
 
 release: ${DISTEXTRA}
 	scripts/copycheck.sh
@@ -52,7 +51,7 @@ release: ${DISTEXTRA}
 unifdef.txt: unifdef.1
 	nroff -Tascii -mdoc unifdef.1 | col -bx >unifdef.txt
 
-Changelog: version.sh scripts/gitlog2changelog.sh
+Changelog: scripts/gitlog2changelog.sh
 	scripts/gitlog2changelog.sh >Changelog
 
 # eof

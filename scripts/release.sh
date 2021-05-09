@@ -1,6 +1,8 @@
 #!/bin/sh
 
-. ./version.sh
+V=$(sed '/"@(#) \$Version: / s/"@(#) \$Version: //
+/"@(#) \$Date: / s/"@(#) \$Date: //
+/ \$\\n"/ s/ \$\\n"//' ./version.h | sed -n 1p)
 
 for f in $@ $(git ls-files | egrep -v '^web/|^[.]git$')
 do

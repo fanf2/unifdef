@@ -27,7 +27,7 @@ pre-generated version.h but the git repository does not. To build from
 a git clone you need a Unix shell environment, which you can get as
 part of GitHub for Windows - http://windows.github.com/
 To update version.h, right-click on the fanf2/unifdef repository and
-select "open a shell here", then type `sh scripts\reversion.sh`.
+select "open a shell here", then type `python scripts\reversion.py`.
 
 We assume Unix provides the BSD err.h functions and C99 stdbool.h. The
 FreeBSD subdirectory has copies of err.c and getopt.c for systems such
