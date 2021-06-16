@@ -9,7 +9,7 @@ unifdef -M~ $opts $mfiles
 e=$?
 for f in $mfiles
 do
-	diff -u $f~ $f | sed '/^[+-]\{3\} /s/	.*//'
+	LANG=C diff -u $f~ $f | sed '/^[+-]\{3\} /s/	.*//'
 	rm -f $f~ $f
 done
 exit $e
