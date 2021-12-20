@@ -48,7 +48,7 @@ export LC_ALL=C
 # list of all controlling macros; assume these are undefined
 "$unifdef" $debug -s "$@" | sort -u | sed 's/^/#undef /' >"$tmp/undefs"
 # list of all macro definitions
-cc -E -dM "$@" | sort >"$tmp/defs"
+${CC:-cc} -E -dM "$@" | sort >"$tmp/defs"
 
 case $debug in
 -d)	cat "$tmp/undefs" "$tmp/defs" 1>&2

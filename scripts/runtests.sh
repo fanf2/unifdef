@@ -1,6 +1,7 @@
 #!/bin/sh
 
 export PATH="$(pwd):${PATH}"
+export LC_ALL=C LANG=C
 ${1:+cd} ${1:-:}
 for cmd in *.sh
 do
