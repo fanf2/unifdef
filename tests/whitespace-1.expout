@@ -1,1 +1,6 @@
 foo
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               //spong
+
+#ifdef BAR
+bar
+#endif

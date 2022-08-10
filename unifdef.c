@@ -846,7 +846,8 @@ parseline(void)
 	   newline or if there is too much whitespace in a directive */
 	if (linestate == LS_HASH) {
 		long len = cp - tline;
-		if (fgets(tline + len, MAXLINE - len, input) == NULL) {
+		const char *line = fgets(tline + len, MAXLINE - len, input);
+		if (line == NULL || *line == '\0') {
 			if (ferror(input))
 				err(2, "can't read %s", filename);
 			debug("parser insert newline at EOF", linenum);
