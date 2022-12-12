@@ -28,7 +28,7 @@ install: unifdef unifdefall.sh unifdef.1
 	: manual
 	install -m 755 -d  ${man1dest}
 	install -m 644 unifdef.1  ${man1dest}/
-	ln -s unifdef.1  ${man1dest}/unifdefall.1
+	ln -f -s unifdef.1  ${man1dest}/unifdefall.1
 
 clean:
 	rm -f unifdef version.h
