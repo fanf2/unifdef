@@ -928,6 +928,10 @@ static Linetype op_div(long *p, Linetype at, long a, Linetype bt, long b) {
 	return op_strict(p, a / b, at, bt);
 }
 static Linetype op_mod(long *p, Linetype at, long a, Linetype bt, long b) {
+	if (bt != LT_TRUE) {
+		debug("eval division by zero");
+		return (LT_ERROR);
+	}
 	return op_strict(p, a % b, at, bt);
 }
 static Linetype op_bor(long *p, Linetype at, long a, Linetype bt, long b) {
