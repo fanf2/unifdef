@@ -25,6 +25,8 @@ int foo9() { return 0; }
 
 int foo10() { return 0; }
 
+int foo11() { return 0; }
+
 int main()
 {
   foo1();
@@ -37,4 +39,5 @@ int main()
   foo8();
   foo9();
   foo10();
+  foo11();
 }

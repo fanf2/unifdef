@@ -997,6 +997,40 @@ static const struct ops eval_ops[] = {
 			{ "%",  op_mod,  NULL } } },
 };
 
+
+
+/**
+ * Converts a string to a long integer, ignoring certain suffix characters.
+ *
+ * @param str Input string to convert.
+ * @param endptr Pointer to character after the last used character in the input string.
+ * @return The converted long integer, or 0 if no conversion could be performed.
+ */
+static long strtol_with_suffix(const char *str, char **endptr)
+{
+    long value = 0;
+    char *temp_ptr = NULL;
+
+    value = strtol(str, &temp_ptr, 0);
+    if (temp_ptr == str) {
+        if (endptr != NULL) {
+            *endptr = (char *)str;
+        }
+        return 0;
+    }
+
+    if (*temp_ptr == 'L' || *temp_ptr == 'l' || *temp_ptr == 'U' || *temp_ptr == 'u') {
+        temp_ptr++;
+    }
+
+    if (endptr != NULL) {
+        *endptr = temp_ptr;
+    }
+
+    return value;
+}
+
+
 /* Current operator precedence level */
 static long prec(const struct ops *ops)
 {
@@ -1059,7 +1093,7 @@ eval_unary(const struct ops *ops, long *valp, const char **cpp)
 			return (LT_ERROR);
 	} else if (isdigit((unsigned char)*cp)) {
 		debug("eval%d number", prec(ops));
-		*valp = strtol(cp, &ep, 0);
+		*valp = strtol_with_suffix(cp, &ep);
 		if (ep == cp)
 			return (LT_ERROR);
 		lt = *valp ? LT_TRUE : LT_FALSE;
@@ -1097,7 +1131,7 @@ eval_unary(const struct ops *ops, long *valp, const char **cpp)
 			*valp = 0;
 			lt = LT_FALSE;
 		} else {
-			*valp = strtol(value[sym], &ep, 0);
+			*valp = strtol_with_suffix(value[sym], &ep);
 			if (*ep != '\0' || ep == value[sym])
 				return (LT_ERROR);
 			lt = *valp ? LT_TRUE : LT_FALSE;

@@ -65,6 +65,12 @@ int foo9() { return 0; }
 int foo10() { return 0; }
 #endif
 
+#if FOO >= 0x42L
+#error FOO is greater than or equal 0x42L
+#else
+int foo11() { return 0; }
+#endif
+
 int main()
 {
   foo1();
@@ -77,4 +83,5 @@ int main()
   foo8();
   foo9();
   foo10();
+  foo11();
 }
