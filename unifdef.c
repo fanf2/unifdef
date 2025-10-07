@@ -1347,6 +1347,11 @@ skipcomment(const char *cp)
 		default:
 			abort(); /* bug */
 		}
+	// reset CXX comment at EOF without trailing \n
+	if (incomment == CXX_COMMENT) {
+		incomment = NO_COMMENT;
+		linestate = LS_START;
+	}
 	return (cp);
 }
 
